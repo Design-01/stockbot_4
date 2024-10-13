@@ -70,9 +70,14 @@ class RandomOHLCV:
     
     def convert_to_pd_freq_format(self, freq):
         """string must separate the number and the char with a space. eg '5 min'"""
-        numb =  int(freq.split(' ')[0])
-        char = 'T' if 'min' in freq.lower() else freq.split(' ')[1][0].upper()
-        return  f'{numb} {char}'
+        if freq.isdigit():
+            return freq + 'D'
+        parts = freq.split(' ')
+        if len(parts) == 2:
+            numb = int(parts[0])
+            char = 'T' if 'min' in parts[1].lower() else parts[1][0].upper()
+            return f'{numb} {char}'
+        return freq
 
     def __post_init__(self) -> None:
         self.freq = self.convert_to_pd_freq_format(self.freq)

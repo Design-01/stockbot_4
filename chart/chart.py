@@ -196,7 +196,7 @@ class Chart:
         chart_type: str: The type of chart to be added
         """
 
-        # make stles consistant
+        # make styles consistent
         style = [style] if not isinstance(style, list) else style
 
         if chart_type == 'line':
@@ -234,5 +234,52 @@ class Chart:
                     marker=stl
                 ), row=row, col=1)
 
+        if chart_type == 'support_resistance':
+            self.add_support_resistance(data, style)
 
+    def add_support_resistance(self, data, style):
+        support_col = [col for col in data.columns if col.endswith('Support')][0]
+        resistance_col = [col for col in data.columns if col.endswith('Resistance')][0]
+        # support_band_col = 'Support_Band'
+        # resistance_band_col = 'Resistance_Band'
 
+        # Extract the most recent support and resistance levels
+        recent_support = data[support_col].iloc[-1]
+        recent_resistance = data[resistance_col].iloc[-1]
+        # support_band = data[support_band_col].iloc[-1]
+        # resistance_band = data[resistance_band_col].iloc[-1]
+
+        print("Recent support level:", recent_support)
+        print("Recent resistance level:", recent_resistance)
+        # print("Support band levels:", support_band)
+        # print("Resistance band levels:", resistance_band)
+
+        # Add the most recent support and resistance levels as lines
+        self.fig.add_shape(
+            type="line",
+            x0=data.index[0], x1=data.index[-1], y0=recent_support, y1=recent_support,
+            line=dict(color=style[0]['color'], width=style[0]['width'], dash="dash"),
+            row=1, col=1
+        )
+        self.fig.add_shape(
+            type="line",
+            x0=data.index[0], x1=data.index[-1], y0=recent_resistance, y1=recent_resistance,
+            line=dict(color=style[1]['color'], width=style[1]['width'], dash="dash"),
+            row=1, col=1
+        )
+
+        # # Add shaded areas for the support and resistance bands
+        # self.fig.add_shape(
+        #     type="rect",
+        #     x0=data.index[0], x1=data.index[-1], y0=min(support_band), y1=max(support_band),
+        #     fillcolor=style[0]['color'], opacity=0.2, line_width=0,
+        #     row=1, col=1
+        # )
+        # self.fig.add_shape(
+        #     type="rect",
+        #     x0=data.index[0], x1=data.index[-1], y0=min(resistance_band), y1=max(resistance_band),
+        #     fillcolor=style[1]['color'], opacity=0.2, line_width=0,
+        #     row=1, col=1
+        # )
+
+        print("Finished adding support and resistance levels")
