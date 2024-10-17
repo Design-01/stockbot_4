@@ -75,7 +75,7 @@ class RandomOHLCV:
         parts = freq.split(' ')
         if len(parts) == 2:
             numb = int(parts[0])
-            char = 'T' if 'min' in parts[1].lower() else parts[1][0].upper()
+            char = 'min' if 'min' in parts[1].lower() else parts[1][0].upper()
             return f'{numb} {char}'
         return freq
 

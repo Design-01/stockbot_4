@@ -16,20 +16,17 @@ class TwelveData:
 
         :param api_key: Your Twelve Data API key
         """
-        self.api_key = api_key
-        self.data_folder = os.path.join('data', 'historical_data')
-        os.makedirs(self.data_folder, exist_ok=True)
+        self.api_key = '171136ac7161454b8f4abeb987c72b02' # temp while testing the code
 
-    def get_historical_data(self, symbol, interval='1day', start_date=None, end_date=None, outputsize=None, save_format='csv'):
+    def get_historical_data(self, symbol, interval='1day', start_date=None, end_date=None, outputsize=None):
         """
-        Retrieve historical stock data from Twelve Data API and save it.
+        Retrieve historical stock data from Twelve Data API.
 
         :param symbol: The stock symbol (e.g., 'AAPL' for Apple Inc.)
         :param interval: Time interval between two consecutive data points (default: '1day')
         :param start_date: Start date for the data (format: 'YYYY-MM-DD')
         :param end_date: End date for the data (format: 'YYYY-MM-DD')
         :param outputsize: Number of data points to retrieve (max 5000)
-        :param save_format: Format to save the data ('csv', 'pickle', or 'excel')
         :return: DataFrame containing the historical data
         """
         endpoint = f"{self.BASE_URL}/time_series"
@@ -58,7 +55,6 @@ class TwelveData:
                 df.set_index('datetime', inplace=True)
                 df = df.astype(float)
                 
-                self.save_data(df, symbol, interval, save_format)
                 return df
             else:
                 print(f"Error: No data found in the response for {symbol}")
@@ -68,48 +64,24 @@ class TwelveData:
             print(f"Error occurred while fetching data: {e}")
             return None
 
-    def get_last_n_days(self, symbol, n_days, interval='1day', save_format='csv'):
+    def get_last_n_days(self, symbol, n_days, interval='1day'):
         """
-        Retrieve data for the last N days and save it.
+        Retrieve data for the last N days.
 
         :param symbol: The stock symbol (e.g., 'AAPL' for Apple Inc.)
         :param n_days: Number of days to retrieve data for
         :param interval: Time interval between two consecutive data points (default: '1day')
-        :param save_format: Format to save the data ('csv', 'pickle', or 'excel')
         :return: DataFrame containing the historical data
         """
         end_date = datetime.now().strftime('%Y-%m-%d')
         start_date = (datetime.now() - timedelta(days=n_days)).strftime('%Y-%m-%d')
-        return self.get_historical_data(symbol, interval, start_date, end_date, save_format=save_format)
-
-    def save_data(self, df, symbol, interval, save_format):
-        """
-        Save the data in the specified format.
-
-        :param df: DataFrame containing the data to save
-        :param symbol: The stock symbol
-        :param interval: Time interval of the data
-        :param save_format: Format to save the data ('csv', 'pickle', or 'excel')
-        """
-        filename = f"{symbol}_{interval}"
-        filepath = os.path.join(self.data_folder, filename)
-
-        if save_format == 'csv':
-            df.to_csv(f"{filepath}.csv")
-        elif save_format == 'pickle':
-            df.to_pickle(f"{filepath}.pkl")
-        elif save_format == 'excel':
-            df.to_excel(f"{filepath}.xlsx")
-        else:
-            print(f"Unsupported save format: {save_format}")
-
-        print(f"Data saved as {filepath}.{save_format}")
+        return self.get_historical_data(symbol, interval, start_date, end_date)
 
 # Example usage:
 # api_key = "YOUR_API_KEY"
 # td = TwelveData(api_key)
-# data = td.get_historical_data("AAPL", start_date="2023-01-01", end_date="2023-05-01", save_format='csv')
+# data = td.get_historical_data("AAPL", start_date="2023-01-01", end_date="2023-05-01")
 # print(data)
 
-# last_30_days = td.get_last_n_days("AAPL", 30, save_format='excel')
+# last_30_days = td.get_last_n_days("AAPL", 30)
 # print(last_30_days)

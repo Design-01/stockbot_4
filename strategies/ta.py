@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 @dataclass
-class Indicator(ABC):
+class TA(ABC):
     column: str = None
     
 
@@ -13,7 +13,7 @@ class Indicator(ABC):
         pass
 
 @dataclass
-class MA(Indicator):
+class MA(TA):
     period: int = 20
 
     def __post_init__(self):
@@ -23,7 +23,7 @@ class MA(Indicator):
         return data[self.column].rolling(window=self.period).mean().rename(self.names)
 
 @dataclass
-class MACD(Indicator):
+class MACD(TA):
     fast: int = 12
     slow: int = 26
     signal: int = 9
@@ -49,7 +49,7 @@ class MACD(Indicator):
         })
     
 @dataclass
-class HPLP(Indicator):
+class HPLP(TA):
     hi_col: str = 'high'
     lo_col: str = 'low'
     span: int = 5
@@ -79,7 +79,7 @@ import pandas as pd
 from dataclasses import dataclass
 
 @dataclass
-class SupportResistance(Indicator):
+class SupportResistance(TA):
     hi_col: str = 'high'
     lo_col: str = 'low'
     tolerance: float = 0.01

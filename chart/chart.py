@@ -55,9 +55,33 @@ class Chart:
             ),
             row=1, col=1
         )
+
+        # Update x-axis to treat x values as categories
+        self.fig.update_xaxes(type='category', row=1, col=1)
         return self.fig
+    
+    def add_day_dividers(self, df: pd.DataFrame):
+
+        # Add vertical lines at midnight for each day
+        for date in pd.date_range(start=df.index.min().date(), end=df.index.max().date()):
+            self.fig.add_shape(
+                type="line",
+                x0=date,
+                y0=0,
+                x1=date,
+                y1=1,
+                xref="x",
+                yref="paper",
+                line=dict(
+                    color="DarkGrey",
+                    width=1,
+                    dash="dash",
+                ),
+            )
 
     def add_layout_and_format(self):
+
+
         self.fig.update_layout(
             title=self.title,
             xaxis_rangeslider_visible=False,
@@ -103,13 +127,16 @@ class Chart:
         self.add_candlestick(df)
         self.add_volume(df)
         self.add_layout_and_format()
+        self.add_day_dividers(df)
         return self.fig
     
     def add_trading_hours(self, df: pd.DataFrame, times:List[Tuple[str]]):
         def find_matching_datetimes(df, time_ranges):
             time_ranges = [(datetime.datetime.strptime(start, '%H:%M').time(), datetime.datetime.strptime(end, '%H:%M').time()) for start, end in time_ranges]
             times = pd.Series(df.index.time)
-            matching_datetimes = [df.index[times == start].union(df.index[times == end]) for start, end in time_ranges]
+            # matching_datetimes = [df.index[times == start].union(df.index[times == end]) for start, end in time_ranges]
+            # matching_datetimes = [(min(times), max(times)) for times in matching_datetimes if not times.empty]
+            matching_datetimes = [df.index[(times >= start) & (times <= end)] for start, end in time_ranges]
             matching_datetimes = [(min(times), max(times)) for times in matching_datetimes if not times.empty]
             return matching_datetimes
 
@@ -122,6 +149,12 @@ class Chart:
         shape_colour = "LightSkyBlue"
 
         trading_hours.sort()
+
+        # Adjust trading hours to the DataFrame's time range
+        trading_hours = [(max(start, min_time), min(end, max_time)) for start, end in trading_hours]
+
+        if not trading_hours:
+            return  # No valid trading hours after adjustment, exit the function
 
         self.fig.add_shape(
             type="rect",

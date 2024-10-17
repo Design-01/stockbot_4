@@ -11,13 +11,13 @@ from datetime import datetime
 @dataclass
 class StockBot:
     mode: str = 'backtest'
+    ohlcv: OHLCV = field(init=False)
+    backtester: Backtester = field(init=False)
+    bank: Bank = field(init=False)
     capital: float = 100000.0
     entry_strategies: List[EntryStrategy] = field(default_factory=list)
     exit_strategies: List[ExitStrategy] = field(default_factory=list)
-    bank: Bank = field(init=False)
     traders: List = field(default_factory=list)
-    backtester: Backtester = field(init=False)
-    ohlcv: OHLCV = field(init=False)
 
     def __post_init__(self):
         self.bank = Bank(self.capital)
@@ -27,9 +27,24 @@ class StockBot:
         self.data_manager = DataManager(data=data)
         self.backtester = Backtester(self.data_manager, self)
 
-    def run(self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None):
-        self.backtester.run(start_date=start_date, end_date=end_date)
+    def run_backtester(self, 
+                          stock: str,
+                          interval: str,
+                          trade_start_time: str,
+                          days: int, 
+                          start_date: Optional[datetime] = None, 
+                          end_date: Optional[datetime] = None,
+                          entry_strategies: List[EntryStrategy] = [],
+                          exit_strategies: List[ExitStrategy] = []):
+        
+        # Get the historical data for the stock using OHLCV class
+        # this class will be used to get the data from the data folder
+        # if it does not find it in the folder it will get it from the Twelve Data API
+        # and save it in the data folder
 
+        # 
+
+        
     def market_bias(self):
         # Placeholder for market bias logic
         pass
