@@ -61,23 +61,26 @@ class Chart:
         return self.fig
     
     def add_day_dividers(self, df: pd.DataFrame):
-
-        # Add vertical lines at midnight for each day
-        for date in pd.date_range(start=df.index.min().date(), end=df.index.max().date()):
-            self.fig.add_shape(
-                type="line",
-                x0=date,
-                y0=0,
-                x1=date,
-                y1=1,
-                xref="x",
-                yref="paper",
-                line=dict(
-                    color="DarkGrey",
-                    width=1,
-                    dash="dash",
-                ),
-            )
+        # Add vertical lines at the start of each new day
+        previous_date = None
+        for timestamp in df.index:
+            current_date = timestamp.date()
+            if current_date != previous_date:
+                self.fig.add_shape(
+                    type="line",
+                    x0=timestamp,
+                    y0=0,
+                    x1=timestamp,
+                    y1=1,
+                    xref="x",
+                    yref="paper",
+                    line=dict(
+                        color="DarkGrey",
+                        width=1,
+                        dash="dash",
+                    ),
+                )
+                previous_date = current_date
 
     def add_layout_and_format(self):
 
@@ -130,14 +133,20 @@ class Chart:
         self.add_day_dividers(df)
         return self.fig
     
-    def add_trading_hours(self, df: pd.DataFrame, times:List[Tuple[str]]):
+    def add_trading_hours(self, df: pd.DataFrame, times: List[Tuple[str]]):
         def find_matching_datetimes(df, time_ranges):
             time_ranges = [(datetime.datetime.strptime(start, '%H:%M').time(), datetime.datetime.strptime(end, '%H:%M').time()) for start, end in time_ranges]
+            dates = pd.Series(df.index.date)
             times = pd.Series(df.index.time)
-            # matching_datetimes = [df.index[times == start].union(df.index[times == end]) for start, end in time_ranges]
-            # matching_datetimes = [(min(times), max(times)) for times in matching_datetimes if not times.empty]
-            matching_datetimes = [df.index[(times >= start) & (times <= end)] for start, end in time_ranges]
-            matching_datetimes = [(min(times), max(times)) for times in matching_datetimes if not times.empty]
+            
+            matching_datetimes = []
+            for date in dates.unique():
+                day_times = times[dates == date]
+                day_index = df.index[dates == date]
+                for start, end in time_ranges:
+                    matching_times = day_index[(day_times >= start) & (day_times <= end)]
+                    if not matching_times.empty:
+                        matching_datetimes.append((min(matching_times), max(matching_times)))
             return matching_datetimes
 
         trading_hours = find_matching_datetimes(df, times)

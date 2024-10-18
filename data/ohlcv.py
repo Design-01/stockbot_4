@@ -208,8 +208,9 @@ class ServeNewOHLCV:
         """
         Post-initialization to set up additional attributes.
         """
+        self.start_data: pd.DataFrame = field(init=False, default=None)
         self.current_index: int = field(init=False, default=0)
-        self.period_data: pd.DataFrame = field(init=False, default=None)
+        self.current_data: pd.DataFrame = field(init=False, default=None)
 
     def serv_period(self, days_ago=0, months_ago=0, date=None, start_time='09:30:00', end_time='16:00:00'):
         """
@@ -236,8 +237,8 @@ class ServeNewOHLCV:
         end_datetime = datetime.combine(date_obj, datetime.strptime(end_time, '%H:%M:%S').time())
 
         # Filter the data for the given period
-        self.period_data = self.data[(self.data.index >= start_datetime) & (self.data.index <= end_datetime)]
-        self.current_index = 0
+        self.start_data = self.data[(self.data.index >= start_datetime) & (self.data.index <= end_datetime)]
+        return self.start_data
     
     def serv_range(self, dayrange=(-5, -2), start_time='08:30:00', end_time='18:00:00'):
         """
@@ -249,39 +250,57 @@ class ServeNewOHLCV:
             end_time (str): End time in 'HH:MM:SS' format. Defaults to '18:00:00'.
         """
         start_day, end_day = dayrange
-        date_obj = self.data.index[-1].date()
 
-        if start_day < 0 and end_day < 0:
-            start_datetime = datetime.combine(date_obj + timedelta(days=start_day), datetime.strptime(start_time, '%H:%M:%S').time())
-            end_datetime = datetime.combine(date_obj + timedelta(days=end_day), datetime.strptime(end_time, '%H:%M:%S').time())
+        if start_day <= 0 and end_day <= 0:
+            end_date_obj = self.data.index[-1].date()
+            start_datetime = datetime.combine(end_date_obj + timedelta(days=start_day), datetime.strptime(start_time, '%H:%M:%S').time())
+            end_datetime = datetime.combine(end_date_obj + timedelta(days=end_day), datetime.strptime(end_time, '%H:%M:%S').time())
+        elif start_day >= 0 and end_day >= 0:
+            start_date_obj = self.data.index[0].date()
+            start_datetime = datetime.combine(start_date_obj + timedelta(days=start_day), datetime.strptime(start_time, '%H:%M:%S').time())
+            end_datetime = datetime.combine(start_date_obj + timedelta(days=end_day), datetime.strptime(end_time, '%H:%M:%S').time())
         else:
-            start_datetime = datetime.combine(date_obj - timedelta(days=start_day), datetime.strptime(start_time, '%H:%M:%S').time())
-            end_datetime = datetime.combine(date_obj - timedelta(days=end_day), datetime.strptime(end_time, '%H:%M:%S').time())
+            raise ValueError("Day range must be either both positive or both negative, for example (-5, -2) or (2, 5)")
 
-        # Ensure start_datetime is before end_datetime
-        if start_datetime > end_datetime:
-            start_datetime, end_datetime = end_datetime, start_datetime
 
         # Filter the data for the given range and time
-        self.period_data = self.data.between_time(start_time, end_time)
-        self.period_data = self.period_data[(self.period_data.index >= start_datetime) & (self.period_data.index <= end_datetime)]
-        self.current_index = 0
+        self.start_data = self.data.between_time(start_time, end_time) 
+        self.start_data = self.start_data[(self.start_data.index >= start_datetime) & (self.start_data.index <= end_datetime)]
+        self.start_data = self.start_data.iloc[1:] # Remove the first row to previousn day's close
+        self.current_data = self.start_data.copy()
+        return self.start_data
 
-    def next_bar(self, end_slice=1):
+    def next_bar(self, histBars=1):
         """
         Serve the next bar or a slice of bars from the period data.
 
         Args:
-            end_slice (int): Number of bars to include in the slice. Defaults to 1.
+            histBars (int): Number of bars to include in the slice. Defaults to 1.
 
         Returns:
             pd.DataFrame or None: The next bar or slice of bars, or None if all bars have been served.
         """
-        if self.period_data is None or self.current_index >= len(self.period_data):
+        if self.start_data is None or self.current_data.index[-1] == self.data.index[-1]:
             return None
         
-        end_index = min(self.current_index + end_slice, len(self.period_data))
-        next_bars = self.period_data.iloc[self.current_index:end_index]
-        self.current_index += 1
+        # Calculate the start index for slicing
+        end_current_index = self.current_data.index[-1]
+        next_num = self.data.index.get_loc(end_current_index) + 1
+        start_num = next_num - histBars
+
+        # Slice the data from start_index to end_index
+        next_bars = self.data.iloc[start_num:next_num+1]
+
+        # Update the current slice of data
+        self.current_data = self.data.loc[self.current_data.index[0]:next_bars.index[-1]]
         
         return next_bars
+    
+    def get_current_data(self):
+        """
+        Get the current slice of served data.
+
+        Returns:
+            pd.DataFrame: The current slice of served data.
+        """
+        return self.current_data
