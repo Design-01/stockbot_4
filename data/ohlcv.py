@@ -262,7 +262,6 @@ class ServeNewOHLCV:
         else:
             raise ValueError("Day range must be either both positive or both negative, for example (-5, -2) or (2, 5)")
 
-
         # Filter the data for the given range and time
         self.start_data = self.data.between_time(start_time, end_time) 
         self.start_data = self.start_data[(self.start_data.index >= start_datetime) & (self.start_data.index <= end_datetime)]

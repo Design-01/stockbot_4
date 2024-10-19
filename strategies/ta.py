@@ -3,14 +3,53 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 import numpy as np
 
+def preprocess_data(func):
+    def wrapper(self, data: pd.DataFrame, *args, **kwargs):
+        data = self.compute_rows_to_update(data, self.names, self.rowsToUpdate)
+        return func(self, data, *args, **kwargs)
+    return wrapper
+
 @dataclass
 class TA(ABC):
     column: str = None
-    
 
     @abstractmethod
     def run(self, data: pd.DataFrame) -> pd.Series | pd.DataFrame:
         pass
+
+    
+    def compute_rows_to_update(self, df, column_names, rows_to_update):
+            """
+            Compute the slice of the DataFrame that needs to be updated based on the columns provided.
+            
+            Parameters:
+            df (pd.DataFrame): The main DataFrame
+            column_names (list): The names of the columns to check
+            rows_to_update (int): The number of rows to add to the last valid index
+            
+            Returns:
+            pd.DataFrame: The sliced DataFrame that needs to be updated
+            """
+            if isinstance(column_names, str):
+                column_names = [column_names]
+            
+            last_valid_indices = []
+            
+            for column_name in column_names:
+                if column_name in df.columns:
+                    last_valid_index = df[column_name].last_valid_index()
+                    if last_valid_index is not None:
+                        lookback_index = df.index.get_loc(last_valid_index)
+                        last_valid_indices.append(lookback_index)
+            
+            if not last_valid_indices:
+                lookback_index = 0
+            else:
+                lookback_index = max(min(last_valid_indices) - rows_to_update, 0) # + 1 # added 1 just to be sure
+
+            return df.iloc[-lookback_index:]
+
+
 
 @dataclass
 class MA(TA):
@@ -18,7 +57,9 @@ class MA(TA):
 
     def __post_init__(self):
         self.names = f"MA_{self.column[:2]}_{self.period}"
+        self.rowsToUpdate = self.period 
 
+    @preprocess_data
     def run(self, data: pd.DataFrame) -> pd.Series:
         return data[self.column].rolling(window=self.period).mean().rename(self.names)
 
@@ -27,16 +68,21 @@ class MACD(TA):
     fast: int = 12
     slow: int = 26
     signal: int = 9
+    fastcol: str = 'close'
+    slowcol: str = 'close'
+    signalcol: str = 'close'
 
     def __post_init__(self):
-        self.macd_name = f"MACD_{self.column[:2]}_{self.fast}_{self.slow}_{self.signal}_MACD"
-        self.signal_name = f"MACD_{self.column[:2]}_{self.fast}_{self.slow}_{self.signal}_Signal"
-        self.histogram_name = f"MACD_{self.column[:2]}_{self.fast}_{self.slow}_{self.signal}_Histogram"
+        self.macd_name = f"MACD_{self.signalcol[:2]}_{self.fast}_{self.slow}_{self.signal}_MACD"
+        self.signal_name = f"MACD_{self.signalcol[:2]}_{self.fast}_{self.slow}_{self.signal}_Signal"
+        self.histogram_name = f"MACD_{self.signalcol[:2]}_{self.fast}_{self.slow}_{self.signal}_Histogram"
         self.names = [self.macd_name, self.signal_name, self.histogram_name]
+        self.rowsToUpdate = max(self.slow, self.signal, self.fast) 
 
-    def run(self, data: pd.DataFrame) -> pd.DataFrame:
-        fast_ema = data[self.column].ewm(span=self.fast, adjust=False).mean()
-        slow_ema = data[self.column].ewm(span=self.slow, adjust=False).mean()
+    @preprocess_data
+    def run(self, ohlcv: pd.DataFrame) -> pd.DataFrame:
+        fast_ema = ohlcv[self.fastcol].ewm(span=self.fast, adjust=False).mean()
+        slow_ema = ohlcv[self.slowcol].ewm(span=self.slow, adjust=False).mean()
         macd = fast_ema - slow_ema
         signal_line = macd.ewm(span=self.signal, adjust=False).mean()
         histogram = macd - signal_line
@@ -59,6 +105,7 @@ class HPLP(TA):
         self.name_lp = f"LP_{self.lo_col[:2]}_{self.span}"
         self.names = [self.name_hp, self.name_lp]
 
+    @preprocess_data
     def run(self, ohlcv: pd.DataFrame) -> pd.DataFrame:
         df = ohlcv.copy()
 

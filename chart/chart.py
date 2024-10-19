@@ -19,9 +19,14 @@ class Chart:
         self.set_fig()
 
     def set_fig(self):
-        self.fig = make_subplots(rows=len(self.rowHeights), cols=1, shared_xaxes=True, 
-                vertical_spacing=0.02,
-                row_width=self.rowHeights)
+        self.fig = make_subplots(
+            rows=len(self.rowHeights), 
+            cols=1, 
+            shared_xaxes=True, 
+            vertical_spacing=0.02,
+            row_width=self.rowHeights)
+        
+
 
     def get_volume_colours(self, df: pd.DataFrame):
         clrred = 'rgba(255, 59, 59, 0.8)'
@@ -55,9 +60,6 @@ class Chart:
             ),
             row=1, col=1
         )
-
-        # Update x-axis to treat x values as categories
-        self.fig.update_xaxes(type='category', row=1, col=1)
         return self.fig
     
     def add_day_dividers(self, df: pd.DataFrame):
@@ -250,14 +252,15 @@ class Chart:
 
         # Add MACD subplot if provided
         if chart_type == 'macd' and isinstance(data, pd.DataFrame):
+            print("Adding MACD subplot")
             macd_col = [col for col in data.columns if col.endswith('MACD')][0]
             signal_col = [col for col in data.columns if col.endswith('Signal')][0]
             hist_col = [col for col in data.columns if col.endswith('Histogram')][0]
             
-            hist_style = {k: v for k, v in style[2].items() if k != 'width'}  # Remove 'width' from style
-            self.fig.add_trace(go.Bar(x=data.index, y=data[hist_col], name=hist_col, marker=hist_style), row=3, col=1)
+            # self.fig.add_trace(go.Bar(x=data.index, y=data[hist_col], name=hist_col, marker=hist_style), row=3, col=1)
             self.fig.add_trace(go.Scatter(x=data.index, y=data[macd_col], name=macd_col, line=style[0]), row=3, col=1)
             self.fig.add_trace(go.Scatter(x=data.index, y=data[signal_col], name=signal_col, line=style[1]), row=3, col=1)
+            self.fig.add_trace(go.Bar(x=data.index, y=data[hist_col], name=hist_col, marker=style[2]), row=3, col=1)
             
             self.fig.update_layout()  # Adjust the height to accommodate the new subplot
         
