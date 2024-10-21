@@ -3,7 +3,7 @@ from plotly.subplots import make_subplots
 import pandas as pd
 from typing import List, Tuple, Dict, Any
 import datetime
-
+from plotly.colors import hex_to_rgb
 
 
 
@@ -252,7 +252,6 @@ class Chart:
 
         # Add MACD subplot if provided
         if chart_type == 'macd' and isinstance(data, pd.DataFrame):
-            print("Adding MACD subplot")
             macd_col = [col for col in data.columns if col.endswith('MACD')][0]
             signal_col = [col for col in data.columns if col.endswith('Signal')][0]
             hist_col = [col for col in data.columns if col.endswith('Histogram')][0]
@@ -282,49 +281,66 @@ class Chart:
         if chart_type == 'support_resistance':
             self.add_support_resistance(data, style)
 
-    def add_support_resistance(self, data, style):
-        support_col = [col for col in data.columns if col.endswith('Support')][0]
-        resistance_col = [col for col in data.columns if col.endswith('Resistance')][0]
-        # support_band_col = 'Support_Band'
-        # resistance_band_col = 'Resistance_Band'
+    def add_support_resistance(self, data: pd.DataFrame, style: List[Dict[str, Any]]) -> None:
+        """
+        Adds support and resistance levels to the chart with upper and lower bounds.
 
-        # Extract the most recent support and resistance levels
-        recent_support = data[support_col].iloc[-1]
-        recent_resistance = data[resistance_col].iloc[-1]
-        # support_band = data[support_band_col].iloc[-1]
-        # resistance_band = data[resistance_band_col].iloc[-1]
+        Args:
+        data (pd.DataFrame): DataFrame containing support and resistance levels with bounds
+        style (List[Dict[str, Any]]): List of style dictionaries for support and resistance
+        """
+        support_style, resistance_style = style
 
-        print("Recent support level:", recent_support)
-        print("Recent resistance level:", recent_resistance)
-        # print("Support band levels:", support_band)
-        # print("Resistance band levels:", resistance_band)
+        def create_traces(level_col, upper_col, lower_col, style):
+            color = style.get('color', 'blue')
+            dash = style.get('dash', 'solid')
+            width = style.get('width', 2)
+            fillcolour = style.get('fillcolour', 'rgba(0, 0, 255, 0.1)')
 
-        # Add the most recent support and resistance levels as lines
-        self.fig.add_shape(
-            type="line",
-            x0=data.index[0], x1=data.index[-1], y0=recent_support, y1=recent_support,
-            line=dict(color=style[0]['color'], width=style[0]['width'], dash="dash"),
-            row=1, col=1
-        )
-        self.fig.add_shape(
-            type="line",
-            x0=data.index[0], x1=data.index[-1], y0=recent_resistance, y1=recent_resistance,
-            line=dict(color=style[1]['color'], width=style[1]['width'], dash="dash"),
-            row=1, col=1
-        )
+            # Main level line
+            yield go.Scatter(
+                x=data.index, 
+                y=data[level_col], 
+                name=level_col,
+                line=dict(color=color, width=width, dash=dash)
+            )
+            
+            # Upper bound (dashed)
+            yield go.Scatter(
+                x=data.index, 
+                y=data[upper_col], 
+                name=f"{level_col} Upper",
+                line=dict(color=color, width=width-1, dash='dash')
+            )
+            
+            # Lower bound (dashed)
+            yield go.Scatter(
+                x=data.index, 
+                y=data[lower_col], 
+                name=f"{level_col} Lower",
+                line=dict(color=color, width=width-1, dash='dash')
+            )
+            
+            # Shaded area between upper and lower bounds
+  
+            yield go.Scatter(
+                x=data.index.tolist() + data.index.tolist()[::-1],
+                y=data[upper_col].tolist() + data[lower_col].tolist()[::-1],
+                fill='toself',
+                fillcolor=fillcolour,
+                line=dict(color='rgba(255,255,255,0)'),
+                showlegend=False,
+                name=f"{level_col} Zone"
+            )
 
-        # # Add shaded areas for the support and resistance bands
-        # self.fig.add_shape(
-        #     type="rect",
-        #     x0=data.index[0], x1=data.index[-1], y0=min(support_band), y1=max(support_band),
-        #     fillcolor=style[0]['color'], opacity=0.2, line_width=0,
-        #     row=1, col=1
-        # )
-        # self.fig.add_shape(
-        #     type="rect",
-        #     x0=data.index[0], x1=data.index[-1], y0=min(resistance_band), y1=max(resistance_band),
-        #     fillcolor=style[1]['color'], opacity=0.2, line_width=0,
-        #     row=1, col=1
-        # )
+        # Support traces
+        support_cols = [col for col in data.columns if col.startswith('Sup')]
+        for i in range(0, len(support_cols), 3):
+            for trace in create_traces(support_cols[i], support_cols[i+1], support_cols[i+2], support_style):
+                self.fig.add_trace(trace, row=1, col=1)
 
-        print("Finished adding support and resistance levels")
+        # Resistance traces
+        resistance_cols = [col for col in data.columns if col.startswith('Res')]
+        for i in range(0, len(resistance_cols), 3):
+            for trace in create_traces(resistance_cols[i], resistance_cols[i+1], resistance_cols[i+2], resistance_style):
+                self.fig.add_trace(trace, row=1, col=1)
