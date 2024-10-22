@@ -4,6 +4,7 @@ import pandas as pd
 from typing import List, Tuple, Dict, Any
 import datetime
 from plotly.colors import hex_to_rgb
+import numpy as np
 
 
 
@@ -84,6 +85,50 @@ class Chart:
                 )
                 previous_date = current_date
 
+    def add_horizontal_lines(self, row_heights, total_height):
+        """
+        Add horizontal lines to separate subplots in a Plotly figure.
+
+        Parameters:
+        fig (plotly.graph_objects.Figure): The Plotly figure to modify.
+        row_heights (list of float): List of relative heights for each subplot.
+        total_height (int): Total height of the figure.
+
+        Returns:
+        None
+        """
+        # Calculate the height of each subplot
+        subplot_heights = [total_height * h for h in row_heights]
+
+        # Calculate the Y offset for each subplot
+        y_offsets = np.cumsum([0] + subplot_heights[:-1])
+
+        # # Add horizontal lines to separate subplots
+        # for y in y_offsets[1:]:  # Skip the first offset (0)
+        #     self.fig.add_shape(
+        #         type="line",
+        #         x0=0,
+        #         x1=1,
+        #         y0=y / total_height,
+        #         y1=y / total_height,
+        #         xref='paper',
+        #         yref='paper',
+        #         line=dict(color="yellow", width=2)
+        #     )
+
+        # Add one line to separate the bottom two plots
+        y =  y_offsets[1]  # Skip the first offset (0) which is the very bottom line
+        self.fig.add_shape(
+            type="line",
+            x0=0,
+            x1=1,
+            y0=y / total_height,
+            y1=y / total_height,
+            xref='paper',
+            yref='paper',
+            line=dict(color="white", width=2)
+        )
+
     def add_layout_and_format(self):
 
 
@@ -126,6 +171,7 @@ class Chart:
 
         self.fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='rgb(50, 50, 50)')
         self.fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='rgb(50, 50, 50)')
+        self.add_horizontal_lines(self.rowHeights, self.height)
         return self.fig
 
     def add_candles_and_volume(self, df: pd.DataFrame):
@@ -344,3 +390,19 @@ class Chart:
         for i in range(0, len(resistance_cols), 3):
             for trace in create_traces(resistance_cols[i], resistance_cols[i+1], resistance_cols[i+2], resistance_style):
                 self.fig.add_trace(trace, row=1, col=1)
+
+    def add_signals(self, data: pd.DataFrame, style: Dict[str, Any] | list[Dict[str, Any]], chart_type: str, row:int=1) -> None:
+        """Adds signals to the chart
+
+        args:
+        data: pd.DataFrame: The data to be added to the chart
+        style: Dict[str, Any]: The style of the data
+        chart_type: str: The type of chart to be added
+        """
+        # make styles consistent
+        style = [style] if not isinstance(style, list) else style
+
+    
+        for column, stl in zip(data.columns, style):
+            self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, mode=chart_type, line=stl),  row=row, col=1)
+
