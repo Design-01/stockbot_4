@@ -23,7 +23,7 @@ class TwelveData:
         Retrieve historical stock data from Twelve Data API.
 
         :param symbol: The stock symbol (e.g., 'AAPL' for Apple Inc.)
-        :param interval: Time interval between two consecutive data points (default: '1day')
+        :param interval: Time interval between two consecutive data points (default: '1day') # Array of intervals: 1min, 5min, 15min, 30min, 45min, 1h, 2h, 4h, 1day, 1week, 1month
         :param start_date: Start date for the data (format: 'YYYY-MM-DD')
         :param end_date: End date for the data (format: 'YYYY-MM-DD')
         :param outputsize: Number of data points to retrieve (max 5000)
