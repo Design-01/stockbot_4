@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 from tzlocal import get_localzone
 from twelvedata import TDClient
@@ -9,6 +9,7 @@ class TwelveData:
     def __init__(self, api_key, symbols):
         self.api_key = api_key
         self.symbols = symbols
+        
         self.messages_history = []
         self.ohlc_data = {symbol: [] for symbol in symbols}
         self.current_minute_data = {symbol: {} for symbol in symbols}
@@ -103,24 +104,35 @@ class TwelveData:
             raise ValueError("Either 'iterations' or 'until' must be provided, but not both")
         
         print('-----------------------')
-        print('--Websocket connected--')
+        print('  Websocket CONNECTED  ')
         print('-----------------------')
         
         def run_subscription(condition, show_messages):
+            nonlocal iterations  # Access the outer iterations variable
             ws = self.td.websocket(symbols="USD", on_event=self.on_event)
             ws.subscribe(self.symbols)
             ws.connect()
-
+            
+            iteration_count = 0
+            
             while condition():
                 if show_messages:
                     print('messages received: ', len(self.messages_history))
+                    print('iteration:', iteration_count + 1)
+                
                 ws.heartbeat()
-                time.sleep(5)
+                time.sleep(5)  # Wait for 5 seconds
+                
+                # Increment counter regardless of whether a message was received
+                if iterations is not None:
+                    iteration_count += 1
+                    if iteration_count >= iterations:
+                        break
 
             ws.disconnect()
-            print('----------------------')
-            print('Websocket disconnected')
-            print('----------------------')
+            print('--------------------------')
+            print('  Websocket DISCONNECTED  ')
+            print('--------------------------') 
             
             # Add the last minute's data if it exists
             for symbol in self.symbols:
@@ -128,8 +140,7 @@ class TwelveData:
                     self.ohlc_data[symbol].append(self.current_minute_data[symbol])
         
         if iterations is not None:
-            count = 0
-            condition = lambda: count < iterations
+            condition = lambda: True  # We'll handle iterations in the loop
             run_subscription(condition, show_messages)
         elif until is not None:
             end_time = datetime.strptime(until, '%Y-%m-%d %H:%M:%S')
