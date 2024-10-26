@@ -14,18 +14,90 @@ class TwelveData:
         self.ohlc_data = {symbol: [] for symbol in symbols}
         self.current_minute_data = {symbol: {} for symbol in symbols}
         self.td = TDClient(apikey=self.api_key)
+        # Cache to store fetched data
+        self.data_cache = {}  # Format: {symbol: {interval: pd.DataFrame}}
+
+    def get_next_lowest_interval(self, requested_interval):
+        """
+        Find the next lowest available interval that is a common denominator of the requested interval.
+        """
+        available_intervals = ['1min', '5min', '15min', '30min', '45min', '1h', '2h', '4h', '8h', '1day', '1week', '1month']
+        interval_map = {
+            '1min': 1, '5min': 5, '15min': 15, '30min': 30, '45min': 45,
+            '1h': 60, '2h': 120, '4h': 240, '8h': 480,
+            '1day': 1440, '1week': 10080, '1month': 43200
+        }
+        
+        # Convert requested interval to minutes
+        if 'min' in requested_interval:
+            requested_minutes = int(requested_interval.replace('min', ''))
+        elif 'h' in requested_interval:
+            requested_minutes = int(requested_interval.replace('h', '')) * 60
+        elif 'day' in requested_interval:
+            requested_minutes = int(requested_interval.replace('day', '')) * 1440
+        elif 'week' in requested_interval:
+            requested_minutes = int(requested_interval.replace('week', '')) * 10080
+        elif 'month' in requested_interval:
+            requested_minutes = int(requested_interval.replace('month', '')) * 43200
+        else:
+            raise ValueError(f"Invalid interval: {requested_interval}")
+        
+        # Find all common denominators that are less than requested interval
+        common_denominators = []
+        for interval in available_intervals:
+            interval_minutes = interval_map[interval]
+            if interval_minutes <= requested_minutes and requested_minutes % interval_minutes == 0:
+                common_denominators.append(interval)
+        
+        # If we found common denominators, return the highest one
+        if common_denominators:
+            return common_denominators[-1]
+        
+        # If no common denominators, find the highest interval that's less than requested
+        valid_intervals = [interval for interval in available_intervals 
+                          if interval_map[interval] < requested_minutes]
+        return valid_intervals[-1] if valid_intervals else '1min'
+
+    def _resample_data(self, df, target_interval):
+        """
+        Resample data to the target interval.
+        """
+        # Convert interval string to pandas offset string
+        interval_map = {
+            'min': 'min',
+            'h': 'H',
+            'day': 'D',
+            'week': 'W',
+            'month': 'M'
+        }
+        
+        # Extract number and unit from interval
+        import re
+        match = re.match(r'(\d+)(\w+)', target_interval)
+        if not match:
+            raise ValueError(f"Invalid interval format: {target_interval}")
+        
+        num, unit = match.groups()
+        if unit not in interval_map:
+            raise ValueError(f"Unsupported interval unit: {unit}")
+        
+        # Create pandas resample rule
+        rule = f"{num}{interval_map[unit]}"
+        
+        # Resample the data
+        resampled = df.resample(rule).agg({
+            'open': 'first',
+            'high': 'max',
+            'low': 'min',
+            'close': 'last',
+            'volume': 'sum'
+        })
+        
+        return resampled.dropna()
 
     def get_historical_data(self, symbol, interval='1day', start_date=None, end_date=None, outputsize=None, timezone="America/New_York"):
         """
         Retrieve historical stock data from Twelve Data API.
-
-        :param symbol: The stock symbol (e.g., 'AAPL' for Apple Inc.)
-        :param interval: Time interval between two consecutive data points (default: '1day')
-        :param start_date: Start date for the data (format: 'YYYY-MM-DD HH:MM')
-        :param end_date: End date for the data (format: 'YYYY-MM-DD HH:MM')
-        :param outputsize: Number of data points to retrieve (max 5000)
-        :param timezone: Timezone for the data (default: 'America/New_York')
-        :return: DataFrame containing the historical data
         """
         tz = pytz.timezone(timezone)
         
@@ -34,25 +106,38 @@ class TwelveData:
         if end_date:
             end_date = tz.localize(datetime.strptime(end_date, "%Y-%m-%d %H:%M")).isoformat()
 
-        ts = self.td.time_series(
-            symbol=symbol,
-            interval=interval,
-            start_date=start_date,
-            end_date=end_date,
-            outputsize=outputsize,
-            timezone=timezone,
-        )
-        return ts.as_pandas()
+        # Initialize symbol cache if it doesn't exist
+        if symbol not in self.data_cache:
+            self.data_cache[symbol] = {}
 
+        # Get the lowest common denominator interval that we need to fetch
+        base_interval = self.get_next_lowest_interval(interval)
+        
+        # Check if we already have this data in cache
+        if base_interval not in self.data_cache[symbol]:
+            # Fetch the data and store in cache
+            ts = self.td.time_series(
+                symbol=symbol,
+                interval=base_interval,
+                start_date=start_date,
+                end_date=end_date,
+                outputsize=outputsize,
+                timezone=timezone,
+            )
+            self.data_cache[symbol][base_interval] = ts.as_pandas()
+
+        # Get the data from cache
+        df = self.data_cache[symbol][base_interval]
+        
+        # If requested interval is different from base interval, resample the data
+        if interval != base_interval:
+            df = self._resample_data(df, interval)
+        
+        return df
 
     def get_last_n_days(self, symbol, n_days, interval='1day'):
         """
         Retrieve data for the last N days.
-
-        :param symbol: The stock symbol (e.g., 'AAPL' for Apple Inc.)
-        :param n_days: Number of days to retrieve data for
-        :param interval: Time interval between two consecutive data points (default: '1day')
-        :return: DataFrame containing the historical data
         """
         end_date = datetime.now().strftime('%Y-%m-%d')
         start_date = (datetime.now() - timedelta(days=n_days)).strftime('%Y-%m-%d')
@@ -97,7 +182,6 @@ class TwelveData:
             
             self.messages_history.append(e)
         print(e)
-
 
     def subscribe(self, iterations=None, show_messages=False, until=None):
         if (iterations is None and until is None) or (iterations is not None and until is not None):

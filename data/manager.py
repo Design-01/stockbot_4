@@ -23,7 +23,7 @@ class MarketDataManager:
     def __post_init__(self):
         """Initialize data structures and validate timeframes"""
         self._validate_mode()
-        self._validate_timeframes()
+        # self._validate_timeframes()
         self._td_client = TwelveData(self.api_key, [self.symbol])
         self._data: Dict[str, pd.DataFrame] = {}  # Historical data for each timeframe
         self._forward_data: Optional[pd.DataFrame] = None  # Forward-looking data for simulation
