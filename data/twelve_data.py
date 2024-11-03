@@ -5,6 +5,10 @@ from tzlocal import get_localzone
 from twelvedata import TDClient
 import pandas as pd
 
+
+
+
+
 class TwelveData:
     def __init__(self, api_key, symbols):
         self.api_key = api_key
@@ -17,83 +21,8 @@ class TwelveData:
         # Cache to store fetched data
         self.data_cache = {}  # Format: {symbol: {interval: pd.DataFrame}}
 
-    def get_next_lowest_interval(self, requested_interval):
-        """
-        Find the next lowest available interval that is a common denominator of the requested interval.
-        """
-        available_intervals = ['1min', '5min', '15min', '30min', '45min', '1h', '2h', '4h', '8h', '1day', '1week', '1month']
-        interval_map = {
-            '1min': 1, '5min': 5, '15min': 15, '30min': 30, '45min': 45,
-            '1h': 60, '2h': 120, '4h': 240, '8h': 480,
-            '1day': 1440, '1week': 10080, '1month': 43200
-        }
-        
-        # Convert requested interval to minutes
-        if 'min' in requested_interval:
-            requested_minutes = int(requested_interval.replace('min', ''))
-        elif 'h' in requested_interval:
-            requested_minutes = int(requested_interval.replace('h', '')) * 60
-        elif 'day' in requested_interval:
-            requested_minutes = int(requested_interval.replace('day', '')) * 1440
-        elif 'week' in requested_interval:
-            requested_minutes = int(requested_interval.replace('week', '')) * 10080
-        elif 'month' in requested_interval:
-            requested_minutes = int(requested_interval.replace('month', '')) * 43200
-        else:
-            raise ValueError(f"Invalid interval: {requested_interval}")
-        
-        # Find all common denominators that are less than requested interval
-        common_denominators = []
-        for interval in available_intervals:
-            interval_minutes = interval_map[interval]
-            if interval_minutes <= requested_minutes and requested_minutes % interval_minutes == 0:
-                common_denominators.append(interval)
-        
-        # If we found common denominators, return the highest one
-        if common_denominators:
-            return common_denominators[-1]
-        
-        # If no common denominators, find the highest interval that's less than requested
-        valid_intervals = [interval for interval in available_intervals 
-                          if interval_map[interval] < requested_minutes]
-        return valid_intervals[-1] if valid_intervals else '1min'
 
-    def _resample_data(self, df, target_interval):
-        """
-        Resample data to the target interval.
-        """
-        # Convert interval string to pandas offset string
-        interval_map = {
-            'min': 'min',
-            'h': 'H',
-            'day': 'D',
-            'week': 'W',
-            'month': 'M'
-        }
-        
-        # Extract number and unit from interval
-        import re
-        match = re.match(r'(\d+)(\w+)', target_interval)
-        if not match:
-            raise ValueError(f"Invalid interval format: {target_interval}")
-        
-        num, unit = match.groups()
-        if unit not in interval_map:
-            raise ValueError(f"Unsupported interval unit: {unit}")
-        
-        # Create pandas resample rule
-        rule = f"{num}{interval_map[unit]}"
-        
-        # Resample the data
-        resampled = df.resample(rule).agg({
-            'open': 'first',
-            'high': 'max',
-            'low': 'min',
-            'close': 'last',
-            'volume': 'sum'
-        })
-        
-        return resampled.dropna()
+
 
     def get_historical_data(self, symbol, interval='1day', start_date=None, end_date=None, outputsize=None, timezone="America/New_York"):
         """
@@ -116,15 +45,18 @@ class TwelveData:
         # Check if we already have this data in cache
         if base_interval not in self.data_cache[symbol]:
             # Fetch the data and store in cache
-            ts = self.td.time_series(
-                symbol=symbol,
-                interval=base_interval,
-                start_date=start_date,
-                end_date=end_date,
-                outputsize=outputsize,
-                timezone=timezone,
-            )
-            self.data_cache[symbol][base_interval] = ts.as_pandas()
+            # ts = self.td.time_series(
+            #     symbol=symbol,
+            #     interval=base_interval,
+            #     start_date=start_date,
+            #     end_date=end_date,
+            #     outputsize=outputsize,
+            #     timezone=timezone,
+            # )
+            # self.data_cache[symbol][base_interval] = ts.as_pandas()
+
+            df = handle_historical_data(self, symbol, base_interval, start_date, end_date, outputsize, timezone)
+            self.data_cache[symbol][base_interval] = df
 
         # Get the data from cache
         df = self.data_cache[symbol][base_interval]
@@ -132,6 +64,28 @@ class TwelveData:
         # If requested interval is different from base interval, resample the data
         if interval != base_interval:
             df = self._resample_data(df, interval)
+        
+        return df.sort_index()
+    
+    def get_file_data(self, symbol, interval='1day', start_date=None, end_date=None):
+        """
+        Retrieve historical stock data from a CSV file.
+        """
+        filename = f"data/{symbol}_{interval}.csv"
+        try:
+            df = pd.read_csv(filename)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"File not found: {filename}")
+        
+        # Convert date column to datetime
+        df['datetime'] = pd.to_datetime(df['datetime'])
+        df.set_index('datetime', inplace=True)
+        
+        # Filter data based on start and end dates
+        if start_date:
+            df = df[df.index >= start_date]
+        if end_date:
+            df = df[df.index <= end_date]
         
         return df
 
