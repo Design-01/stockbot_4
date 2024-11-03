@@ -360,13 +360,15 @@ def get_historical_data(api_key, symbol, start_date, end_date, interval):
     if len(missing_batched_dates_lower) == 0:
         print(f"No missing data for {lowest_interval}")
     else:
-        slower_count = 1
+        request_timer = RequestTimer(max_requests_per_minute=8)
         for bd in missing_batched_dates_lower:
+            if not request_timer.make_request():
+                print("Reached maximum requests per minute. Waiting for next minute...")
+                time.sleep(60)
             print(f"Getting missing data for {lowest_interval} -- dates: { bd[0]} to {bd[1]}")
             lower_data_list += [get_historical_data_from_source(api_key, symbol, bd[0], bd[1], lowest_interval)]
             log_date_range(symbol, lowest_interval, bd[0], bd[1])
-            time.sleep(10) if slower_count % 8 == 0 else time.sleep(1)
-            slower_count += 1
+
 
         # now save the lower data
         lower_data = combine_dataframes(lower_data_list)
@@ -494,4 +496,37 @@ def visualize_stock_date_ranges(min_height=400, row_height=40, max_height=None):
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#2F2F2F')
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#2F2F2F')
     fig.show()
+
+
+import time
+from collections import deque
+
+
+class RequestTimer:
+    def __init__(self, max_requests_per_minute):
+        self.max_requests_per_minute = max_requests_per_minute
+        self.requests = deque()
+
+    def make_request(self):
+        self.wait_until_can_make_request()
+        self.request_made()
+        return True
+
+    def request_made(self):
+        current_time = time.time()
+        self.requests.append(current_time)
+        self._remove_old_requests(current_time)
+
+    def can_make_request(self):
+        current_time = time.time()
+        self._remove_old_requests(current_time)
+        return len(self.requests) < self.max_requests_per_minute
+
+    def wait_until_can_make_request(self):
+        while not self.can_make_request():
+            time.sleep(1)  # Wait for 1 second before checking again
+
+    def _remove_old_requests(self, current_time):
+        while self.requests and current_time - self.requests[0] > 60:
+            self.requests.popleft()
     
