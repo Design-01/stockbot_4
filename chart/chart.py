@@ -405,4 +405,13 @@ class Chart:
     
         for column, stl in zip(data.columns, style):
             self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, mode=chart_type, line=stl),  row=row, col=1)
+    
+    def add_line(self, data: pd.Series, style: Dict[str, Any], row:int=1) -> None:
+        """Adds a line to the chart
+
+        args:
+        data: pd.Series: The data to be added to the chart
+        style: Dict[str, Any]: The style of the data
+        """
+        self.fig.add_trace(go.Scatter(x=data.index, y=data, name=data.name, line=style), row=row, col=1)
 
