@@ -49,7 +49,10 @@ class TA(ABC):
 
             return df.iloc[-lookback_index:]
 
-
+    @staticmethod
+    def normalize(series: pd.Series, max_value: float) -> pd.Series:
+        """Efficient normalization to -100 to 100 range"""
+        return (series / max_value).clip(-1, 1) * 100
 
 @dataclass
 class MA(TA):
@@ -386,6 +389,294 @@ class SupRes(TA):
         
         return levels
     
+
+
+@dataclass
+class MansfieldRSI(TA):
+    close_col: str = 'close'  # Column name for stock close price
+    index_col: str = 'index_close'  # Column name for index close price
+    span: int = 14  # Default lookback period
+    
+    def __post_init__(self):
+        self.name_mrsi = f"MRSI_{self.span}"
+        self.names = [self.name_mrsi]
+        self.rowsToUpdate = 200
+
+    @preprocess_data
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        df = data.copy()
+        
+        # Step 1: Calculate raw Relative Strength (RS)
+        rs = df[self.close_col] / df[self.index_col]
+        
+        # Step 2: Smooth RS using moving average
+        rs_ma = rs.rolling(window=self.span, min_periods=1).mean()
+        
+        # Step 3: Normalize RS by subtracting its moving average
+        normalized_rs = rs - rs_ma
+        
+        # Step 4: Scale the normalized RS
+        df[self.name_mrsi] = normalized_rs * 100
+        
+        # Handle any NaN values that might occur at the beginning
+        df[self.name_mrsi] = df[self.name_mrsi].fillna(0)
+        
+        return df[[self.name_mrsi]]
+
+
+@dataclass
+class DIR(TA):
+    """
+    Direction Indicator
+    Measures trend direction based on moving average slope, normalized to -100 to +100.
+    Positive values indicate upward trend, negative values indicate downward trend.
+    Values closer to extremes indicate steeper slopes.
+    """
+    period: int = 50
+    max_slope: float = 0.02  # Maximum expected slope (2% per period)
+    
+    def __post_init__(self):
+        self.name = f"MADIR_{self.column[:2]}_{self.period}"
+        self.names = [self.name]
+        self.rowsToUpdate = self.period + 1
+    
+    @staticmethod
+    def normalize(series: pd.Series, max_value: float) -> pd.Series:
+        """Efficient normalization to -100 to 100 range"""
+        return (series / max_value).clip(-1, 1) * 100
+    
+    @preprocess_data
+    def run(self, data: pd.DataFrame) -> pd.Series:
+        ma = data[self.column].rolling(window=self.period).mean()
+        slope = ma.diff() / ma.shift(1)
+        return self.normalize(slope, self.max_slope).rename(self.names)
+
+
+@dataclass
+class VolAcc(TA):
+    """
+    Acceleration Indicator
+    Measures rate of change in trend direction, normalized to -100 to +100.
+    Positive values indicate increasing slope (acceleration up),
+    negative values indicate decreasing slope (acceleration down).
+    """
+    max_accel: float = 0.001  # Maximum expected acceleration (0.1% per period)
+    
+    def __post_init__(self):
+        self.name = f"VolACC"
+        self.names = [self.name]
+        self.rowsToUpdate = len(self.column) + 1
+    
+    @staticmethod
+    def normalize(series: pd.Series, max_value: float) -> pd.Series:
+        """Efficient normalization to -100 to 100 range"""
+        return (series / max_value).clip(-1, 1) * 100
+    
+    @preprocess_data
+    def run(self, data: pd.DataFrame) -> pd.Series:
+        d = data['volume']
+        current_slope = d.diff() / d.shift(1)
+        prev_slope = d.shift(1).diff() / d.shift(2)
+        acceleration = current_slope - prev_slope
+        return self.normalize(acceleration, self.max_accel).rename(self.name)
+
+@dataclass
+class ACC(TA):
+    """
+    Acceleration Indicator using dual moving averages
+    Measures acceleration by comparing the change in MA differences over time.
+    Positive values indicate increasing difference between MAs,
+    negative values indicate decreasing difference between MAs.
+    """
+    fast_ma: int = 5       # Period for faster moving average
+    slow_ma: int = 10      # Period for slower moving average
+    max_accel: float = 0.001  # Maximum expected acceleration (0.1% per period)
+    
+    def __post_init__(self):
+        self.name = f"ACC_{self.column}"
+        self.names = [self.name]
+        self.rowsToUpdate = max(self.fast_ma, self.slow_ma) + 2  # +2 for shift operation
+    
+    @staticmethod
+    def normalize(series: pd.Series, max_value: float) -> pd.Series:
+        """Efficient normalization to -100 to 100 range"""
+        return (series / max_value).clip(-1, 1) * 100
+    
+    @preprocess_data
+    def run(self, data: pd.DataFrame) -> pd.Series:
+        # Calculate two moving averages
+        fast_ma = data[self.column].rolling(window=self.fast_ma).mean()
+        slow_ma = data[self.column].rolling(window=self.slow_ma).mean()
+        
+        ma_diff = fast_ma - slow_ma
+        current_diff = ma_diff
+        return self.normalize(current_diff, self.max_accel).rename(self.name)
+
+
+@dataclass
+class Breaks:
+    """Checks if price crosses above/below a metric"""
+    price_column: str
+    metric_column: str
+    cross_above: bool  # True for cross above, False for cross below
+
+    def __post_init__(self):
+        direction = 'UP' if self.cross_above else 'DN'
+        self.name = f"BRK_{direction}_{self.metric_column[:2]}"
+        self.names = [self.name]
+
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        df = data.copy()
+        
+        curr_price = df[self.price_column]
+        prev_price = curr_price.shift(1)
+        curr_metric = df[self.metric_column]
+        prev_metric = curr_metric.shift(1)
+
+        if self.cross_above:
+            df[self.name] = (prev_price <= prev_metric) & (curr_price > curr_metric)
+        else:
+            df[self.name] = (prev_price >= prev_metric) & (curr_price < curr_metric)
+            
+        return df
+
+@dataclass
+class AboveBelow:
+    """Checks if price is above/below a metric"""
+    value: str | float
+    metric_column: str
+    check_above: bool  # True to check if above, False to check if below
+
+    def __post_init__(self):
+        prefix = 'ABV' if self.check_above else 'BLW'
+        self.name = f"{prefix}_{self.value}_{self.metric_column}"
+        self.names = [self.name]
+
+    def run(self, df: pd.DataFrame) -> pd.DataFrame:
+        
+        
+        value =  df[self.value] if isinstance(self.value, str) else self.value
+        if self.check_above:
+            df[self.name] = value > df[self.metric_column]
+        else:
+            df[self.name] = value < df[self.metric_column]
+            
+        return df
+
+
+@dataclass
+class VolDev(TA):
+    """Calculates percentage deviation of current volume from its moving average"""
+    period: int = 10 # period for the moving average
+
+    def __post_init__(self):
+        self.name = f"VDEV_{self.period}"
+        self.names = [self.name]
+        self.rowsToUpdate = self.period + 1
+
+    def run(self, df: pd.DataFrame) -> pd.DataFrame:
+        
+        # Calculate volume moving average
+        volume_ma = df[self.column].rolling(window=self.period).mean()
+        
+        # Calculate percentage deviation
+        # ((current - average) / average) * 100
+        df[self.name] = ((df[self.column] - volume_ma) / volume_ma) * 100
+            
+        return df
+    
+
+@dataclass
+class VolumeThreshold(TA):
+    """
+    Volume Threshold Indicator
+    Identifies when volume is above a specified percentage threshold
+    compared to its moving average.
+    Returns 1 when above threshold, 0 when below.
+    """
+    period: int = 10           # Period for moving average
+    threshold: float = 0.8     # 80% above moving average = 1.8
+    
+    def __post_init__(self):
+        self.column = 'volume'
+        self.name = f"VOL_THRESH_{self.period}_{int(self.threshold*100)}"
+        self.names = [self.name]
+        self.rowsToUpdate = self.period + 1
+    
+    @preprocess_data
+    def run(self, data: pd.DataFrame) -> pd.Series:
+        # Calculate moving average of volume
+        volume_ma = data[self.column].rolling(window=self.period).mean()
+        
+        # Calculate ratio of current volume to moving average
+        volume_ratio = data[self.column] / volume_ma
+        
+        # Create binary signal: 1 if above threshold, 0 if below
+        signal = (volume_ratio > (1 + self.threshold)).astype(int)
+        
+        return signal.rename(self.name)
+    
+
+@dataclass
+class TrendDuration(TA):
+    """
+    Trend Duration Indicator
+    Measures the duration of a trend by counting the number of consecutive
+    periods in which the trend has been in the same direction.
+    return negative number if downtrend, positive number if uptrend
+    """
+
+    def __post_init__(self):
+        self.name = f"TDUR_{self.column}"
+        self.names = [self.name]
+        self.rowsToUpdate = 20
+
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        df = data.copy()
+        
+        # Calculate trend direction
+        trend = np.sign(df[self.column].diff())
+        
+        # Calculate trend duration
+        trend_duration = trend.groupby((trend != trend.shift()).cumsum()).cumcount() + 1
+        
+        # Assign trend duration to the last row
+        df[self.name] = trend_duration
+        
+        # Convert trend duration to negative if in a downtrend
+        df.loc[trend < 0, self.name] = -df.loc[trend < 0, self.name]
+        
+        return df
+    
+def process_ta_filters(df, ta_list, min_score=None):
+    """
+    Process multiple technical analysis filters and return a dataframe with score summaries.
+    
+    Parameters:
+    frame: The initial frame object that handles technical analysis
+    ta_list (list): List of technical analysis filter objects
+    min_score (int, optional): Minimum score to filter the results
+    
+    Returns:
+    pandas.DataFrame: DataFrame with filter scores and all-true indicator
+    """
+    
+    # Get the names of all filters
+    ta_filter_names = [ta.name for ta in ta_list]
+
+    
+    # Calculate the sum of true values for each row
+    df['filter_score'] = df[ta_filter_names].sum(axis=1)
+    
+    # Add column to indicate if all filters are true
+    df['all_true'] = df[ta_filter_names].all(axis=1)
+    
+    # Apply minimum score filter if specified
+    if min_score is not None:
+        df = df[df['filter_score'] >= min_score]
+    
+    return df
+
 
 # Example usage:
 # Assume df is your input DataFrame with 'datetime' as index, 'high' and 'low' as columns

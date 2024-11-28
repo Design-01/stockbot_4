@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Tuple
-from chart.chart import Chart
+import pandas as pd
+from chart.chart import Chart  # Use relative import for Chart
 from strategies.ta import TA
 from strategies.signals import Signals
-import pandas as pd
+from typing import Any, Dict, List, Tuple
 
 @dataclass
 class Frame:
@@ -84,7 +84,7 @@ class Frame:
         return self.data
 
     #£ Working
-    def add_ta(self, ta: TA, style: Dict[str, Any] | List[Dict[str, Any]], chart_type: str = "line", row: int = 1):
+    def add_ta(self, ta: TA, style: Dict[str, Any] | List[Dict[str, Any]] = {}, chart_type: str = "line", row: int = 1):
         # Check for duplicates
         for existing_ta, existing_style, existing_chart_type, existing_row in self.ta:
             if (existing_ta == ta and 
@@ -128,6 +128,7 @@ class Frame:
     def plot(self, width: int = 1400, height: int = 800, trading_hours: bool = False):
         self.chart.refesh(self.data)
         for indicator, style, chart_type, row in self.ta:
+            if style == {}: pass
             indicator_data = self.data[indicator.names] # get the data for the indicator which should be updated first 
             self.chart.add_ta(indicator_data, style, chart_type, row)
         for signals, style, chart_type, row in self.sigs:

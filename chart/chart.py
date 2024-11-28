@@ -64,7 +64,20 @@ class Chart:
         return self.fig
     
     def add_day_dividers(self, df: pd.DataFrame):
-        # Add vertical lines at the start of each new day
+        """
+        Add vertical lines at the start of each new day, but only if the data is intraday.
+        
+        Args:
+            df (pd.DataFrame): DataFrame with a datetime index
+        """
+        # Check if data is intraday by examining the time differences
+        time_diff = df.index.to_series().diff().median()
+        
+        # If median time difference is >= 1 day, it's daily data or longer
+        if time_diff >= pd.Timedelta(days=1):
+            return  # Exit function for daily or longer intervals
+            
+        # Proceed with adding dividers for intraday data
         previous_date = None
         for timestamp in df.index:
             current_date = timestamp.date()
