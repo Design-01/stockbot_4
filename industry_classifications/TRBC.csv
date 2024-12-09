@@ -1,0 +1,896 @@
+Sector Code,Sector Name,Industry Group Code,Industry Group Name,Industry Code,Industry Name,Sub-Industry Code,Sub-Industry Name,Hierarchical ID
+50,Energy,5010,Coal,501010,Coal,5010101010,Coal (NEC),5010101010
+50,Energy,5010,Coal,501010,Coal,5010101011,Coal Mining Support,5010101011
+50,Energy,5010,Coal,501010,Coal,5010101012,Coal Wholesale,5010101012
+50,Energy,5010,Oil & Gas,501020,Integrated Oil & Gas,5010201010,Integrated Oil & Gas,5010201010
+50,Energy,5010,Oil & Gas,501020,Oil & Gas Exploration and Production,5010202010,Oil & Gas Exploration and Production (NEC),5010202010
+50,Energy,5010,Oil & Gas,501020,Oil & Gas Exploration and Production,5010202011,Oil Exploration & Production - Onshore,5010202011
+50,Energy,5010,Oil & Gas,501020,Oil & Gas Exploration and Production,5010202012,Oil Exploration & Production - Offshore,5010202012
+50,Energy,5010,Oil & Gas,501020,Oil & Gas Exploration and Production,5010202013,Natural Gas Exploration & Production - Onshore,5010202013
+50,Energy,5010,Oil & Gas,501020,Oil & Gas Exploration and Production,5010202014,Natural Gas Exploration & Production - Offshore,5010202014
+50,Energy,5010,Oil & Gas,501020,Oil & Gas Exploration and Production,5010202015,Unconventional Oil & Gas Production,5010202015
+50,Energy,5010,Oil & Gas,501020,Oil & Gas Refining and Marketing,5010203010,Oil & Gas Refining and Marketing (NEC),5010203010
+50,Energy,5010,Oil & Gas,501020,Oil & Gas Refining and Marketing,5010203011,Petroleum Refining,5010203011
+50,Energy,5010,Oil & Gas,501020,Oil & Gas Refining and Marketing,5010203012,Gasoline Stations,5010203012
+50,Energy,5010,Oil & Gas,501020,Oil & Gas Refining and Marketing,5010203013,Petroleum Product Wholesale,5010203013
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil & Gas Drilling,5010301010,Oil & Gas Drilling (NEC),5010301010
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil & Gas Drilling,5010301011,Oil Drilling - Onshore,5010301011
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil & Gas Drilling,5010301012,Gas Drilling - Onshore,5010301012
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil & Gas Drilling,5010301013,Oil Drilling - Offshore,5010301013
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil & Gas Drilling,5010301014,Gas Drilling - Offshore,5010301014
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil & Gas Drilling,5010301015,Unconventional Oil & Gas Drilling,5010301015
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil Related Services and Equipment,5010302010,Oil Related Services and Equipment (NEC),5010302010
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil Related Services and Equipment,5010302011,Oil Related Services,5010302011
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil Related Services and Equipment,5010302012,Oil Related Equipment,5010302012
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil Related Services and Equipment,5010302013,Oil Related - Surveying & Mapping Services,5010302013
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil & Gas Transportation Services,5010303010,Oil & Gas Transportation Services (NEC),5010303010
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil & Gas Transportation Services,5010303011,LNG Transportation & Storage,5010303011
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil & Gas Transportation Services,5010303012,Natural Gas Pipeline Transportation,5010303012
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil & Gas Transportation Services,5010303013,Oil Pipeline Transportation,5010303013
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil & Gas Transportation Services,5010303014,Sea-Borne Tankers,5010303014
+50,Energy,5010,Oil & Gas Related Equipment and Services,501030,Oil & Gas Transportation Services,5010303015,Oil & Gas Storage,5010303015
+50,Energy,5020,Renewable Energy,502010,Renewable Energy Equipment & Services,5020101010,Renewable Energy Equipment & Services (NEC),5020101010
+50,Energy,5020,Renewable Energy,502010,Renewable Energy Equipment & Services,5020101011,Wind Systems & Equipment,5020101011
+50,Energy,5020,Renewable Energy,502010,Renewable Energy Equipment & Services,5020101012,Stationary Fuel Cells,5020101012
+50,Energy,5020,Renewable Energy,502010,Renewable Energy Equipment & Services,5020101013,Photovoltaic Solar Systems & Equipment,5020101013
+50,Energy,5020,Renewable Energy,502010,Renewable Energy Equipment & Services,5020101014,Thermal Solar Systems & Equipment,5020101014
+50,Energy,5020,Renewable Energy,502010,Renewable Energy Equipment & Services,5020101015,Biomass Power Energy Equipment,5020101015
+50,Energy,5020,Renewable Energy,502010,Renewable Energy Equipment & Services,5020101016,Waste to Energy Systems & Equipment,5020101016
+50,Energy,5020,Renewable Energy,502010,Renewable Energy Equipment & Services,5020101017,Hydropower Equipment,5020101017
+50,Energy,5020,Renewable Energy,502010,Renewable Energy Equipment & Services,5020101018,Wave Power Energy Equipment,5020101018
+50,Energy,5020,Renewable Energy,502010,Renewable Energy Equipment & Services,5020101019,Renewable Energy Services,5020101019
+50,Energy,5020,Renewable Energy,502010,Renewable Energy Equipment & Services,5020101020,Geothermal Equipment,5020101020
+50,Energy,5020,Renewable Energy,502010,Renewable Fuels,5020102010,Renewable Fuels (NEC),5020102010
+50,Energy,5020,Renewable Energy,502010,Renewable Fuels,5020102011,Biodiesel,5020102011
+50,Energy,5020,Renewable Energy,502010,Renewable Fuels,5020102012,Ethanol Fuels,5020102012
+50,Energy,5020,Renewable Energy,502010,Renewable Fuels,5020102013,Pyrolytic & Synthetic Fuels,5020102013
+50,Energy,5020,Renewable Energy,502010,Renewable Fuels,5020102014,Biomass & Biogas Fuels,5020102014
+50,Energy,5020,Renewable Energy,502010,Renewable Fuels,5020102015,Hydrogen Fuel,5020102015
+50,Energy,5030,Uranium,503010,Uranium,5030101010,Uranium (NEC),5030101010
+50,Energy,5030,Uranium,503010,Uranium,5030101011,Uranium Mining,5030101011
+50,Energy,5030,Uranium,503010,Uranium,5030101012,Uranium Processing,5030101012
+51,Basic Materials,5110,Chemicals,511010,Commodity Chemicals,5110101010,Commodity Chemicals (NEC),5110101010
+51,Basic Materials,5110,Chemicals,511010,Commodity Chemicals,5110101011,Plastics,5110101011
+51,Basic Materials,5110,Chemicals,511010,Commodity Chemicals,5110101012,Paints & Coatings,5110101012
+51,Basic Materials,5110,Chemicals,511010,Commodity Chemicals,5110101013,Tanning & Softening Agents,5110101013
+51,Basic Materials,5110,Chemicals,511010,Commodity Chemicals,5110101014,Explosives,5110101014
+51,Basic Materials,5110,Chemicals,511010,Commodity Chemicals,5110101015,Industrial Gases,5110101015
+51,Basic Materials,5110,Chemicals,511010,Commodity Chemicals,5110101016,Commodity Chemicals Wholesale,5110101016
+51,Basic Materials,5110,Chemicals,511010,Commodity Chemicals,5110101017,Glass,5110101017
+51,Basic Materials,5110,Chemicals,511010,Agricultural Chemicals,5110102010,Agricultural Chemicals (NEC),5110102010
+51,Basic Materials,5110,Chemicals,511010,Agricultural Chemicals,5110102011,Fertilizers,5110102011
+51,Basic Materials,5110,Chemicals,511010,Agricultural Chemicals,5110102012,Pesticides,5110102012
+51,Basic Materials,5110,Chemicals,511010,Agricultural Chemicals,5110102013,Organic Fertilizers,5110102013
+51,Basic Materials,5110,Chemicals,511010,Agricultural Chemicals,5110102014,Agricultural Chemicals Wholesale,5110102014
+51,Basic Materials,5110,Chemicals,511010,Specialty Chemicals,5110103010,Specialty Chemicals (NEC),5110103010
+51,Basic Materials,5110,Chemicals,511010,Specialty Chemicals,5110103011,Coloring Agents,5110103011
+51,Basic Materials,5110,Chemicals,511010,Specialty Chemicals,5110103012,Synthetic Fibers,5110103012
+51,Basic Materials,5110,Chemicals,511010,Specialty Chemicals,5110103014,Advanced Polymers,5110103014
+51,Basic Materials,5110,Chemicals,511010,Specialty Chemicals,5110103016,Industrial Biotechnology Chemicals,5110103016
+51,Basic Materials,5110,Chemicals,511010,Specialty Chemicals,5110103017,Specialty Chemicals Wholesale,5110103017
+51,Basic Materials,5110,Chemicals,511010,Specialty Chemicals,5110103018,Composites,5110103018
+51,Basic Materials,5110,Chemicals,511010,Specialty Chemicals,5110103019,Adhesive & Epoxy,5110103019
+51,Basic Materials,5110,Chemicals,511010,Diversified Chemicals,5110109010,Diversified Chemicals,5110109010
+51,Basic Materials,5120,Metals & Mining,512010,Non-Gold Precious Metals & Minerals,5120101010,Non-Gold Precious Metals & Minerals (NEC),5120101010
+51,Basic Materials,5120,Metals & Mining,512010,Non-Gold Precious Metals & Minerals,5120101011,Silver Mining,5120101011
+51,Basic Materials,5120,Metals & Mining,512010,Non-Gold Precious Metals & Minerals,5120101012,Platinum Mining,5120101012
+51,Basic Materials,5120,Metals & Mining,512010,Non-Gold Precious Metals & Minerals,5120101013,Diamond Mining,5120101013
+51,Basic Materials,5120,Metals & Mining,512010,Non-Gold Precious Metals & Minerals,5120101014,Semiprecious Gem Stones,5120101014
+51,Basic Materials,5120,Metals & Mining,512010,Non-Gold Precious Metals & Minerals,5120101015,Pearl Cultivation,5120101015
+51,Basic Materials,5120,Metals & Mining,512010,Non-Gold Precious Metals & Minerals,5120101016,Rare Earth Minerals,5120101016
+51,Basic Materials,5120,Metals & Mining,512010,Iron & Steel,5120102010,Iron & Steel (NEC),5120102010
+51,Basic Materials,5120,Metals & Mining,512010,Iron & Steel,5120102011,Iron Ore Mining,5120102011
+51,Basic Materials,5120,Metals & Mining,512010,Iron & Steel,5120102012,Coke Coal Mining,5120102012
+51,Basic Materials,5120,Metals & Mining,512010,Iron & Steel,5120102013,"Iron, Steel Mills & Foundries",5120102013
+51,Basic Materials,5120,Metals & Mining,512010,Iron & Steel,5120102014,Metal Service Centers,5120102014
+51,Basic Materials,5120,Metals & Mining,512010,Iron & Steel,5120102015,Metallic Rolling & Drawing Products,5120102015
+51,Basic Materials,5120,Metals & Mining,512010,Iron & Steel,5120102016,Metal Merchant Wholesale,5120102016
+51,Basic Materials,5120,Metals & Mining,512010,Aluminum,5120103010,Aluminum (NEC),5120103010
+51,Basic Materials,5120,Metals & Mining,512010,Aluminum,5120103011,Primary Aluminum Production,5120103011
+51,Basic Materials,5120,Metals & Mining,512010,Aluminum,5120103012,Secondary Smelting & Alloying of Aluminum,5120103012
+51,Basic Materials,5120,Metals & Mining,512010,Aluminum,5120103013,Aluminum Rolling,5120103013
+51,Basic Materials,5120,Metals & Mining,512010,Aluminum,5120103014,Aluminum Refining,5120103014
+51,Basic Materials,5120,Metals & Mining,512010,Aluminum,5120103015,Aluminum Wholesale,5120103015
+51,Basic Materials,5120,Metals & Mining,512010,Aluminum,5120103016,Bauxite Mining,5120103016
+51,Basic Materials,5120,Metals & Mining,512010,Specialty Mining & Metals,5120105010,Specialty Mining & Metals (NEC),5120105010
+51,Basic Materials,5120,Metals & Mining,512010,Specialty Mining & Metals,5120105011,Lead Ore Mining,5120105011
+51,Basic Materials,5120,Metals & Mining,512010,Specialty Mining & Metals,5120105012,Copper Ore Mining,5120105012
+51,Basic Materials,5120,Metals & Mining,512010,Specialty Mining & Metals,5120105013,Nickel Ore Mining,5120105013
+51,Basic Materials,5120,Metals & Mining,512010,Specialty Mining & Metals,5120105014,Zinc Ore Mining,5120105014
+51,Basic Materials,5120,Metals & Mining,512010,Specialty Mining & Metals,5120105015,Nonferrous Metal Mining,5120105015
+51,Basic Materials,5120,Metals & Mining,512010,Specialty Mining & Metals,5120105016,Nonferrous Metal Processing,5120105016
+51,Basic Materials,5120,Metals & Mining,512010,Specialty Mining & Metals,5120105017,Specialty Mining & Metals Wholesale,5120105017
+51,Basic Materials,5120,Metals & Mining,512010,Gold,5120106010,Gold (NEC),5120106010
+51,Basic Materials,5120,Metals & Mining,512010,Gold,5120106011,Gold Mining,5120106011
+51,Basic Materials,5120,Metals & Mining,512010,Gold,5120106012,Gold Refining,5120106012
+51,Basic Materials,5120,Metals & Mining,512010,Mining Support Services & Equipment,5120107010,Mining Support Services & Equipment (NEC),5120107010
+51,Basic Materials,5120,Metals & Mining,512010,Mining Support Services & Equipment,5120107011,Geophysical Surveying & Mapping Services,5120107011
+51,Basic Materials,5120,Metals & Mining,512010,Mining Support Services & Equipment,5120107012,Mining Support Services,5120107012
+51,Basic Materials,5120,Metals & Mining,512010,Mining Support Services & Equipment,5120107013,Mining Machinery & Equipment Manufacturing,5120107013
+51,Basic Materials,5120,Metals & Mining,512010,Diversified Mining,5120108010,Diversified Mining,5120108010
+51,Basic Materials,5120,Construction Materials,512020,Construction Materials,5120201010,Construction Materials (NEC),5120201010
+51,Basic Materials,5120,Construction Materials,512020,Construction Materials,5120201011,Construction Material Processing,5120201011
+51,Basic Materials,5120,Construction Materials,512020,Construction Materials,5120201012,Cement & Concrete Manufacturing,5120201012
+51,Basic Materials,5120,Construction Materials,512020,Construction Materials,5120201013,Tile & Paving Material Manufacturing,5120201013
+51,Basic Materials,5120,Construction Materials,512020,Construction Materials,5120201014,Rock Mining,5120201014
+51,Basic Materials,5120,Construction Materials,512020,Construction Materials,5120201015,Construction Material Wholesale,5120201015
+51,Basic Materials,5130,Paper & Forest Products,513010,Forest & Wood Products,5130101010,Forest & Wood Products (NEC),5130101010
+51,Basic Materials,5130,Paper & Forest Products,513010,Forest & Wood Products,5130101011,Timber Tract Operations,5130101011
+51,Basic Materials,5130,Paper & Forest Products,513010,Forest & Wood Products,5130101012,Forest Nurseries & Gathering of Forest Products,5130101012
+51,Basic Materials,5130,Paper & Forest Products,513010,Forest & Wood Products,5130101013,Logging & Sawmills,5130101013
+51,Basic Materials,5130,Paper & Forest Products,513010,Forest & Wood Products,5130101014,Forest Support & Services,5130101014
+51,Basic Materials,5130,Paper & Forest Products,513010,Forest & Wood Products,5130101015,Wood Products,5130101015
+51,Basic Materials,5130,Paper & Forest Products,513010,Forest & Wood Products,5130101016,Wood Product Wholesale,5130101016
+51,Basic Materials,5130,Paper & Forest Products,513010,Paper Products,5130102010,Paper Products (NEC),5130102010
+51,Basic Materials,5130,Paper & Forest Products,513010,Paper Products,5130102011,Paper Mills & Products,5130102011
+51,Basic Materials,5130,Paper & Forest Products,513010,Paper Products,5130102012,Newsprint Mills,5130102012
+51,Basic Materials,5130,Paper & Forest Products,513010,Paper Products,5130102013,Pulp Mills,5130102013
+51,Basic Materials,5130,Paper & Forest Products,513010,Paper Products,5130102014,Paper Product Wholesale,5130102014
+51,Basic Materials,5130,Containers & Packaging,513020,Non-Paper Containers & Packaging,5130201010,Non-Paper Containers & Packaging (NEC),5130201010
+51,Basic Materials,5130,Containers & Packaging,513020,Non-Paper Containers & Packaging,5130201011,Textile Containers & Packaging,5130201011
+51,Basic Materials,5130,Containers & Packaging,513020,Non-Paper Containers & Packaging,5130201012,Glass Containers & Packaging,5130201012
+51,Basic Materials,5130,Containers & Packaging,513020,Non-Paper Containers & Packaging,5130201013,Metal Containers & Packaging,5130201013
+51,Basic Materials,5130,Containers & Packaging,513020,Non-Paper Containers & Packaging,5130201014,Plastic Containers & Packaging,5130201014
+51,Basic Materials,5130,Containers & Packaging,513020,Non-Paper Containers & Packaging,5130201015,Wood Container & Packaging,5130201015
+51,Basic Materials,5130,Containers & Packaging,513020,Non-Paper Containers & Packaging,5130201016,Container & Packaging Material Wholesale,5130201016
+51,Basic Materials,5130,Containers & Packaging,513020,Paper Packaging,5130202010,Paper Packaging (NEC),5130202010
+51,Basic Materials,5130,Containers & Packaging,513020,Paper Packaging,5130202011,Paper Packaging Wholesale,5130202011
+52,Industrials,5210,Aerospace & Defense,521010,Aerospace & Defense,5210101010,Aerospace & Defense (NEC),5210101010
+52,Industrials,5210,Aerospace & Defense,521010,Aerospace & Defense,5210101011,Arms & Ammunitions Manufacturing,5210101011
+52,Industrials,5210,Aerospace & Defense,521010,Aerospace & Defense,5210101012,Commercial Aircraft Manufacturing,5210101012
+52,Industrials,5210,Aerospace & Defense,521010,Aerospace & Defense,5210101013,Military Aircraft Manufacturing,5210101013
+52,Industrials,5210,Aerospace & Defense,521010,Aerospace & Defense,5210101014,Aircraft Parts Manufacturing,5210101014
+52,Industrials,5210,Aerospace & Defense,521010,Aerospace & Defense,5210101015,Military Vehicles Manufacturing,5210101015
+52,Industrials,5210,Aerospace & Defense,521010,Aerospace & Defense,5210101016,Satellite Design & Manufacture,5210101016
+52,Industrials,5210,Aerospace & Defense,521010,Aerospace & Defense,5210101017,Spacecraft Manufacturing,5210101017
+52,Industrials,5210,Aerospace & Defense,521010,Aerospace & Defense,5210101018,Military Clothing & Accessories,5210101018
+52,Industrials,5210,Aerospace & Defense,521010,Aerospace & Defense,5210101019,Aircraft Equipment Wholesale,5210101019
+52,Industrials,5210,Aerospace & Defense,521010,Aerospace & Defense,5210101020,Aerospace & Defense Electronics,5210101020
+52,Industrials,5210,Aerospace & Defense,521010,Aerospace & Defense,5210101021,Drone Manufacturing,5210101021
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201010,Industrial Machinery & Equipment (NEC),5210201010
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201011,Industrial Components,5210201011
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201012,Industrial Machinery,5210201012
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201013,Ball & Roller Bearings,5210201013
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201014,Testing & Measuring Equipment,5210201014
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201015,Pump & Pumping Equipment,5210201015
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201016,Air & Gas Compressors,5210201016
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201017,Welding & Soldering Equipment,5210201017
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201018,Industrial Process Furnace & Ovens,5210201018
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201019,Fluid Power Cylinder & Actuators,5210201019
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201020,Automatic Vending Machines,5210201020
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201021,Industrial Moulds,5210201021
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201022,Machine Tools,5210201022
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201023,Industrial Valve Manufacturing,5210201023
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201024,Industrial Machinery & Equipment Wholesale,5210201024
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Industrial Machinery & Equipment,5210201025,Commercial Equipment,5210201025
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Machinery & Vehicles,5210202010,Heavy Machinery & Vehicles (NEC),5210202010
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Machinery & Vehicles,5210202011,Construction Machinery,5210202011
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Machinery & Vehicles,5210202012,Heavy Trucks,5210202012
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Machinery & Vehicles,5210202013,Heavy Buses & Coaches,5210202013
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Machinery & Vehicles,5210202014,Locomotive Engines & Rolling Stock,5210202014
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Machinery & Vehicles,5210202015,Agricultural Machinery,5210202015
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Machinery & Vehicles,5210202016,Commercial Landscaping Equipment,5210202016
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Machinery & Vehicles,5210202017,Heavy Machinery & Vehicles Wholesale,5210202017
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Electrical Components & Equipment,5210203010,Electrical Components & Equipment (NEC),5210203010
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Electrical Components & Equipment,5210203011,Batteries & Uninterruptible Power Supplies,5210203011
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Electrical Components & Equipment,5210203012,Wires & Cables,5210203012
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Electrical Components & Equipment,5210203013,Electrical Components,5210203013
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Electrical Components & Equipment,5210203014,Lighting Equipment,5210203014
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Electrical Components & Equipment,5210203015,"Heating, Ventilation & Air Conditioning Systems",5210203015
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Electrical Components & Equipment,5210203016,Electrical Insulators,5210203016
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Electrical Components & Equipment,5210203017,Switchgear,5210203017
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Electrical Components & Equipment,5210203018,Portable Motors & Generators,5210203018
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Electrical Components & Equipment,5210203019,Electrical Measuring & Testing Instruments,5210203019
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Electrical Components & Equipment,5210203020,Electric Equipment Wholesale,5210203020
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Electrical Equipment,5210204010,Heavy Electrical Equipment (NEC),5210204010
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Electrical Equipment,5210204011,Electrical Transmission & Grid Equipment,5210204011
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Electrical Equipment,5210204012,Elevator & Conveying Equipment,5210204012
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Electrical Equipment,5210204013,Turbine Manufacturing,5210204013
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Electrical Equipment,5210204014,Heavy Motors & Generators,5210204014
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Electrical Equipment,5210204015,Industrial Electrical Switchgear,5210204015
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Heavy Electrical Equipment,5210204016,Nuclear Generators & Components,5210204016
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Shipbuilding,5210205010,Shipbuilding (NEC),5210205010
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Shipbuilding,5210205011,Ship Parts Manufacturers,5210205011
+52,Industrials,5210,"Machinery, Tools, Heavy Vehicles, Trains & Ships",521020,Shipbuilding,5210205012,Ship Repairing & Maintenance,5210205012
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102010,Construction & Engineering (NEC),5220102010
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102011,Commercial Buildings,5220102011
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102012,Highway & Bridge Construction,5220102012
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102013,Railway Construction,5220102013
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102014,Power & Communications Network Construction,5220102014
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102015,Civil Engineers & Architects,5220102015
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102016,Building Contractors,5220102016
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102017,Industrial Plant Construction,5220102017
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102018,Water & Sewage Construction,5220102018
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102019,Land Division & Subdivision,5220102019
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102020,Gas Infrastructure Construction,5220102020
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102021,Electric Power Plant Construction,5220102021
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102022,Nuclear Power Plant Construction,5220102022
+52,Industrials,5220,Construction & Engineering,522010,Construction & Engineering,5220102023,Telecommunication Construction,5220102023
+52,Industrials,5220,Diversified Industrial Goods Wholesale,522020,Diversified Industrial Goods Wholesale,5220201010,Diversified Industrial Goods Wholesale,5220201010
+52,Industrials,5220,Professional & Commercial Services,522030,Environmental Services & Equipment,5220301010,Environmental Services & Equipment (NEC),5220301010
+52,Industrials,5220,Professional & Commercial Services,522030,Environmental Services & Equipment,5220301011,Purification & Treatment Equipment,5220301011
+52,Industrials,5220,Professional & Commercial Services,522030,Environmental Services & Equipment,5220301012,"Waste Management, Disposal & Recycling Services",5220301012
+52,Industrials,5220,Professional & Commercial Services,522030,Environmental Services & Equipment,5220301013,Environmental Consultancy Services,5220301013
+52,Industrials,5220,Professional & Commercial Services,522030,Environmental Services & Equipment,5220301014,Environmental R&D Services & Biotechnology,5220301014
+52,Industrials,5220,Professional & Commercial Services,522030,Environmental Services & Equipment,5220301015,Carbon Capture & Storage,5220301015
+52,Industrials,5220,Professional & Commercial Services,522030,Commercial Printing Services,5220302010,Commercial Printing Services (NEC),5220302010
+52,Industrials,5220,Professional & Commercial Services,522030,Commercial Printing Services,5220302011,Specialized Printing Services,5220302011
+52,Industrials,5220,Professional & Commercial Services,522030,Commercial Printing Services,5220302012,Newspaper & Magazine Printing Services,5220302012
+52,Industrials,5220,Professional & Commercial Services,522030,Commercial Printing Services,5220302013,Book Printing Services,5220302013
+52,Industrials,5220,Professional & Commercial Services,522030,Employment Services,5220303010,Employment Services (NEC),5220303010
+52,Industrials,5220,Professional & Commercial Services,522030,Employment Services,5220303011,Human Resources Consulting Services,5220303011
+52,Industrials,5220,Professional & Commercial Services,522030,Employment Services,5220303012,Outsourcing & Staffing Services,5220303012
+52,Industrials,5220,Professional & Commercial Services,522030,Employment Services,5220303013,Executive Search Services,5220303013
+52,Industrials,5220,Professional & Commercial Services,522030,Employment Services,5220303014,Online Job Portals,5220303014
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304010,Business Support Services (NEC),5220304010
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304011,Corporate Accounting Services,5220304011
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304012,Legal Services,5220304012
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304013,Management Consulting Services,5220304013
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304014,Security Services,5220304014
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304016,Cleaning Services,5220304016
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304017,Data Processing Services,5220304017
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304018,Industrial Equipment Rental,5220304018
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304019,Office Equipment & Supplies Rental,5220304019
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304020,Pest Control Services,5220304020
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304021,Maintenance & Repair Services,5220304021
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304022,Industrial Design Services,5220304022
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304023,Translation & Interpretation Services,5220304023
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304024,Testing Laboratories,5220304024
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304025,Call Center Services,5220304025
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304026,Exhibition & Conference Services,5220304026
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Services,5220304027,Transaction & Payment Services,5220304027
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Supplies,5220306010,Business Support Supplies (NEC),5220306010
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Supplies,5220306011,Office Furniture,5220306011
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Supplies,5220306012,Office Supplies,5220306012
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Supplies,5220306013,"Health, Safety & Fire Protection Equipment",5220306013
+52,Industrials,5220,Professional & Commercial Services,522030,Business Support Supplies,5220306014,Office Supplies Wholesale,5220306014
+52,Industrials,5220,Professional & Commercial Services,522030,Professional Information Services,5220307010,Professional Information Services (NEC),5220307010
+52,Industrials,5220,Professional & Commercial Services,522030,Professional Information Services,5220307011,Financial Information Providers,5220307011
+52,Industrials,5220,Professional & Commercial Services,522030,Professional Information Services,5220307012,Compliance & Investor Communication,5220307012
+52,Industrials,5220,Professional & Commercial Services,522030,Professional Information Services,5220307013,Rating Agencies,5220307013
+52,Industrials,5220,Professional & Commercial Services,522030,Professional Information Services,5220307014,Trade & Business Publishing,5220307014
+52,Industrials,5220,Professional & Commercial Services,522030,Professional Information Services,5220307015,Legal & Tax Information Providers,5220307015
+52,Industrials,5220,Professional & Commercial Services,522030,Professional Information Services,5220307016,Education & Training Information Providers,5220307016
+52,Industrials,5220,Professional & Commercial Services,522030,Professional Information Services,5220307017,Journals & Scholarly Research,5220307017
+52,Industrials,5220,Professional & Commercial Services,522030,Professional Information Services,5220307018,News Agencies,5220307018
+52,Industrials,5220,Professional & Commercial Services,522030,Professional Information Services,5220307019,Libraries & Archives,5220307019
+52,Industrials,5240,Freight & Logistics Services,524050,"Courier, Postal, Air Freight & Land-based Logistics",5240501010,"Courier, Postal, Air Freight & Land-based Logistics (NEC)",5240501010
+52,Industrials,5240,Freight & Logistics Services,524050,"Courier, Postal, Air Freight & Land-based Logistics",5240501011,Freight Logistics,5240501011
+52,Industrials,5240,Freight & Logistics Services,524050,"Courier, Postal, Air Freight & Land-based Logistics",5240501012,Air Freight,5240501012
+52,Industrials,5240,Freight & Logistics Services,524050,"Courier, Postal, Air Freight & Land-based Logistics",5240501013,Courier Services,5240501013
+52,Industrials,5240,Freight & Logistics Services,524050,"Courier, Postal, Air Freight & Land-based Logistics",5240501014,Integrated Logistics Operators,5240501014
+52,Industrials,5240,Freight & Logistics Services,524050,Marine Freight & Logistics,5240502010,Marine Freight & Logistics (NEC),5240502010
+52,Industrials,5240,Freight & Logistics Services,524050,Marine Freight & Logistics,5240502011,Marine Logistics,5240502011
+52,Industrials,5240,Freight & Logistics Services,524050,Marine Freight & Logistics,5240502012,Inland Water Freight,5240502012
+52,Industrials,5240,Freight & Logistics Services,524050,Marine Freight & Logistics,5240502013,Deep Sea Freight,5240502013
+52,Industrials,5240,Freight & Logistics Services,524050,Ground Freight & Logistics,5240503010,Ground Freight & Logistics (NEC),5240503010
+52,Industrials,5240,Freight & Logistics Services,524050,Ground Freight & Logistics,5240503011,Railway Freight Operators,5240503011
+52,Industrials,5240,Freight & Logistics Services,524050,Ground Freight & Logistics,5240503012,Freight Trucking,5240503012
+52,Industrials,5240,Freight & Logistics Services,524050,Ground Freight & Logistics,5240503013,Warehousing,5240503013
+52,Industrials,5240,Freight & Logistics Services,524050,Ground Freight & Logistics,5240503014,Truck Rental,5240503014
+52,Industrials,5240,Passenger Transportation Services,524060,Airlines,5240601010,Airlines (NEC),5240601010
+52,Industrials,5240,Passenger Transportation Services,524060,Airlines,5240601011,Regional Airlines,5240601011
+52,Industrials,5240,Passenger Transportation Services,524060,Airlines,5240601012,Charter & Private Air Services,5240601012
+52,Industrials,5240,Passenger Transportation Services,524060,Airlines,5240601013,Specialized Aviation Services,5240601013
+52,Industrials,5240,Passenger Transportation Services,524060,Airlines,5240601014,Inter-Modal Passenger Transportation,5240601014
+52,Industrials,5240,Passenger Transportation Services,524060,"Passenger Transportation, Ground & Sea",5240602010,"Passenger Transportation, Ground & Sea (NEC)",5240602010
+52,Industrials,5240,Passenger Transportation Services,524060,"Passenger Transportation, Ground & Sea",5240602011,Commuting Services,5240602011
+52,Industrials,5240,Passenger Transportation Services,524060,"Passenger Transportation, Ground & Sea",5240602012,Charter Bus Services,5240602012
+52,Industrials,5240,Passenger Transportation Services,524060,"Passenger Transportation, Ground & Sea",5240602013,Rail Services,5240602013
+52,Industrials,5240,Passenger Transportation Services,524060,"Passenger Transportation, Ground & Sea",5240602014,Marine Passenger Transportation,5240602014
+52,Industrials,5240,Passenger Transportation Services,524060,"Passenger Transportation, Ground & Sea",5240602015,Commuter Ferry Operators,5240602015
+52,Industrials,5240,Passenger Transportation Services,524060,"Passenger Transportation, Ground & Sea",5240602016,Taxis & Limousines,5240602016
+52,Industrials,5240,Passenger Transportation Services,524060,"Passenger Transportation, Ground & Sea",5240602017,Passenger Car Rental,5240602017
+52,Industrials,5240,Transport Infrastructure,524070,Airport Operators & Services,5240701010,Airport Operators & Services (NEC),5240701010
+52,Industrials,5240,Transport Infrastructure,524070,Airport Operators & Services,5240701011,Airport Operators,5240701011
+52,Industrials,5240,Transport Infrastructure,524070,Airport Operators & Services,5240701012,Duty Free Shops,5240701012
+52,Industrials,5240,Transport Infrastructure,524070,Airport Operators & Services,5240701013,Airport Fueling Services,5240701013
+52,Industrials,5240,Transport Infrastructure,524070,Airport Operators & Services,5240701014,Airline Catering Services,5240701014
+52,Industrials,5240,Transport Infrastructure,524070,Marine Port Services,5240702010,Marine Port Services (NEC),5240702010
+52,Industrials,5240,Transport Infrastructure,524070,Marine Port Services,5240702011,Port Warehousing Services,5240702011
+52,Industrials,5240,Transport Infrastructure,524070,Marine Port Services,5240702012,Port Operators,5240702012
+52,Industrials,5240,Transport Infrastructure,524070,Marine Port Services,5240702013,Marine Cargo Handling Services,5240702013
+52,Industrials,5240,Transport Infrastructure,524070,Highways & Rail Tracks,5240703010,Highways & Rail Tracks (NEC),5240703010
+52,Industrials,5240,Transport Infrastructure,524070,Highways & Rail Tracks,5240703011,Highway Operators,5240703011
+52,Industrials,5240,Transport Infrastructure,524070,Highways & Rail Tracks,5240703012,Railway Operators,5240703012
+52,Industrials,5240,Transport Infrastructure,524070,Highways & Rail Tracks,5240703013,Parking Lot Operators,5240703013
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,Auto & Truck Manufacturers,5310101010,Auto & Truck Manufacturers (NEC),5310101010
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,Auto & Truck Manufacturers,5310101011,Motorcycles & Scooters,5310101011
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,Auto & Truck Manufacturers,5310101012,Automobiles & Multi Utility Vehicles,5310101012
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,Auto & Truck Manufacturers,5310101013,Light Trucks,5310101013
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,Auto & Truck Manufacturers,5310101014,Electric (Alternative) Vehicles,5310101014
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,Auto & Truck Manufacturers,5310101015,Luxury Vehicles,5310101015
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,Auto & Truck Manufacturers,5310101016,Auto & Truck Wholesale,5310101016
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,"Auto, Truck & Motorcycle Parts",5310102010,"Auto, Truck & Motorcycle Parts (NEC)",5310102010
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,"Auto, Truck & Motorcycle Parts",5310102011,Automotive Body Parts,5310102011
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,"Auto, Truck & Motorcycle Parts",5310102012,Engine & Powertrain Systems,5310102012
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,"Auto, Truck & Motorcycle Parts",5310102013,Automotive Batteries,5310102013
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,"Auto, Truck & Motorcycle Parts",5310102014,Automotive Systems,5310102014
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,"Auto, Truck & Motorcycle Parts",5310102015,Automotive Accessories,5310102015
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,"Auto, Truck & Motorcycle Parts",5310102016,Motorcycle Parts & Accessories,5310102016
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,"Auto, Truck & Motorcycle Parts",5310102017,Auto & Truck Parts Wholesale,5310102017
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,Tires & Rubber Products,5310103010,Tires & Rubber Products (NEC),5310103010
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,Tires & Rubber Products,5310103011,Tire & Tube Manufacturers,5310103011
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,Tires & Rubber Products,5310103012,Tire Retreading,5310103012
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,Tires & Rubber Products,5310103013,Industrial Rubber Products,5310103013
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,Tires & Rubber Products,5310103014,Rubber Plantations,5310103014
+53,Consumer Cyclicals,5310,Automobiles & Auto Parts,531010,Tires & Rubber Products,5310103015,Tires & Rubber Products Wholesale,5310103015
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Textiles & Leather Goods,5320201010,Textiles & Leather Goods (NEC),5320201010
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Textiles & Leather Goods,5320201011,Synthetic Fabrics,5320201011
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Textiles & Leather Goods,5320201012,Natural Fabrics,5320201012
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Textiles & Leather Goods,5320201013,Organic & Ecologically Produced Fabric,5320201013
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Textiles & Leather Goods,5320201014,Leather Goods,5320201014
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Textiles & Leather Goods,5320201015,Fur Goods,5320201015
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Textiles & Leather Goods,5320201016,Fabric Dyeing & Finishing,5320201016
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Textiles & Leather Goods,5320201017,Yarn Goods,5320201017
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Textiles & Leather Goods,5320201018,Cotton Farming,5320201018
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Textiles & Leather Goods,5320201019,Textiles & Leather Goods Wholesale,5320201019
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202010,Apparel & Accessories (NEC),5320202010
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202011,Men's Clothing,5320202011
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202012,Women's Clothing,5320202012
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202013,Children's & Infants' Clothing,5320202013
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202014,Sportswear & Outdoors Clothing,5320202014
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202015,Jeans,5320202015
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202016,Knitwear,5320202016
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202017,Lingerie,5320202017
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202018,Hosiery & Socks,5320202018
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202019,Industrial Clothing & Uniforms,5320202019
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202020,Fair Trade & Ethical Clothing,5320202020
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202021,Luxury Clothing,5320202021
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202022,Theatrical Costumes,5320202022
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202023,Animal & Pet Clothing,5320202023
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202024,Luxury Accessories,5320202024
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202025,Accessories,5320202025
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202026,Jewelry,5320202026
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202027,Watches,5320202027
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202028,Handbags & Luggage,5320202028
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202029,Fashion Eyewear,5320202029
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Apparel & Accessories,5320202030,Apparel Wholesale,5320202030
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Footwear,5320203010,Footwear (NEC),5320203010
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Footwear,5320203011,Men's Footwear,5320203011
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Footwear,5320203012,Women's Footwear,5320203012
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Footwear,5320203013,Children's & Infants' Footwear,5320203013
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Footwear,5320203014,Sports & Outdoor Footwear,5320203014
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Footwear,5320203015,Luxury Footwear,5320203015
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Footwear,5320203016,Functional Footwear,5320203016
+53,Consumer Cyclicals,5320,Textiles & Apparel,532020,Footwear,5320203017,Footwear Wholesale,5320203017
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Homebuilding,5320301010,Homebuilding (NEC),5320301010
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Homebuilding,5320301011,Residential Builders - Single Homes,5320301011
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Homebuilding,5320301012,Residential Builders - Multifamily Homes,5320301012
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Homebuilding,5320301013,Prefabricated Homes,5320301013
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Homebuilding,5320301014,Sustainable & Energy Efficient Home Builders,5320301014
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Homebuilding,5320301015,Retirement Home Builders,5320301015
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Homebuilding,5320301016,Residential Architectural & Interior Design Services,5320301016
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Construction Supplies & Fixtures,5320302010,Construction Supplies & Fixtures (NEC),5320302010
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Construction Supplies & Fixtures,5320302011,Construction Supplies,5320302011
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Construction Supplies & Fixtures,5320302012,Luxury Construction Supplies & Fixtures,5320302012
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Construction Supplies & Fixtures,5320302013,Doors & Window Frames,5320302013
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Construction Supplies & Fixtures,5320302014,Flooring & Interior Tile Manufacturers,5320302014
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Construction Supplies & Fixtures,5320302015,Plumbing Fixtures & Fittings,5320302015
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Construction Supplies & Fixtures,5320302016,Kitchen Cabinets,5320302016
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Construction Supplies & Fixtures,5320302017,Bathroom Fixtures,5320302017
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Construction Supplies & Fixtures,5320302018,Roofing Supplies,5320302018
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Construction Supplies & Fixtures,5320302019,Lighting Fixtures,5320302019
+53,Consumer Cyclicals,5320,Homebuilding & Construction Supplies,532030,Construction Supplies & Fixtures,5320302020,Construction Supplies & Fixtures Wholesale,5320302020
+53,Consumer Cyclicals,5320,Household Goods,532040,"Appliances, Tools & Housewares",5320403010,"Appliances, Tools & Housewares (NEC)",5320403010
+53,Consumer Cyclicals,5320,Household Goods,532040,"Appliances, Tools & Housewares",5320403011,Household Appliances,5320403011
+53,Consumer Cyclicals,5320,Household Goods,532040,"Appliances, Tools & Housewares",5320403012,Tools & Housewares,5320403012
+53,Consumer Cyclicals,5320,Household Goods,532040,"Appliances, Tools & Housewares",5320403013,Kitchen Appliances,5320403013
+53,Consumer Cyclicals,5320,Household Goods,532040,"Appliances, Tools & Housewares",5320403014,Cutlery & Flatware,5320403014
+53,Consumer Cyclicals,5320,Household Goods,532040,"Appliances, Tools & Housewares",5320403015,Appliance & Houseware Wholesale,5320403015
+53,Consumer Cyclicals,5320,Household Goods,532040,"Appliances, Tools & Housewares",5320403016,Luxury Appliances,5320403016
+53,Consumer Cyclicals,5320,Household Goods,532040,Home Furnishings,5320404010,Home Furnishings (NEC),5320404010
+53,Consumer Cyclicals,5320,Household Goods,532040,Home Furnishings,5320404011,Carpets & Curtains,5320404011
+53,Consumer Cyclicals,5320,Household Goods,532040,Home Furnishings,5320404012,Wallpaper,5320404012
+53,Consumer Cyclicals,5320,Household Goods,532040,Home Furnishings,5320404014,Luxury Furnishing,5320404014
+53,Consumer Cyclicals,5320,Household Goods,532040,Home Furnishings,5320404015,Antiques,5320404015
+53,Consumer Cyclicals,5320,Household Goods,532040,Home Furnishings,5320404016,Home Furnishings Wholesale,5320404016
+53,Consumer Cyclicals,5320,Household Goods,532040,Home Furnishings,5320404017,Furniture,5320404017
+53,Consumer Cyclicals,5320,Household Goods,532040,Home Furnishings,5320404018,Art & Craftwork,5320404018
+53,Consumer Cyclicals,5320,Leisure Products,532050,Toys & Children's Products,5320501010,Toys & Children's Products (NEC),5320501010
+53,Consumer Cyclicals,5320,Leisure Products,532050,Toys & Children's Products,5320501011,Dolls & Stuffed Toys,5320501011
+53,Consumer Cyclicals,5320,Leisure Products,532050,Toys & Children's Products,5320501012,"Games, Toys & Children's Vehicles",5320501012
+53,Consumer Cyclicals,5320,Leisure Products,532050,Toys & Children's Products,5320501013,Children's Safety Products,5320501013
+53,Consumer Cyclicals,5320,Leisure Products,532050,Toys & Children's Products,5320501014,Children's Furniture,5320501014
+53,Consumer Cyclicals,5320,Leisure Products,532050,Toys & Children's Products,5320501015,Children's Products & Accessories,5320501015
+53,Consumer Cyclicals,5320,Leisure Products,532050,Toys & Children's Products,5320501016,Toys & Children's Products Wholesale,5320501016
+53,Consumer Cyclicals,5320,Leisure Products,532050,Recreational Products,5320502010,Recreational Products (NEC),5320502010
+53,Consumer Cyclicals,5320,Leisure Products,532050,Recreational Products,5320502011,Sailing Yachts & Motorboats,5320502011
+53,Consumer Cyclicals,5320,Leisure Products,532050,Recreational Products,5320502012,Bicycle Manufacturing,5320502012
+53,Consumer Cyclicals,5320,Leisure Products,532050,Recreational Products,5320502013,Sporting & Outdoor Goods,5320502013
+53,Consumer Cyclicals,5320,Leisure Products,532050,Recreational Products,5320502014,Musical Instruments,5320502014
+53,Consumer Cyclicals,5320,Leisure Products,532050,Recreational Products,5320502015,Luxury Recreational Products,5320502015
+53,Consumer Cyclicals,5320,Leisure Products,532050,Recreational Products,5320502016,Leisure Products Wholesale,5320502016
+53,Consumer Cyclicals,5320,Leisure Products,532050,Recreational Products,5320502017,Electric Scooters & Bicycles,5320502017
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,"Hotels, Motels & Cruise Lines",5330101010,"Hotels, Motels & Cruise Lines (NEC)",5330101010
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,"Hotels, Motels & Cruise Lines",5330101011,Hotels & Motels,5330101011
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,"Hotels, Motels & Cruise Lines",5330101012,Cruise Lines,5330101012
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,"Hotels, Motels & Cruise Lines",5330101013,Luxury Hotels,5330101013
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,"Hotels, Motels & Cruise Lines",5330101014,Resort Operators,5330101014
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,"Hotels, Motels & Cruise Lines",5330101015,Bed & Breakfast,5330101015
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,"Hotels, Motels & Cruise Lines",5330101016,Self-Catering Accommodation,5330101016
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,"Hotels, Motels & Cruise Lines",5330101017,Campsite Operators,5330101017
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Restaurants & Bars,5330102010,Restaurants & Bars (NEC),5330102010
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Restaurants & Bars,5330102011,"Pubs, Bars & Night Clubs",5330102011
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Restaurants & Bars,5330102012,Commercial Food Services,5330102012
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Restaurants & Bars,5330102013,Quick Service Restaurants,5330102013
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Restaurants & Bars,5330102014,Mobile Caterers,5330102014
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Restaurants & Bars,5330102015,Banquet Halls & Catering,5330102015
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Restaurants & Bars,5330102016,Cafés,5330102016
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Casinos & Gaming,5330103010,Casinos & Gaming (NEC),5330103010
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Casinos & Gaming,5330103011,Gambling & Gaming Machine Manufacturers,5330103011
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Casinos & Gaming,5330103012,Gaming Machine Operators,5330103012
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Casinos & Gaming,5330103013,Casinos,5330103013
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Casinos & Gaming,5330103014,Horse & Dog Race Tracks,5330103014
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Casinos & Gaming,5330103015,Lottery Operators,5330103015
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104010,Leisure & Recreation (NEC),5330104010
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104011,Movie Theaters & Movie Products,5330104011
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104012,Theatres & Performing Arts,5330104012
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104013,Museums & Historic Places,5330104013
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104014,Travel Agents,5330104014
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104015,Amusement Parks and Zoos,5330104015
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104016,"Gyms, Fitness and Spa Centers",5330104016
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104017,Adventure Sports Facilities & Ski Resorts,5330104017
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104018,Public Sport Facilities,5330104018
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104019,Professional Sports Venues,5330104019
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104020,Golf Courses,5330104020
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104021,Hunting & Fishing,5330104021
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104022,Marinas,5330104022
+53,Consumer Cyclicals,5330,Hotels & Entertainment Services,533010,Leisure & Recreation,5330104023,Guided Tour Operators,5330104023
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Advertising & Marketing,5330201010,Advertising & Marketing (NEC),5330201010
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Advertising & Marketing,5330201011,Advertising Agency,5330201011
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Advertising & Marketing,5330201012,Media Buying Agency,5330201012
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Advertising & Marketing,5330201013,Signs & Advertising Specialty Producers,5330201013
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Advertising & Marketing,5330201014,Outdoor Advertising,5330201014
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Advertising & Marketing,5330201015,Direct Marketing,5330201015
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Advertising & Marketing,5330201016,Sales Promotions & Events Management,5330201016
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Advertising & Marketing,5330201017,Guerrilla & Sensory Marketing,5330201017
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Advertising & Marketing,5330201018,Public Relations,5330201018
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Advertising & Marketing,5330201019,Digital Media Agencies,5330201019
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Advertising & Marketing,5330201020,Branding & Naming,5330201020
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Advertising & Marketing,5330201021,Market Research,5330201021
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Advertising & Marketing,5330201022,Marketing Consulting Services,5330201022
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Broadcasting,5330202010,Broadcasting (NEC),5330202010
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Broadcasting,5330202011,Television Broadcasting,5330202011
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Broadcasting,5330202012,Radio Broadcasting,5330202012
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Broadcasting,5330202013,Cable Service Providers,5330202013
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Entertainment Production,5330203010,Entertainment Production (NEC),5330203010
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Entertainment Production,5330203011,"Movie, TV Production & Distribution",5330203011
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Entertainment Production,5330203012,"Music, Music Video Production & Distribution",5330203012
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Entertainment Production,5330203013,Plays & Concert Production,5330203013
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Entertainment Production,5330203014,Entertainment Production Equipment & Services,5330203014
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Entertainment Production,5330203015,Copyright Management,5330203015
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Entertainment Production,5330203016,Adult Entertainment Production & Broadcasting,5330203016
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Consumer Publishing,5330204010,Consumer Publishing (NEC),5330204010
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Consumer Publishing,5330204011,Newspaper Publishing,5330204011
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Consumer Publishing,5330204012,Magazine Publishing,5330204012
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Consumer Publishing,5330204013,Book Publishing,5330204013
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Consumer Publishing,5330204014,Directory Publishing,5330204014
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Consumer Publishing,5330204015,Digital Publishing,5330204015
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Consumer Publishing,5330204016,Adult Publishing,5330204016
+53,Consumer Cyclicals,5330,Media & Publishing,533020,Consumer Publishing,5330204017,"Books, Newspapers & Magazines Wholesale",5330204017
+53,Consumer Cyclicals,5340,Diversified Retail,534020,Department Stores,5340201010,Department Stores (NEC),5340201010
+53,Consumer Cyclicals,5340,Diversified Retail,534020,Department Stores,5340201011,General Department Stores,5340201011
+53,Consumer Cyclicals,5340,Diversified Retail,534020,Department Stores,5340201012,Luxury Department Stores,5340201012
+53,Consumer Cyclicals,5340,Diversified Retail,534020,Department Stores,5340201013,Internet & Mail Order Department Stores,5340201013
+53,Consumer Cyclicals,5340,Diversified Retail,534020,Discount Stores,5340202010,Discount Stores (NEC),5340202010
+53,Consumer Cyclicals,5340,Diversified Retail,534020,Discount Stores,5340202011,Internet & Mail Order Discount Stores,5340202011
+53,Consumer Cyclicals,5340,Diversified Retail,534020,Discount Stores,5340202012,Discount Stores with Grocery,5340202012
+53,Consumer Cyclicals,5340,Diversified Retail,534020,Discount Stores,5340202013,Discount Stores without Grocery,5340202013
+53,Consumer Cyclicals,5340,Diversified Retail,534020,Discount Stores,5340202014,Discount Stores with Gasoline,5340202014
+53,Consumer Cyclicals,5340,Diversified Retail,534020,Discount Stores,5340202015,Discount Stores without Gasoline,5340202015
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,"Auto Vehicles, Parts & Service Retailers",5340301010,"Auto Vehicles, Parts & Service Retailers (NEC)",5340301010
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,"Auto Vehicles, Parts & Service Retailers",5340301011,New Car Dealers,5340301011
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,"Auto Vehicles, Parts & Service Retailers",5340301012,Used Car Dealers,5340301012
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,"Auto Vehicles, Parts & Service Retailers",5340301013,Motorcycle Dealers,5340301013
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,"Auto Vehicles, Parts & Service Retailers",5340301014,Automotive Parts & Accessories Retailers,5340301014
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,"Auto Vehicles, Parts & Service Retailers",5340301015,Tire Dealers,5340301015
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,"Auto Vehicles, Parts & Service Retailers",5340301016,Luxury Car Dealers,5340301016
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Improvement Products & Services Retailers,5340302010,Home Improvement Products & Services Retailers (NEC),5340302010
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Improvement Products & Services Retailers,5340302011,Paint & Wallpaper Retailers,5340302011
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Improvement Products & Services Retailers,5340302012,Builder Merchants,5340302012
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Improvement Products & Services Retailers,5340302013,Nursery & Garden Centers,5340302013
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Improvement Products & Services Retailers,5340302014,Kitchen & Bathroom Retailers,5340302014
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Improvement Products & Services Retailers,5340302015,Home Décor Retailers,5340302015
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Improvement Products & Services Retailers,5340302016,Interior Design Services,5340302016
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Improvement Products & Services Retailers,5340302017,Luxury Home Improvement Product Retailers,5340302017
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Furnishings Retailers,5340303010,Home Furnishings Retailers (NEC),5340303010
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Furnishings Retailers,5340303011,Furniture Retailers,5340303011
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Furnishings Retailers,5340303012,Floor Covering Retailers,5340303012
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Furnishings Retailers,5340303013,Soft Furnishing Retailers,5340303013
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Furnishings Retailers,5340303014,Luxury Furnishing Retailers,5340303014
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Furnishings Retailers,5340303015,Antique Dealers,5340303015
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Home Furnishings Retailers,5340303016,Art & Craftwork Retailers,5340303016
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Apparel & Accessories Retailers,5340304010,Apparel & Accessories Retailers (NEC),5340304010
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Apparel & Accessories Retailers,5340304011,Footwear Retailers,5340304011
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Apparel & Accessories Retailers,5340304012,Jewelry & Watch Retailers,5340304012
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Apparel & Accessories Retailers,5340304013,Men's Apparel Retailers,5340304013
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Apparel & Accessories Retailers,5340304014,Women's Apparel Retailers,5340304014
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Apparel & Accessories Retailers,5340304015,Children's & Infants' Clothing Retailers,5340304015
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Apparel & Accessories Retailers,5340304016,Teen Fashion Retailers,5340304016
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Apparel & Accessories Retailers,5340304017,Handbags & Luggage Retailers,5340304017
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Apparel & Accessories Retailers,5340304018,Luxury Apparel Retailers,5340304018
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Apparel & Accessories Retailers,5340304019,Sports & Outdoors Retailers,5340304019
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Computer & Electronics Retailers,5340305010,Computer & Electronics Retailers (NEC),5340305010
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Computer & Electronics Retailers,5340305011,Computer Hardware & Software Retailers,5340305011
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Computer & Electronics Retailers,5340305012,Consumer Electronics Retailers,5340305012
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Computer & Electronics Retailers,5340305013,Mobile Phone Retailers,5340305013
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309010,Miscellaneous Specialty Retailers (NEC),5340309010
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309011,Luxury Beauty Supply Retailers,5340309011
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309012,Personal Care Products Retailers,5340309012
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309013,Optical Goods Stores,5340309013
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309014,Health Food Stores,5340309014
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309015,Musical Instrument Retailers,5340309015
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309016,Hobby & Craft Product Retailers,5340309016
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309017,Toys & Games Retailers,5340309017
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309018,Book & Magazine Retailers,5340309018
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309019,Florists,5340309019
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309020,Office Supplies & Stationery Stores,5340309020
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309021,"Gift, Novelty & Souvenir Stores",5340309021
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309022,Used Merchandise Stores,5340309022
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309023,Sporting Goods Stores,5340309023
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309024,Pet & Pet Supplies Retailers,5340309024
+53,Consumer Cyclicals,5340,Specialty Retailers,534030,Miscellaneous Specialty Retailers,5340309025,Adult Products Retailers,5340309025
+54,Consumer Non-Cyclicals,5410,Beverages,541010,Brewers,5410101010,Brewers (NEC),5410101010
+54,Consumer Non-Cyclicals,5410,Beverages,541010,Brewers,5410101011,Craft & Micro Brewers,5410101011
+54,Consumer Non-Cyclicals,5410,Beverages,541010,Distillers & Wineries,5410102010,Distillers & Wineries (NEC),5410102010
+54,Consumer Non-Cyclicals,5410,Beverages,541010,Distillers & Wineries,5410102011,Wineries,5410102011
+54,Consumer Non-Cyclicals,5410,Beverages,541010,Distillers & Wineries,5410102012,Distilleries,5410102012
+54,Consumer Non-Cyclicals,5410,Beverages,541010,Distillers & Wineries,5410102013,Malt Producers,5410102013
+54,Consumer Non-Cyclicals,5410,Beverages,541010,Non-Alcoholic Beverages,5410103010,Non-Alcoholic Beverages (NEC),5410103010
+54,Consumer Non-Cyclicals,5410,Beverages,541010,Non-Alcoholic Beverages,5410103011,Carbonated Soft Drinks,5410103011
+54,Consumer Non-Cyclicals,5410,Beverages,541010,Non-Alcoholic Beverages,5410103012,Fruit Drinks,5410103012
+54,Consumer Non-Cyclicals,5410,Beverages,541010,Non-Alcoholic Beverages,5410103013,Energy Drinks,5410103013
+54,Consumer Non-Cyclicals,5410,Beverages,541010,Non-Alcoholic Beverages,5410103014,Bottled Water & Ice,5410103014
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201010,Fishing & Farming (NEC),5410201010
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201011,Grain (Crop) Production,5410201011
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201012,Poultry Farming,5410201012
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201013,Sheep & Specialty Livestock Farming,5410201013
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201014,"Vegetable, Fruit & Nut Farming",5410201014
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201015,"Coffee, Tea & Cocoa Farming",5410201015
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201016,Sugarcane Farming,5410201016
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201017,Commercial Nurseries,5410201017
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201018,Commercial Fishing,5410201018
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201019,Aquaculture,5410201019
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201020,Fur Farming,5410201020
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201021,Animal Breeding,5410201021
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201022,Agriculture Support Services,5410201022
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201023,Organic Farming,5410201023
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201024,Animal Feed,5410201024
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201025,Agricultural Consultancy Services,5410201025
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201026,Fishing & Farming Wholesale,5410201026
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201027,Agricultural Biotechnology,5410201027
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201028,Hog & Pig Farming,5410201028
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201029,Cattle Farming,5410201029
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Fishing & Farming,5410201030,Fair Trade & Ethical Fishing & Farming,5410201030
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202010,Food Processing (NEC),5410202010
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202011,Flour Milling,5410202011
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202012,Bread & Bakery Product Manufacturing,5410202012
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202013,Breakfast Cereal Manufacturing,5410202013
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202014,"Cookie, Cracker & Pasta Manufacturing",5410202014
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202015,Fruit & Vegetable Processing,5410202015
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202016,Meat Processing,5410202016
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202017,Halal Meat Processing,5410202017
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202018,Seafood Product Preparation & Packaging,5410202018
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202019,Dairy Products,5410202019
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202020,"Starch, Vegetable Fat & Oil Manufacturing",5410202020
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202021,Coffee & Tea,5410202021
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202022,Sugar & Artificial Sweeteners,5410202022
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202023,Chocolate & Confectionery,5410202023
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202024,Snack Food & Non-Chocolate Confectionary,5410202024
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202025,Special Foods & Wellbeing Products,5410202025
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202026,Food Ingredients,5410202026
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202027,Baby Food,5410202027
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202028,Ready-Made Meals,5410202028
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202030,Frozen Food Manufacturing,5410202030
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202031,Pet Food Manufacturing,5410202031
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Food Processing,5410202032,Vegan & Vegetarian Food Manufacturing,5410202032
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Tobacco,5410203010,Tobacco (NEC),5410203010
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Tobacco,5410203011,Tobacco Farming,5410203011
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Tobacco,5410203012,Tobacco Stemming & Redrying,5410203012
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Tobacco,5410203013,Cigars & Cigarette Manufacturing,5410203013
+54,Consumer Non-Cyclicals,5410,Food & Tobacco,541020,Tobacco,5410203014,Chewing Tobacco Products,5410203014
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Household Products,5420101010,Household Products (NEC),5420101010
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Household Products,5420101011,Laundry Supplies,5420101011
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Household Products,5420101012,Cleaning Supplies,5420101012
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Household Products,5420101013,Air Fresheners,5420101013
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Household Products,5420101015,Pet & Plant Protection Agents,5420101015
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Household Products,5420101016,Auto Cleaning Products,5420101016
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Products,5420102010,Personal Products (NEC),5420102010
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Products,5420102011,Cosmetics & Perfumes,5420102011
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Products,5420102012,Luxury Cosmetics,5420102012
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Products,5420102013,Sanitary Products,5420102013
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Products,5420102014,Hair Accessories,5420102014
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Products,5420102015,Birth Control Products,5420102015
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Products,5420102016,Halal Personal Products,5420102016
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Services,5420103010,Personal Services (NEC),5420103010
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Services,5420103011,Consumer Goods Rental,5420103011
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Services,5420103012,Accounting & Tax Preparation,5420103012
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Services,5420103013,Personal Legal Services,5420103013
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Services,5420103015,Child Care & Family Services,5420103015
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Services,5420103016,Consumer Repair Services,5420103016
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Services,5420103017,Personal Care Services,5420103017
+54,Consumer Non-Cyclicals,5420,Personal & Household Products & Services,542010,Personal Services,5420103018,Funeral Services,5420103018
+54,Consumer Non-Cyclicals,5430,Food & Drug Retailing,543010,Drug Retailers,5430101010,Drug Retailers (NEC),5430101010
+54,Consumer Non-Cyclicals,5430,Food & Drug Retailing,543010,Drug Retailers,5430101011,Retail - Drugs with Grocery,5430101011
+54,Consumer Non-Cyclicals,5430,Food & Drug Retailing,543010,Drug Retailers,5430101012,Retail - Drugs without Grocery,5430101012
+54,Consumer Non-Cyclicals,5430,Food & Drug Retailing,543010,Drug Retailers,5430101013,Cannabis Product Retailers,5430101013
+54,Consumer Non-Cyclicals,5430,Food & Drug Retailing,543010,Drug Retailers,5430101014,Non-Cannabis Recreational Drug Retailers,5430101014
+54,Consumer Non-Cyclicals,5430,Food & Drug Retailing,543010,Food Retail & Distribution,5430102010,Food Retail & Distribution (NEC),5430102010
+54,Consumer Non-Cyclicals,5430,Food & Drug Retailing,543010,Food Retail & Distribution,5430102011,Food Wholesale,5430102011
+54,Consumer Non-Cyclicals,5430,Food & Drug Retailing,543010,Food Retail & Distribution,5430102012,Supermarkets & Convenience Stores,5430102012
+54,Consumer Non-Cyclicals,5430,Food & Drug Retailing,543010,Food Retail & Distribution,5430102013,"Beer, Wine & Liquor Stores",5430102013
+54,Consumer Non-Cyclicals,5430,Food & Drug Retailing,543010,Food Retail & Distribution,5430102014,Vending Machine Providers,5430102014
+54,Consumer Non-Cyclicals,5430,Food & Drug Retailing,543010,Food Retail & Distribution,5430102015,Tobacco Stores,5430102015
+54,Consumer Non-Cyclicals,5430,Food & Drug Retailing,543010,Food Retail & Distribution,5430102016,Food Markets,5430102016
+54,Consumer Non-Cyclicals,5440,Consumer Goods Conglomerates,544010,Consumer Goods Conglomerates,5440101010,Consumer Goods Conglomerates,5440101010
+55,Financials,5510,Banking Services,551010,Banks,5510101010,Banks (NEC),5510101010
+55,Financials,5510,Banking Services,551010,Banks,5510101011,Corporate Banks,5510101011
+55,Financials,5510,Banking Services,551010,Banks,5510101012,Retail & Mortgage Banks,5510101012
+55,Financials,5510,Banking Services,551010,Banks,5510101013,Money Center Banks,5510101013
+55,Financials,5510,Banking Services,551010,Banks,5510101014,Private Banks,5510101014
+55,Financials,5510,Banking Services,551010,Banks,5510101015,Islamic Banks,5510101015
+55,Financials,5510,Banking Services,551010,Consumer Lending,5510103010,Consumer Lending (NEC),5510103010
+55,Financials,5510,Banking Services,551010,Consumer Lending,5510103011,Personal & Car Loans,5510103011
+55,Financials,5510,Banking Services,551010,Consumer Lending,5510103012,Consumer Credit Cards Services,5510103012
+55,Financials,5510,Banking Services,551010,Consumer Lending,5510103013,Consumer Leasing,5510103013
+55,Financials,5510,Banking Services,551010,Consumer Lending,5510103014,Credit Unions,5510103014
+55,Financials,5510,Banking Services,551010,Consumer Lending,5510103015,Microfinancing,5510103015
+55,Financials,5510,Banking Services,551010,Corporate Financial Services,5510105010,Corporate Financial Services (NEC),5510105010
+55,Financials,5510,Banking Services,551010,Corporate Financial Services,5510105011,Commercial Loans,5510105011
+55,Financials,5510,Banking Services,551010,Corporate Financial Services,5510105012,Import-Export Banks,5510105012
+55,Financials,5510,Banking Services,551010,Corporate Financial Services,5510105013,International Trade Financing,5510105013
+55,Financials,5510,Banking Services,551010,Corporate Financial Services,5510105014,Factoring,5510105014
+55,Financials,5510,Banking Services,551010,Corporate Financial Services,5510105015,Commercial Leasing,5510105015
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Banking & Brokerage Services,5510201010,Investment Banking & Brokerage Services (NEC),5510201010
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Banking & Brokerage Services,5510201011,Investment Banking,5510201011
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Banking & Brokerage Services,5510201012,Brokerage Services,5510201012
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Banking & Brokerage Services,5510201013,Inter-Dealer Broker,5510201013
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Banking & Brokerage Services,5510201014,Islamic Investment Banking & Brokerage Services,5510201014
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Banking & Brokerage Services,5510201015,Merchant Banks,5510201015
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Management & Fund Operators,5510202010,Investment Management & Fund Operators (NEC),5510202010
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Management & Fund Operators,5510202011,Investment Management,5510202011
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Management & Fund Operators,5510202012,Hedge Funds,5510202012
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Management & Fund Operators,5510202013,Collective Investment Fund Operators,5510202013
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Management & Fund Operators,5510202014,Wealth Management,5510202014
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Management & Fund Operators,5510202015,Venture Capital,5510202015
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Management & Fund Operators,5510202016,Private Equity,5510202016
+55,Financials,5510,Investment Banking & Investment Services,551020,Investment Management & Fund Operators,5510202017,Islamic Investment Management & Fund Operators,5510202017
+55,Financials,5510,Investment Banking & Investment Services,551020,Diversified Investment Services,5510203010,Diversified Investment Services,5510203010
+55,Financials,5510,Investment Banking & Investment Services,551020,Financial & Commodity Market Operators & Service Providers,5510205010,Financial & Commodity Market Operators & Service Providers (NEC),5510205010
+55,Financials,5510,Investment Banking & Investment Services,551020,Financial & Commodity Market Operators & Service Providers,5510205011,Securities & Commodity Exchanges,5510205011
+55,Financials,5510,Investment Banking & Investment Services,551020,Financial & Commodity Market Operators & Service Providers,5510205012,"Clearing, Settlement & Custodial Service",5510205012
+55,Financials,5530,Insurance,553010,Multiline Insurance & Brokers,5530101010,Multiline Insurance & Brokers (NEC),5530101010
+55,Financials,5530,Insurance,553010,Multiline Insurance & Brokers,5530101011,Islamic Insurance,5530101011
+55,Financials,5530,Insurance,553010,Multiline Insurance & Brokers,5530101012,Insurance Brokers,5530101012
+55,Financials,5530,Insurance,553010,Property & Casualty Insurance,5530102010,Property & Casualty Insurance (NEC),5530102010
+55,Financials,5530,Insurance,553010,Property & Casualty Insurance,5530102011,Property Insurance,5530102011
+55,Financials,5530,Insurance,553010,Property & Casualty Insurance,5530102012,Insurance - Automobile,5530102012
+55,Financials,5530,Insurance,553010,Property & Casualty Insurance,5530102013,Travel Insurance,5530102013
+55,Financials,5530,Insurance,553010,Property & Casualty Insurance,5530102014,Casualty Insurance,5530102014
+55,Financials,5530,Insurance,553010,Life & Health Insurance,5530103010,Life & Health Insurance (NEC),5530103010
+55,Financials,5530,Insurance,553010,Life & Health Insurance,5530103011,Life Insurance,5530103011
+55,Financials,5530,Insurance,553010,Life & Health Insurance,5530103012,Health Insurance,5530103012
+55,Financials,5530,Insurance,553010,Reinsurance,5530105010,Reinsurance (NEC),5530105010
+55,Financials,5530,Insurance,553010,Reinsurance,5530105011,Life & Health Reinsurance,5530105011
+55,Financials,5530,Insurance,553010,Reinsurance,5530105012,Property & Casualty Reinsurance,5530105012
+55,Financials,5550,Collective Investments,555010,UK Investment Trusts,5550101010,UK Investment Trusts,5550101010
+55,Financials,5550,Collective Investments,555010,Mutual Funds,5550102010,Mutual Funds (NEC),5550102010
+55,Financials,5550,Collective Investments,555010,Mutual Funds,5550102011,Islamic Mutual Funds,5550102011
+55,Financials,5550,Collective Investments,555010,Closed End Funds,5550103010,Closed End Funds,5550103010
+55,Financials,5550,Collective Investments,555010,Exchange-Traded Funds,5550104010,Exchange-Traded Funds (NEC),5550104010
+55,Financials,5550,Collective Investments,555010,Exchange-Traded Funds,5550104011,Islamic ETFs,5550104011
+55,Financials,5550,Collective Investments,555010,Exchange-Traded Funds,5550104012,Islamic Commodity ETFs,5550104012
+55,Financials,5550,Collective Investments,555010,Pension Funds,5550105010,Pension Funds,5550105010
+55,Financials,5550,Collective Investments,555010,Insurance Funds,5550106010,Insurance Funds,5550106010
+55,Financials,5560,Investment Holding Companies,556010,Investment Holding Companies,5560101010,Investment Holding Companies (NEC),5560101010
+55,Financials,5560,Investment Holding Companies,556010,Investment Holding Companies,5560101011,Shell Companies,5560101011
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,Advanced Medical Equipment & Technology,5610101010,Advanced Medical Equipment & Technology (NEC),5610101010
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,Advanced Medical Equipment & Technology,5610101011,Medical Diagnostic & Testing Equipment,5610101011
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,Advanced Medical Equipment & Technology,5610101012,Medical Monitoring Systems,5610101012
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,Advanced Medical Equipment & Technology,5610101013,Laser Equipment,5610101013
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,Advanced Medical Equipment & Technology,5610101014,Medical Imaging Systems,5610101014
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,Advanced Medical Equipment & Technology,5610101015,Medical Software & Technology Services,5610101015
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,Advanced Medical Equipment & Technology,5610101016,Advanced Medical Equipment Wholesale,5610101016
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,"Medical Equipment, Supplies & Distribution",5610102010,"Medical Equipment, Supplies & Distribution (NEC)",5610102010
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,"Medical Equipment, Supplies & Distribution",5610102011,Medical Supplies,5610102011
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,"Medical Equipment, Supplies & Distribution",5610102012,Medical Prosthetics,5610102012
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,"Medical Equipment, Supplies & Distribution",5610102013,Medical Equipment,5610102013
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,"Medical Equipment, Supplies & Distribution",5610102014,Medical Devices & Implants,5610102014
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,"Medical Equipment, Supplies & Distribution",5610102015,Medical Equipment Wholesale,5610102015
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,"Medical Equipment, Supplies & Distribution",5610102016,"Glasses, Spectacles & Contact Lenses",5610102016
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,"Medical Equipment, Supplies & Distribution",5610102017,Laboratory Diagnostic & Testing Substances,5610102017
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,"Medical Equipment, Supplies & Distribution",5610102018,Veterinary Medical Equipment & Supplies,5610102018
+56,Healthcare,5610,Healthcare Equipment & Supplies,561010,"Medical Equipment, Supplies & Distribution",5610102019,Drug Delivery Systems,5610102019
+56,Healthcare,5610,Healthcare Providers & Services,561020,Healthcare Facilities & Services,5610201010,Healthcare Facilities & Services (NEC),5610201010
+56,Healthcare,5610,Healthcare Providers & Services,561020,Healthcare Facilities & Services,5610201011,"Hospitals, Clinics & Primary Care Services",5610201011
+56,Healthcare,5610,Healthcare Providers & Services,561020,Healthcare Facilities & Services,5610201012,Residential & Long-Term Care,5610201012
+56,Healthcare,5610,Healthcare Providers & Services,561020,Healthcare Facilities & Services,5610201013,Ambulance & Emergency Services,5610201013
+56,Healthcare,5610,Healthcare Providers & Services,561020,Healthcare Facilities & Services,5610201014,Doctor's Office,5610201014
+56,Healthcare,5610,Healthcare Providers & Services,561020,Healthcare Facilities & Services,5610201015,Medical & Diagnostic Laboratories,5610201015
+56,Healthcare,5610,Healthcare Providers & Services,561020,Healthcare Facilities & Services,5610201016,Veterinary Services,5610201016
+56,Healthcare,5610,Healthcare Providers & Services,561020,Healthcare Facilities & Services,5610201017,Telemedicine Services,5610201017
+56,Healthcare,5610,Healthcare Providers & Services,561020,Healthcare Facilities & Services,5610201018,Home Healthcare Services,5610201018
+56,Healthcare,5610,Healthcare Providers & Services,561020,Healthcare Facilities & Services,5610201019,Alternative Medicine Facilities,5610201019
+56,Healthcare,5610,Healthcare Providers & Services,561020,Healthcare Facilities & Services,5610201020,Medical Farming,5610201020
+56,Healthcare,5610,Healthcare Providers & Services,561020,Managed Healthcare,5610202010,Managed Healthcare (NEC),5610202010
+56,Healthcare,5610,Healthcare Providers & Services,561020,Managed Healthcare,5610202011,HMO Medical Centers,5610202011
+56,Healthcare,5620,Pharmaceuticals,562010,Pharmaceuticals,5620104010,Pharmaceuticals (NEC),5620104010
+56,Healthcare,5620,Pharmaceuticals,562010,Pharmaceuticals,5620104011,Proprietary & Advanced Pharmaceuticals,5620104011
+56,Healthcare,5620,Pharmaceuticals,562010,Pharmaceuticals,5620104012,Biopharmaceuticals,5620104012
+56,Healthcare,5620,Pharmaceuticals,562010,Pharmaceuticals,5620104013,In-Vivo Diagnostic & Testing Substances,5620104013
+56,Healthcare,5620,Pharmaceuticals,562010,Pharmaceuticals,5620104014,Veterinary Drugs,5620104014
+56,Healthcare,5620,Pharmaceuticals,562010,Pharmaceuticals,5620104015,Generic Pharmaceuticals,5620104015
+56,Healthcare,5620,Pharmaceuticals,562010,Pharmaceuticals,5620104016,Alternative Medicine,5620104016
+56,Healthcare,5620,Pharmaceuticals,562010,Pharmaceuticals,5620104017,Recreational Pharmaceuticals,5620104017
+56,Healthcare,5620,Pharmaceuticals,562010,Pharmaceuticals,5620104018,Pharmaceuticals Wholesale,5620104018
+56,Healthcare,5620,Biotechnology & Medical Research,562020,Biotechnology & Medical Research,5620201010,Biotechnology & Medical Research (NEC),5620201010
+56,Healthcare,5620,Biotechnology & Medical Research,562020,Biotechnology & Medical Research,5620201011,Bio Therapeutic Drugs,5620201011
+56,Healthcare,5620,Biotechnology & Medical Research,562020,Biotechnology & Medical Research,5620201012,Bio Diagnostics & Testing,5620201012
+56,Healthcare,5620,Biotechnology & Medical Research,562020,Biotechnology & Medical Research,5620201013,Bio Medical Devices,5620201013
+57,Technology,5710,Semiconductors & Semiconductor Equipment,571010,Semiconductors,5710101010,Semiconductors (NEC),5710101010
+57,Technology,5710,Semiconductors & Semiconductor Equipment,571010,Semiconductors,5710101011,Integrated Circuits,5710101011
+57,Technology,5710,Semiconductors & Semiconductor Equipment,571010,Semiconductors,5710101012,Memory Chips (RAM),5710101012
+57,Technology,5710,Semiconductors & Semiconductor Equipment,571010,Semiconductors,5710101013,Processors,5710101013
+57,Technology,5710,Semiconductors & Semiconductor Equipment,571010,Semiconductors,5710101014,Semiconductor Wholesale,5710101014
+57,Technology,5710,Semiconductors & Semiconductor Equipment,571010,Semiconductors,5710101015,NFC & RFID Systems,5710101015
+57,Technology,5710,Semiconductors & Semiconductor Equipment,571010,Semiconductor Equipment & Testing,5710102010,Semiconductor Equipment & Testing (NEC),5710102010
+57,Technology,5710,Semiconductors & Semiconductor Equipment,571010,Semiconductor Equipment & Testing,5710102011,Semiconductor Machinery Manufacturing,5710102011
+57,Technology,5710,Semiconductors & Semiconductor Equipment,571010,Semiconductor Equipment & Testing,5710102012,Semiconductor Testing Equipment & Service,5710102012
+57,Technology,5710,Semiconductors & Semiconductor Equipment,571010,Semiconductor Equipment & Testing,5710102013,Semiconductor Equipment Wholesale,5710102013
+57,Technology,5710,Communications & Networking,571020,Communications & Networking,5710201010,Communications & Networking (NEC),5710201010
+57,Technology,5710,Communications & Networking,571020,Communications & Networking,5710201011,Network Equipment,5710201011
+57,Technology,5710,Communications & Networking,571020,Communications & Networking,5710201012,Security & Surveillance,5710201012
+57,Technology,5710,Communications & Networking,571020,Communications & Networking,5710201013,Conferencing Tools & Systems,5710201013
+57,Technology,5710,Communications & Networking,571020,Communications & Networking,5710201014,VOIP Equipment & Systems,5710201014
+57,Technology,5710,Communications & Networking,571020,Communications & Networking,5710201015,Broadcasting Equipment,5710201015
+57,Technology,5710,Communications & Networking,571020,Communications & Networking,5710201016,Satellite Communications Network,5710201016
+57,Technology,5710,Communications & Networking,571020,Communications & Networking,5710201017,Fiber Optic Cable Manufacturing,5710201017
+57,Technology,5710,Electronic Equipment & Parts,571040,Electronic Equipment & Parts,5710401010,Electronic Equipment & Parts (NEC),5710401010
+57,Technology,5710,Electronic Equipment & Parts,571040,Electronic Equipment & Parts,5710401011,Biometric Products,5710401011
+57,Technology,5710,Electronic Equipment & Parts,571040,Electronic Equipment & Parts,5710401012,Advanced Electronic Equipment,5710401012
+57,Technology,5710,Electronic Equipment & Parts,571040,Electronic Equipment & Parts,5710401013,Display Screens,5710401013
+57,Technology,5710,Electronic Equipment & Parts,571040,Electronic Equipment & Parts,5710401014,Electronic Components,5710401014
+57,Technology,5710,Electronic Equipment & Parts,571040,Electronic Equipment & Parts,5710401015,3D Printers,5710401015
+57,Technology,5710,Office Equipment,571050,Office Equipment,5710501010,Office Equipment (NEC),5710501010
+57,Technology,5710,Office Equipment,571050,Office Equipment,5710501011,Commercial Document Management,5710501011
+57,Technology,5710,Office Equipment,571050,Office Equipment,5710501012,Office Technology Equipment,5710501012
+57,Technology,5710,Office Equipment,571050,Office Equipment,5710501013,Point of Sale Systems,5710501013
+57,Technology,5710,Office Equipment,571050,Office Equipment,5710501014,Scientific & Precision Equipment,5710501014
+57,Technology,5710,Office Equipment,571050,Office Equipment,5710501015,Office Equipment Wholesale,5710501015
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Computer Hardware,5710601010,Computer Hardware (NEC),5710601010
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Computer Hardware,5710601011,Scientific & Super Computers,5710601011
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Computer Hardware,5710601012,Laptop & Desktop Computers,5710601012
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Computer Hardware,5710601013,Tablet & Netbook Computers,5710601013
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Computer Hardware,5710601014,Input Devices,5710601014
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Computer Hardware,5710601015,Output Devices,5710601015
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Computer Hardware,5710601016,Servers & Systems,5710601016
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Computer Hardware,5710601017,Storage Devices,5710601017
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Computer Hardware,5710601018,Computer Hardware Component Assembly,5710601018
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Computer Hardware,5710601019,Consumer Document Management,5710601019
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Phones & Handheld Devices,5710602010,Phones & Handheld Devices (NEC),5710602010
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Phones & Handheld Devices,5710602011,Phones & Smart Phones,5710602011
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Phones & Handheld Devices,5710602012,Portable Satellite Navigation,5710602012
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Phones & Handheld Devices,5710602013,Personal Music Players,5710602013
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Phones & Handheld Devices,5710602014,Electronic Books,5710602014
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Phones & Handheld Devices,5710602015,Mobile Device Component Assembly,5710602015
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Household Electronics,5710603010,Household Electronics (NEC),5710603010
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Household Electronics,5710603011,Photographic Equipment,5710603011
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Household Electronics,5710603012,TV & Video,5710603012
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Household Electronics,5710603013,Home Audio,5710603013
+57,Technology,5710,"Computers, Phones & Household Electronics",571060,Household Electronics,5710603014,Consumer Electronic Wholesale,5710603014
+57,Technology,5710,Integrated Hardware & Software,571070,Integrated Hardware & Software,5710701010,Integrated Hardware & Software,5710701010
+57,Technology,5720,Software & IT Services,572010,IT Services & Consulting,5720101010,IT Services & Consulting (NEC),5720101010
+57,Technology,5720,Software & IT Services,572010,IT Services & Consulting,5720101011,Computer Programming,5720101011
+57,Technology,5720,Software & IT Services,572010,IT Services & Consulting,5720101012,Computer Training,5720101012
+57,Technology,5720,Software & IT Services,572010,IT Services & Consulting,5720101013,Technology Consulting & Outsourcing Services,5720101013
+57,Technology,5720,Software & IT Services,572010,IT Services & Consulting,5720101014,IT Testing Services,5720101014
+57,Technology,5720,Software & IT Services,572010,IT Services & Consulting,5720101015,Cloud Computing Services,5720101015
+57,Technology,5720,Software & IT Services,572010,IT Services & Consulting,5720101016,Machine Learning & Artificial Intelligence (AI) Services,5720101016
+57,Technology,5720,Software & IT Services,572010,Software,5720102010,Software (NEC),5720102010
+57,Technology,5720,Software & IT Services,572010,Software,5720102011,System Software,5720102011
+57,Technology,5720,Software & IT Services,572010,Software,5720102012,Application Software,5720102012
+57,Technology,5720,Software & IT Services,572010,Software,5720102013,Enterprise Software,5720102013
+57,Technology,5720,Software & IT Services,572010,Software,5720102014,Mobile Application Software,5720102014
+57,Technology,5720,Software & IT Services,572010,Software,5720102015,Mobile System Software,5720102015
+57,Technology,5720,Software & IT Services,572010,Software,5720102016,Programming Software & Testing Tools,5720102016
+57,Technology,5720,Software & IT Services,572010,Software,5720102017,Server & Database Software,5720102017
+57,Technology,5720,Software & IT Services,572010,Software,5720102018,Security Software,5720102018
+57,Technology,5720,Software & IT Services,572010,Online Services,5720103010,Online Services (NEC),5720103010
+57,Technology,5720,Software & IT Services,572010,Online Services,5720103011,Search Engines,5720103011
+57,Technology,5720,Software & IT Services,572010,Online Services,5720103012,Social Media & Networking,5720103012
+57,Technology,5720,Software & IT Services,572010,Online Services,5720103013,E-commerce & Auction Services,5720103013
+57,Technology,5720,Software & IT Services,572010,Online Services,5720103014,Content & Site Management Services,5720103014
+57,Technology,5720,Software & IT Services,572010,Online Services,5720103015,Internet Security & Transactions Services,5720103015
+57,Technology,5720,Software & IT Services,572010,Online Services,5720103016,Internet Gaming,5720103016
+57,Technology,5730,Financial Technology (Fintech) & Infrastructure,573010,Financial Technology (Fintech),5730101010,Financial Technology (Fintech) (NEC),5730101010
+57,Technology,5730,Financial Technology (Fintech) & Infrastructure,573010,Financial Technology (Fintech),5730101020,Business to Business,5730101020
+57,Technology,5730,Financial Technology (Fintech) & Infrastructure,573010,Financial Technology (Fintech),5730101030,Business to Consumer,5730101030
+57,Technology,5730,Financial Technology (Fintech) & Infrastructure,573010,Financial Technology (Fintech),5730101040,Consumer to Consumer,5730101040
+57,Technology,5730,Financial Technology (Fintech) & Infrastructure,573010,Crowd Collaboration,5730102010,Crowd Collaboration (NEC),5730102010
+57,Technology,5730,Financial Technology (Fintech) & Infrastructure,573010,Crowd Collaboration,5730102020,Crowdfinancing & Crowdfunding,5730102020
+57,Technology,5730,Financial Technology (Fintech) & Infrastructure,573010,Crowd Collaboration,5730102030,Crowdsourcing Platforms,5730102030
+57,Technology,5730,Financial Technology (Fintech) & Infrastructure,573010,Blockchain & Cryptocurrency,5730103010,Blockchain & Cryptocurrency (NEC),5730103010
+57,Technology,5730,Financial Technology (Fintech) & Infrastructure,573010,Blockchain & Cryptocurrency,5730103020,Cryptocurrency Trading Platforms (Exchanges),5730103020
+57,Technology,5730,Financial Technology (Fintech) & Infrastructure,573010,Blockchain & Cryptocurrency,5730103030,Blockchain Technology (Software),5730103030
+57,Technology,5730,Financial Technology (Fintech) & Infrastructure,573010,Blockchain & Cryptocurrency,5730103040,Cryptocurrency Hardware,5730103040
+57,Technology,5730,Financial Technology (Fintech) & Infrastructure,573010,Blockchain & Cryptocurrency,5730103050,Cryptocurrency Mining,5730103050
+57,Technology,5730,Financial Technology (Fintech) & Infrastructure,573010,Miscellaneous Fintech Infrastructure,5730109010,Miscellaneous Fintech Infrastructure,5730109010
+57,Technology,5740,Telecommunications Services,574010,Integrated Telecommunications Services,5740101010,Integrated Telecommunications Services (NEC),5740101010
+57,Technology,5740,Telecommunications Services,574010,Integrated Telecommunications Services,5740101020,Wired Telecommunications Carriers,5740101020
+57,Technology,5740,Telecommunications Services,574010,Integrated Telecommunications Services,5740101030,Telecommunications Resellers,5740101030
+57,Technology,5740,Telecommunications Services,574010,Integrated Telecommunications Services,5740101040,Internet Service Providers,5740101040
+57,Technology,5740,Telecommunications Services,574010,Integrated Telecommunications Services,5740101050,Telecommunications Network Infrastructure,5740101050
+57,Technology,5740,Telecommunications Services,574010,Integrated Telecommunications Services,5740101060,VOIP Services,5740101060
+57,Technology,5740,Telecommunications Services,574010,Wireless Telecommunications Services,5740102010,Wireless Telecommunications Services (NEC),5740102010
+57,Technology,5740,Telecommunications Services,574010,Wireless Telecommunications Services,5740102020,Alternative Communications Services,5740102020
+57,Technology,5740,Telecommunications Services,574010,Wireless Telecommunications Services,5740102030,Satellite Service Operators,5740102030
+57,Technology,5740,Telecommunications Services,574010,Wireless Telecommunications Services,5740102040,Wi-Fi & Wi-Max Providers,5740102040
+57,Technology,5740,Telecommunications Services,574010,Wireless Telecommunications Services,5740102050,Wireless Telecoms Service Providers,5740102050
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Electric Utilities,5910101010,Electric Utilities (NEC),5910101010
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Electric Utilities,5910101012,Fossil Fuel Electric Utilities,5910101012
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Electric Utilities,5910101013,Nuclear Utilities,5910101013
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Electric Utilities,5910101014,Power Charging Stations,5910101014
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Electric Utilities,5910101020,Alternative Electric Utilities,5910101020
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Electric Utilities,5910101021,Hydroelectric & Tidal Utilities,5910101021
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Electric Utilities,5910101022,Solar Electric Utilities,5910101022
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Electric Utilities,5910101023,Wind Electric Utilities,5910101023
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Electric Utilities,5910101024,Biomass & Waste to Energy Electric Utilities,5910101024
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Electric Utilities,5910101025,Geothermal Electric Utilities,5910101025
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Independent Power Producers,5910102010,Independent Power Producers (NEC),5910102010
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Independent Power Producers,5910102011,Fossil Fuel IPPs,5910102011
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Independent Power Producers,5910102012,Renewable IPPs,5910102012
+59,Utilities,5910,Electrical Utilities & IPPs,591010,Independent Power Producers,5910102013,Nuclear IPPs,5910102013
+59,Utilities,5910,Natural Gas Utilities,591020,Natural Gas Utilities,5910201010,Natural Gas Utilities (NEC),5910201010
+59,Utilities,5910,Natural Gas Utilities,591020,Natural Gas Utilities,5910201011,Natural Gas Distribution,5910201011
+59,Utilities,5910,Water & Related Utilities,591030,Water & Related Utilities,5910301010,Water & Related Utilities (NEC),5910301010
+59,Utilities,5910,Water & Related Utilities,591030,Water & Related Utilities,5910301011,Water Supply & Irrigation Systems,5910301011
+59,Utilities,5910,Water & Related Utilities,591030,Water & Related Utilities,5910301012,Sewage Treatment Facilities,5910301012
+59,Utilities,5910,Water & Related Utilities,591030,Water & Related Utilities,5910301013,Heating & Air-Conditioning Supply,5910301013
+59,Utilities,5910,Multiline Utilities,591040,Multiline Utilities,5910401010,Multiline Utilities,5910401010
+60,Real Estate,6010,Real Estate Operations,601010,"Real Estate Rental, Development & Operations",6010101010,"Real Estate Rental, Development & Operations (NEC)",6010101010
+60,Real Estate,6010,Real Estate Operations,601010,"Real Estate Rental, Development & Operations",6010101020,Office Real Estate Rental & Development,6010101020
+60,Real Estate,6010,Real Estate Operations,601010,"Real Estate Rental, Development & Operations",6010101030,Retail Real Estate Rental & Development,6010101030
+60,Real Estate,6010,Real Estate Operations,601010,"Real Estate Rental, Development & Operations",6010101040,Industrial Real Estate Rental & Development,6010101040
+60,Real Estate,6010,Real Estate Operations,601010,"Real Estate Rental, Development & Operations",6010101050,Residential Real Estate Rental & Development,6010101050
+60,Real Estate,6010,Real Estate Operations,601010,Real Estate Services,6010102010,Real Estate Services (NEC),6010102010
+60,Real Estate,6010,Real Estate Operations,601010,Real Estate Services,6010102020,Office Real Estate Services,6010102020
+60,Real Estate,6010,Real Estate Operations,601010,Real Estate Services,6010102030,Retail Real Estate Services,6010102030
+60,Real Estate,6010,Real Estate Operations,601010,Real Estate Services,6010102040,Industrial Real Estate Services,6010102040
+60,Real Estate,6010,Real Estate Operations,601010,Real Estate Services,6010102050,Residential Real Estate Services,6010102050
+60,Real Estate,6010,Residential & Commercial REITs,601020,Diversified REITs,6010201010,Diversified REITs,6010201010
+60,Real Estate,6010,Residential & Commercial REITs,601020,Commercial REITs,6010202010,Commercial REITs (NEC),6010202010
+60,Real Estate,6010,Residential & Commercial REITs,601020,Commercial REITs,6010202020,Office REITs,6010202020
+60,Real Estate,6010,Residential & Commercial REITs,601020,Commercial REITs,6010202030,Retail REITs,6010202030
+60,Real Estate,6010,Residential & Commercial REITs,601020,Commercial REITs,6010202040,Industrial REITs,6010202040
+60,Real Estate,6010,Residential & Commercial REITs,601020,Residential REITs,6010203010,Residential REITs,6010203010
+60,Real Estate,6010,Residential & Commercial REITs,601020,Specialized REITs,6010204010,Specialized REITs (NEC),6010204010
+60,Real Estate,6010,Residential & Commercial REITs,601020,Specialized REITs,6010204020,Healthcare REITs,6010204020
+60,Real Estate,6010,Residential & Commercial REITs,601020,Specialized REITs,6010204030,Hospitality REITs,6010204030
+60,Real Estate,6010,Residential & Commercial REITs,601020,Specialized REITs,6010204040,Self-Storage REITs,6010204040
+60,Real Estate,6010,Residential & Commercial REITs,601020,Specialized REITs,6010204050,Timber REITs,6010204050
+60,Real Estate,6010,Residential & Commercial REITs,601020,Specialized REITs,6010204060,Mortgage REITs,6010204060
+60,Real Estate,6010,Residential & Commercial REITs,601020,Specialized REITs,6010204070,Islamic REITs,6010204070
+61,"Institutions, Associations & Organizations",6110,"Institutions, Associations & Organizations",611010,Religious Organizations,6110101010,Religious Organizations,6110101010
+61,"Institutions, Associations & Organizations",6110,"Institutions, Associations & Organizations",611010,Civic & Social Organizations,6110102010,Civic & Social Organizations,6110102010
+61,"Institutions, Associations & Organizations",6110,"Institutions, Associations & Organizations",611010,Environmental Organizations,6110103010,Environmental Organizations,6110103010
+61,"Institutions, Associations & Organizations",6110,"Institutions, Associations & Organizations",611010,Charity Organizations,6110104010,Charity Organizations,6110104010
+61,"Institutions, Associations & Organizations",6110,"Institutions, Associations & Organizations",611010,Professional Organizations,6110105010,Professional Organizations (NEC),6110105010
+61,"Institutions, Associations & Organizations",6110,"Institutions, Associations & Organizations",611010,Professional Organizations,6110105020,"Business, Professional & Labor Organizations",6110105020
+61,"Institutions, Associations & Organizations",6110,"Institutions, Associations & Organizations",611010,Professional Organizations,6110105030,Political Organizations,6110105030
+61,"Institutions, Associations & Organizations",6110,"Institutions, Associations & Organizations",611010,Professional Organizations,6110105040,Non-Governmental Organizations (NGOs),6110105040
+62,Government Activity,6210,Government Activity,621010,Government & Government Finance,6210101010,Government & Government Finance (NEC),6210101010
+62,Government Activity,6210,Government Activity,621010,Government & Government Finance,6210101020,Public Finance Activities,6210101020
+62,Government Activity,6210,Government Activity,621010,Legal & Safety Public Services,6210102010,Legal & Safety Public Services (NEC),6210102010
+62,Government Activity,6210,Government Activity,621010,Legal & Safety Public Services,6210102020,"Police, Justice & Legal Counsel",6210102020
+62,Government Activity,6210,Government Activity,621010,Legal & Safety Public Services,6210102030,Fire,6210102030
+62,Government Activity,6210,Government Activity,621010,Government Administration Activities,6210103010,Government Administration Activities,6210103010
+62,Government Activity,6210,Government Activity,621010,National Security & International Affairs,6210104010,National Security & International Affairs,6210104010
+63,Academic & Educational Services,6310,Miscellaneous Educational Service Providers,631010,Miscellaneous Educational Service Providers,6310101010,Miscellaneous Educational Service Providers,6310101010
+63,Academic & Educational Services,6310,"School, College & University",631020,"School, College & University",6310201010,"School, College & University (NEC)",6310201010
+63,Academic & Educational Services,6310,"School, College & University",631020,"School, College & University",6310201020,Nursery & Pre-Schools,6310201020
+63,Academic & Educational Services,6310,"School, College & University",631020,"School, College & University",6310201030,Elementary & Primary Schools,6310201030
+63,Academic & Educational Services,6310,"School, College & University",631020,"School, College & University",6310201040,Colleges & Secondary Schools,6310201040
+63,Academic & Educational Services,6310,"School, College & University",631020,"School, College & University",6310201050,Universities,6310201050
+63,Academic & Educational Services,6310,"School, College & University",631020,"School, College & University",6310201060,School Districts,6310201060
+63,Academic & Educational Services,6310,Professional & Business Education,631030,Professional & Business Education,6310301010,Professional & Business Education,6310301010

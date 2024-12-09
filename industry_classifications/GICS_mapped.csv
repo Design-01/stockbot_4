@@ -1,0 +1,158 @@
+Sector Code,Sector Name,Industry Group Code,Industry Group Name,Industry Code,Industry Name,Sub-Industry Code,Sub-Industry Name,etf_ticker
+10,Energy,1010,Energy,101010,Energy Equipment & Services,10101010,Oil & Gas Drilling,XLE
+10,Energy,1010,Energy,101010,Energy Equipment & Services,10101020,Oil & Gas Equipment & Services,XLE
+10,Energy,1010,Energy,101020,Oil Gas & Consumable Fuels,10102010,Integrated Oil & Gas,XLE
+10,Energy,1010,Energy,101020,Oil Gas & Consumable Fuels,10102020,Oil & Gas Exploration & Production,XLE
+10,Energy,1010,Energy,101020,Oil Gas & Consumable Fuels,10102030,Oil & Gas Refining & Marketing,XLE
+10,Energy,1010,Energy,101020,Oil Gas & Consumable Fuels,10102040,Oil & Gas Storage & Transportation,XLE
+10,Energy,1010,Energy,101020,Oil Gas & Consumable Fuels,10102050,Coal & Consumable Fuels,XLE
+15,Materials,1510,Materials,151010,Chemicals,15101010,Commodity Chemicals,XLB
+15,Materials,1510,Materials,151010,Chemicals,15101020,Diversified Chemicals,XLB
+15,Materials,1510,Materials,151010,Chemicals,15101030,Fertilizers & Agricultural Chemicals,XLB
+15,Materials,1510,Materials,151010,Chemicals,15101040,Industrial Gases,XLB
+15,Materials,1510,Materials,151010,Chemicals,15101050,Specialty Chemicals,XLB
+15,Materials,1510,Materials,151020,Construction Materials,15102010,Construction Materials,XLB
+15,Materials,1510,Materials,151030,Containers & Packaging,15103010,Metal & Glass Containers,XLB
+15,Materials,1510,Materials,151030,Containers & Packaging,15103020,Paper Packaging,XLB
+15,Materials,1510,Materials,151040,Metals & Mining,15104010,Aluminum,XLB
+15,Materials,1510,Materials,151040,Metals & Mining,15104020,Diversified Metals & Mining,XLB
+15,Materials,1510,Materials,151040,Metals & Mining,15104025,Copper,XLB
+15,Materials,1510,Materials,151040,Metals & Mining,15104030,Gold,XLB
+15,Materials,1510,Materials,151040,Metals & Mining,15104040,Precious Metals & Minerals,XLB
+15,Materials,1510,Materials,151040,Metals & Mining,15104045,Silver,XLB
+15,Materials,1510,Materials,151040,Metals & Mining,15104050,Steel,XLB
+15,Materials,1510,Materials,151050,Paper & Forest Products,15105010,Forest Products,XLB
+15,Materials,1510,Materials,151050,Paper & Forest Products,15105020,Paper Products,XLB
+20,Industrials,2010,Capital Goods,201010,Aerospace & Defense,20101010,Aerospace & Defense,XLI
+20,Industrials,2010,Capital Goods,201020,Building Products,20102010,Building Products,XLI
+20,Industrials,2010,Capital Goods,201030,Construction & Engineering,20103010,Construction & Engineering,XLI
+20,Industrials,2010,Capital Goods,201040,Electrical Equipment,20104010,Electrical Components & Equipment,XLI
+20,Industrials,2010,Capital Goods,201040,Electrical Equipment,20104020,Heavy Electrical Equipment,XLI
+20,Industrials,2010,Capital Goods,201050,Industrial Conglomerates,20105010,Industrial Conglomerates,XLI
+20,Industrials,2010,Capital Goods,201060,Machinery,20106010,Construction Machinery & Heavy Trucks,XLI
+20,Industrials,2010,Capital Goods,201060,Machinery,20106020,Agricultural & Farm Machinery,XLI
+20,Industrials,2010,Capital Goods,201060,Machinery,20106030,Industrial Machinery,XLI
+20,Industrials,2010,Capital Goods,201070,Trading Companies & Distributors,20107010,Trading Companies & Distributors,XLI
+20,Industrials,2020,Commercial & Professional Services,202010,Commercial Services & Supplies,20201010,Commercial Printing,XLI
+20,Industrials,2020,Commercial & Professional Services,202010,Commercial Services & Supplies,20201050,Environmental & Facilities Services,XLI
+20,Industrials,2020,Commercial & Professional Services,202010,Commercial Services & Supplies,20201060,Office Services & Supplies,XLI
+20,Industrials,2020,Commercial & Professional Services,202010,Commercial Services & Supplies,20201070,Diversified Support Services,XLI
+20,Industrials,2020,Commercial & Professional Services,202010,Commercial Services & Supplies,20201080,Security & Alarm Services,XLI
+20,Industrials,2020,Commercial & Professional Services,202020,Professional Services,20202010,Human Resource & Employment Services,XLI
+20,Industrials,2020,Commercial & Professional Services,202020,Professional Services,20202020,Research & Consulting Services,XLI
+20,Industrials,2030,Transportation,203010,Air Freight & Logistics,20301010,Air Freight & Logistics,XLI
+20,Industrials,2030,Transportation,203020,Airlines,20302010,Airlines,XLI
+20,Industrials,2030,Transportation,203030,Marine,20303010,Marine,XLI
+20,Industrials,2030,Transportation,203040,Road & Rail,20304010,Railroads,XLI
+20,Industrials,2030,Transportation,203040,Road & Rail,20304020,Trucking,XLI
+20,Industrials,2030,Transportation,203050,Transportation Infrastructure,20305010,Airport Services,XLI
+20,Industrials,2030,Transportation,203050,Transportation Infrastructure,20305020,Highways & Railtracks,XLI
+20,Industrials,2030,Transportation,203050,Transportation Infrastructure,20305030,Marine Ports & Services,XLI
+25,Consumer Discretionary,2510,Automobiles & Components,251010,Auto Components,25101010,Auto Parts & Equipment,XLY
+25,Consumer Discretionary,2510,Automobiles & Components,251010,Auto Components,25101020,Tires & Rubber,XLY
+25,Consumer Discretionary,2510,Automobiles & Components,251020,Automobiles,25102010,Automobile Manufacturers,XLY
+25,Consumer Discretionary,2510,Automobiles & Components,251020,Automobiles,25102020,Motorcycle Manufacturers,XLY
+25,Consumer Discretionary,2520,Consumer Durables & Apparel,252010,Household Durables,25201010,Consumer Electronics,XLY
+25,Consumer Discretionary,2520,Consumer Durables & Apparel,252010,Household Durables,25201020,Home Furnishings,XLY
+25,Consumer Discretionary,2520,Consumer Durables & Apparel,252010,Household Durables,25201030,Homebuilding,XLY
+25,Consumer Discretionary,2520,Consumer Durables & Apparel,252010,Household Durables,25201040,Household Appliances,XLY
+25,Consumer Discretionary,2520,Consumer Durables & Apparel,252010,Household Durables,25201050,Housewares & Specialties,XLY
+25,Consumer Discretionary,2520,Consumer Durables & Apparel,252020,Leisure Products,25202010,Leisure Products,XLY
+25,Consumer Discretionary,2520,Consumer Durables & Apparel,252030,Textiles Apparel & Luxury Goods,25203010,Apparel Accessories & Luxury Goods,XLY
+25,Consumer Discretionary,2520,Consumer Durables & Apparel,252030,Textiles Apparel & Luxury Goods,25203020,Footwear,XLY
+25,Consumer Discretionary,2520,Consumer Durables & Apparel,252030,Textiles Apparel & Luxury Goods,25203030,Textiles,XLY
+25,Consumer Discretionary,2530,Consumer Services,253010,Hotels Restaurants & Leisure,25301010,Casinos & Gaming,XLY
+25,Consumer Discretionary,2530,Consumer Services,253010,Hotels Restaurants & Leisure,25301020,Hotels Resorts & Cruise Lines,XLY
+25,Consumer Discretionary,2530,Consumer Services,253010,Hotels Restaurants & Leisure,25301030,Leisure Facilities,XLY
+25,Consumer Discretionary,2530,Consumer Services,253010,Hotels Restaurants & Leisure,25301040,Restaurants,XLY
+25,Consumer Discretionary,2530,Consumer Services,253020,Diversified Consumer Services,25302010,Education Services,XLY
+25,Consumer Discretionary,2530,Consumer Services,253020,Diversified Consumer Services,25302020,Specialized Consumer Services,XLY
+25,Consumer Discretionary,2550,Retailing,255010,Distributors,25501010,Distributors,XLY
+25,Consumer Discretionary,2550,Retailing,255020,Internet & Direct Marketing Retail,25502020,Internet & Direct Marketing Retail,XLY
+25,Consumer Discretionary,2550,Retailing,255030,Multiline Retail,25503010,Department Stores,XLY
+25,Consumer Discretionary,2550,Retailing,255030,Multiline Retail,25503020,General Merchandise Stores,XLY
+25,Consumer Discretionary,2550,Retailing,255040,Specialty Retail,25504010,Apparel Retail,XLY
+25,Consumer Discretionary,2550,Retailing,255040,Specialty Retail,25504020,Computer & Electronics Retail,XLY
+25,Consumer Discretionary,2550,Retailing,255040,Specialty Retail,25504030,Home Improvement Retail,XLY
+25,Consumer Discretionary,2550,Retailing,255040,Specialty Retail,25504040,Specialty Stores,XLY
+25,Consumer Discretionary,2550,Retailing,255040,Specialty Retail,25504050,Automotive Retail,XLY
+25,Consumer Discretionary,2550,Retailing,255040,Specialty Retail,25504060,Homefurnishing Retail,XLY
+30,Consumer Staples,3010,Food & Staples Retailing,301010,Food & Staples Retailing,30101010,Drug Retail,XLP
+30,Consumer Staples,3010,Food & Staples Retailing,301010,Food & Staples Retailing,30101020,Food Distributors,XLP
+30,Consumer Staples,3010,Food & Staples Retailing,301010,Food & Staples Retailing,30101030,Food Retail,XLP
+30,Consumer Staples,3010,Food & Staples Retailing,301010,Food & Staples Retailing,30101040,Hypermarkets & Super Centers,XLP
+30,Consumer Staples,3020,Food Beverage & Tobacco,302010,Beverages,30201010,Brewers,XLP
+30,Consumer Staples,3020,Food Beverage & Tobacco,302010,Beverages,30201020,Distillers & Vintners,XLP
+30,Consumer Staples,3020,Food Beverage & Tobacco,302010,Beverages,30201030,Soft Drinks,XLP
+30,Consumer Staples,3020,Food Beverage & Tobacco,302020,Food Products,30202010,Agricultural Products,XLP
+30,Consumer Staples,3020,Food Beverage & Tobacco,302020,Food Products,30202030,Packaged Foods & Meats,XLP
+30,Consumer Staples,3020,Food Beverage & Tobacco,302030,Tobacco,30203010,Tobacco,XLP
+30,Consumer Staples,3030,Household & Personal Products,303010,Household Products,30301010,Household Products,XLP
+30,Consumer Staples,3030,Household & Personal Products,303020,Personal Products,30302010,Personal Products,XLP
+35,Health Care,3510,Health Care Equipment & Services,351010,Health Care Equipment & Supplies,35101010,Health Care Equipment,XLV
+35,Health Care,3510,Health Care Equipment & Services,351010,Health Care Equipment & Supplies,35101020,Health Care Supplies,XLV
+35,Health Care,3510,Health Care Equipment & Services,351020,Health Care Providers & Services,35102015,Health Care Services,XLV
+35,Health Care,3510,Health Care Equipment & Services,351020,Health Care Providers & Services,35102020,Health Care Facilities,XLV
+35,Health Care,3510,Health Care Equipment & Services,351020,Health Care Providers & Services,35102030,Managed Health Care,XLV
+35,Health Care,3510,Health Care Equipment & Services,351030,Health Care Technology,35103010,Health Care Technology,XLV
+35,Health Care,3520,Pharmaceuticals Biotechnology & Life Sciences,352010,Biotechnology,35201010,Biotechnology,XLV
+35,Health Care,3520,Pharmaceuticals Biotechnology & Life Sciences,352020,Pharmaceuticals,35202010,Pharmaceuticals,XLV
+35,Health Care,3520,Pharmaceuticals Biotechnology & Life Sciences,352030,Life Sciences Tools & Services,35203010,Life Sciences Tools & Services,XLV
+40,Financials,4010,Banks,401010,Banks,40101010,Diversified Banks,XLF
+40,Financials,4010,Banks,401010,Banks,40101015,Regional Banks,XLF
+40,Financials,4010,Banks,401020,Thrifts & Mortgage Finance,40102010,Thrift & Mortgage Finance,XLF
+40,Financials,4020,Diversified Financials,402010,Diversified Financial Services,40201020,Other Diversified Financial Services,XLF
+40,Financials,4020,Diversified Financials,402010,Diversified Financial Services,40201030,Multi-Sector Holdings,XLF
+40,Financials,4020,Diversified Financials,402010,Diversified Financial Services,40201040,Specialized Finance,XLF
+40,Financials,4020,Diversified Financials,402020,Consumer Finance,40202010,Consumer Finance,XLF
+40,Financials,4020,Diversified Financials,402030,Capital Markets,40203010,Asset Management & Custody Banks,XLF
+40,Financials,4020,Diversified Financials,402030,Capital Markets,40203020,Investment Banking & Brokerage,XLF
+40,Financials,4020,Diversified Financials,402030,Capital Markets,40203030,Diversified Capital Markets,XLF
+40,Financials,4020,Diversified Financials,402030,Capital Markets,40203040,Financial Exchanges & Data,XLF
+40,Financials,4020,Diversified Financials,402040,Mortgage Real Estate Investment Trusts (REITs),40204010,Mortgage REITs,XLF
+40,Financials,4030,Insurance,403010,Insurance,40301010,Insurance Brokers,XLF
+40,Financials,4030,Insurance,403010,Insurance,40301020,Life & Health Insurance,XLF
+40,Financials,4030,Insurance,403010,Insurance,40301030,Multi-line Insurance,XLF
+40,Financials,4030,Insurance,403010,Insurance,40301040,Property & Casualty Insurance,XLF
+40,Financials,4030,Insurance,403010,Insurance,40301050,Reinsurance,XLF
+45,Information Technology,4510,Software & Services,451020,IT Services,45102010,IT Consulting & Other Services,XLK
+45,Information Technology,4510,Software & Services,451020,IT Services,45102020,Data Processing & Outsourced Services,XLK
+45,Information Technology,4510,Software & Services,451020,IT Services,45102030,Internet Services & Infrastructure,XLK
+45,Information Technology,4510,Software & Services,451030,Software,45103010,Application Software,XLK
+45,Information Technology,4510,Software & Services,451030,Software,45103020,Systems Software,XLK
+45,Information Technology,4520,Technology Hardware & Equipment,452010,Communications Equipment,45201020,Communications Equipment,XLK
+45,Information Technology,4520,Technology Hardware & Equipment,452020,Technology Hardware Storage & Peripherals,45202030,Technology Hardware Storage & Peripherals,XLK
+45,Information Technology,4520,Technology Hardware & Equipment,452030,Electronic Equipment Instruments & Components,45203010,Electronic Equipment & Instruments,XLK
+45,Information Technology,4520,Technology Hardware & Equipment,452030,Electronic Equipment Instruments & Components,45203015,Electronic Components,XLK
+45,Information Technology,4520,Technology Hardware & Equipment,452030,Electronic Equipment Instruments & Components,45203020,Electronic Manufacturing Services,XLK
+45,Information Technology,4520,Technology Hardware & Equipment,452030,Electronic Equipment Instruments & Components,45203030,Technology Distributors,XLK
+45,Information Technology,4530,Semiconductors & Semiconductor Equipment,453010,Semiconductors & Semiconductor Equipment,45301010,Semiconductor Equipment,XLK
+45,Information Technology,4530,Semiconductors & Semiconductor Equipment,453010,Semiconductors & Semiconductor Equipment,45301020,Semiconductors,XLK
+50,Communication Services,5010,Telecommunication Services,501010,Diversified Telecommunication Services,50101010,Alternative Carriers,XLC
+50,Communication Services,5010,Telecommunication Services,501010,Diversified Telecommunication Services,50101020,Integrated Telecommunication Services,XLC
+50,Communication Services,5010,Telecommunication Services,501020,Wireless Telecommunication Services,50102010,Wireless Telecommunication Services,XLC
+50,Communication Services,5020,Media & Entertainment,502010,Media,50201010,Advertising,XLC
+50,Communication Services,5020,Media & Entertainment,502010,Media,50201020,Broadcasting,XLC
+50,Communication Services,5020,Media & Entertainment,502010,Media,50201030,Cable & Satellite,XLC
+50,Communication Services,5020,Media & Entertainment,502010,Media,50201040,Publishing,XLC
+50,Communication Services,5020,Media & Entertainment,502020,Entertainment,50202010,Movies & Entertainment,XLC
+50,Communication Services,5020,Media & Entertainment,502020,Entertainment,50202020,Interactive Home Entertainment,XLC
+50,Communication Services,5020,Media & Entertainment,502030,Interactive Media & Services,50203010,Interactive Media & Services,XLC
+55,Utilities,5510,Utilities,551010,Electric Utilities,55101010,Electric Utilities,XLU
+55,Utilities,5510,Utilities,551020,Gas Utilities,55102010,Gas Utilities,XLU
+55,Utilities,5510,Utilities,551030,Multi-Utilities,55103010,Multi-Utilities,XLU
+55,Utilities,5510,Utilities,551040,Water Utilities,55104010,Water Utilities,XLU
+55,Utilities,5510,Utilities,551050,Independent Power and Renewable Electric Producers,55105010,Independent Power Producers & Energy Traders,XLU
+55,Utilities,5510,Utilities,551050,Independent Power and Renewable Electric Producers,55105020,Renewable Electricity,XLU
+60,Real Estate,6010,Real Estate,601010,Equity Real Estate Investment Trusts (REITs),60101010,Diversified REITs,XLRE
+60,Real Estate,6010,Real Estate,601010,Equity Real Estate Investment Trusts (REITs),60101020,Industrial REITs,XLRE
+60,Real Estate,6010,Real Estate,601010,Equity Real Estate Investment Trusts (REITs),60101030,Hotel & Resort REITs,XLRE
+60,Real Estate,6010,Real Estate,601010,Equity Real Estate Investment Trusts (REITs),60101040,Office REITs,XLRE
+60,Real Estate,6010,Real Estate,601010,Equity Real Estate Investment Trusts (REITs),60101050,Health Care REITs,XLRE
+60,Real Estate,6010,Real Estate,601010,Equity Real Estate Investment Trusts (REITs),60101060,Residential REITs,XLRE
+60,Real Estate,6010,Real Estate,601010,Equity Real Estate Investment Trusts (REITs),60101070,Retail REITs,XLRE
+60,Real Estate,6010,Real Estate,601010,Equity Real Estate Investment Trusts (REITs),60101080,Specialized REITs,XLRE
+60,Real Estate,6010,Real Estate,601020,Real Estate Management & Development,60102010,Diversified Real Estate Activities,XLRE
+60,Real Estate,6010,Real Estate,601020,Real Estate Management & Development,60102020,Real Estate Operating Companies,XLRE
+60,Real Estate,6010,Real Estate,601020,Real Estate Management & Development,60102030,Real Estate Development,XLRE
+60,Real Estate,6010,Real Estate,601020,Real Estate Management & Development,60102040,Real Estate Services,XLRE

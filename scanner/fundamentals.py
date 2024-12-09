@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Union, Tuple, Optional
 from datetime import datetime
 import pandas as pd
-from ib_insync import IB
+from ib_insync import IB, Stock
 from fundamentals import get_stock_info, StockInfo, ForecastMetrics
 
 def parse_xml_value(ratio_element) -> Union[float, str, datetime]:
@@ -54,50 +54,55 @@ class ForecastMetrics:
 
 @dataclass
 class StockInfo:
+    # Adding sector and industry fields to existing StockInfo
+    sector: str = ''
+    industry: str = ''
+    sub_industry: str = ''
+    
     # Timestamp and Metadata
-    latest_available_date: str
-    price_currency: str
-    reporting_currency: str
-    exchange_rate: float
+    latest_available_date: str = ''
+    price_currency: str = ''
+    reporting_currency: str = ''
+    exchange_rate: float = 1.0
     
     # Price and Volume Metrics
-    current_price: float
-    high_52week: float
-    low_52week: float
-    pricing_date: str
-    volume_10day_avg: float
-    enterprise_value: float
+    current_price: float = 0.0
+    high_52week: float = 0.0
+    low_52week: float = 0.0
+    pricing_date: str = ''
+    volume_10day_avg: float = 0.0
+    enterprise_value: float = 0.0
     
     # Income Statement Metrics
-    market_cap: float
-    revenue_ttm: float
-    ebitda: float
-    net_income_ttm: float
+    market_cap: float = 0.0
+    revenue_ttm: float = 0.0
+    ebitda: float = 0.0
+    net_income_ttm: float = 0.0
     
     # Per Share Metrics
-    eps_ttm: float
-    revenue_per_share: float
-    book_value_per_share: float
-    cash_per_share: float
-    cash_flow_per_share: float
-    dividend_per_share: float
+    eps_ttm: float = 0.0
+    revenue_per_share: float = 0.0
+    book_value_per_share: float = 0.0
+    cash_per_share: float = 0.0
+    cash_flow_per_share: float = 0.0
+    dividend_per_share: float = 0.0
     
     # Margin Metrics
-    gross_margin: float
-    operating_margin: float
-    net_profit_margin: float
+    gross_margin: float = 0.0
+    operating_margin: float = 0.0
+    net_profit_margin: float = 0.0
     
     # Growth Metrics
-    revenue_growth_rate: float
-    eps_growth_rate: float
+    revenue_growth_rate: float = 0.0
+    eps_growth_rate: float = 0.0
     
     # Valuation Metrics
-    pe_ratio: float
-    price_to_book: float
-    price_to_sales: float
+    pe_ratio: float = 0.0
+    price_to_book: float = 0.0
+    price_to_sales: float = 0.0
     
     # Company Information
-    employee_count: int
+    employee_count: int = 0
     
     # Forecast Data
     forecast: Optional[ForecastMetrics] = None
@@ -120,16 +125,21 @@ class StockInfo:
             self.volume_vs_10day_avg_pct = ((current_volume - self.volume_10day_avg) / self.volume_10day_avg) * 100
 
 def get_stock_info(ib, ticker: str, current_volume: float = 0) -> StockInfo:
-    """Retrieve comprehensive stock information including all available ratios."""
+    """Retrieve comprehensive stock information including all available ratios and sector/industry data."""
     contract = Stock(ticker, 'SMART', 'USD')
     details = ib.reqContractDetails(contract)
     if not details:
         raise ValueError(f"No contract details found for {ticker}")
     
+    # Get fundamental ratios data
     fundamental_data = ib.reqFundamentalData(contract, 'ReportSnapshot')
     root = ET.fromstring(fundamental_data)
     
-    # Get root level attributes
+    # Get industry classification data
+    industry_data = ib.reqFundamentalData(contract, 'ReportsFinSummary')
+    industry_root = ET.fromstring(industry_data)
+    
+    # Get root level attributes from ratios
     ratios = root.find('.//Ratios')
     price_currency = ratios.get('PriceCurrency', 'USD')
     reporting_currency = ratios.get('ReportingCurrency', 'USD')
@@ -144,6 +154,15 @@ def get_stock_info(ib, ticker: str, current_volume: float = 0) -> StockInfo:
         field_name = ratio.get('FieldName')
         if field_name:
             data[field_name] = parse_xml_value(ratio)
+    
+    # Extract sector/industry information
+    sector = industry_root.find(".//Sector")
+    industry = industry_root.find(".//Industry")
+    sub_industry = industry_root.find(".//SubIndustry")
+    
+    sector = sector.text if sector is not None else ""
+    industry = industry.text if industry is not None else ""
+    sub_industry = sub_industry.text if sub_industry is not None else ""
     
     # Process forecast data
     forecast_data = root.find('.//ForecastData')
@@ -167,6 +186,11 @@ def get_stock_info(ib, ticker: str, current_volume: float = 0) -> StockInfo:
             forecast = None
     
     stock_info = StockInfo(
+        # Sector/Industry Information (new)
+        sector=sector,
+        industry=industry,
+        sub_industry=sub_industry,
+        
         # Metadata
         latest_available_date=latest_date,
         price_currency=price_currency,

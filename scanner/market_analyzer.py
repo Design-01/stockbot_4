@@ -10,153 +10,157 @@ class IBMarketAnalyzer:
         self.sector_signals = {}
         self.spy_contract = None
         self.sector_etfs = {}
+        self.spy_data = None  # Store SPY dataframe
+        self.sector_data = {}  # Store sector dataframes
         
     def set_sectors(self):
-
-        # Create SPY contract
+        """Original set_sectors implementation"""
         self.spy_contract = Stock('SPY', 'SMART', 'USD')
         
-        # Define major sector ETF contracts
         self.sector_etfs = {
             'Technology': Stock('XLK', 'SMART', 'USD'),
             'Healthcare': Stock('XLV', 'SMART', 'USD'),
             'Financials': Stock('XLF', 'SMART', 'USD'),
-            'Energy': Stock('XLE', 'SMART', 'USD'),
+            'Energy': Stock('XLE', 'SMART', 'USD'), # Energy ETF
             'Consumer_Discretionary': Stock('XLY', 'SMART', 'USD'),
             'Consumer_Staples': Stock('XLP', 'SMART', 'USD'),
-            'Industrials': Stock('XLI', 'SMART', 'USD'),
-            'Materials': Stock('XLB', 'SMART', 'USD'),
+            'Industrials': Stock('XLI', 'SMART', 'USD'), # Industrials ETF
+            'Materials': Stock('XLB', 'SMART', 'USD'), # Materials ETF
             'Utilities': Stock('XLU', 'SMART', 'USD'),
             'Real_Estate': Stock('XLRE', 'SMART', 'USD')
         }
 
-            
-    def get_historical_data(self, contract, duration='1 Y', bar_size='1 day'):
-            """
-            Fetch historical data from IB
-            """
-            # Qualify the contracts first
-            self.ib.qualifyContracts(contract)
-            
-            # Format end time in UTC
-            end_time = datetime.now().strftime('%Y%m%d-%H:%M:%S')
-            
-            try:
-                bars = self.ib.reqHistoricalData(
-                    contract,
-                    endDateTime=end_time,
-                    durationStr=duration,
-                    barSizeSetting=bar_size,
-                    whatToShow='TRADES',
-                    useRTH=True,
-                    formatDate=1,
-                    timeout=10
-                )
-                
-                if bars:
-                    df = util.df(bars)
-                    df.set_index('date', inplace=True)
-                    return df
-                return None
-                
-            except Exception as e:
-                print(f"Error fetching data for {contract.symbol}: {str(e)}")
-                return None
-
-    def analyze_market_direction(self, lookback_periods={'short': 20, 'medium': 50, 'long': 200}):
-        """
-        Analyze overall market direction using SPY data from IB
-        """
-        if not self.spy_contract:
-            raise ValueError("IB connection not initialized. Call connect_ib() first.")
-            
-        df = self.get_historical_data(self.spy_contract)
-        if df is None:
-            raise ValueError("Failed to fetch SPY data from IB")
-            
-        # Calculate moving averages
+    def add_technical_indicators(self, df, lookback_periods={'short': 20, 'medium': 50, 'long': 200}):
+        """Add all technical indicators to a dataframe"""
+        # Moving Averages
         for period_name, period in lookback_periods.items():
             df[f'MA_{period}'] = df['close'].rolling(window=period).mean()
-        
-        # Get current price and moving averages
-        current_price = df['close'].iloc[-1]
-        mas = {period_name: df[f'MA_{period}'].iloc[-1] 
-               for period_name, period in lookback_periods.items()}
-        
-        # Calculate momentum (Rate of Change)
+            df[f'MA_{period}_Distance'] = ((df['close'] - df[f'MA_{period}']) / df[f'MA_{period}']) * 100
+
+        # Volume Moving Averages
+        df['Volume_MA20'] = df['volume'].rolling(window=20).mean()
+        df['Volume_Ratio'] = df['volume'] / df['Volume_MA20']
+
+        # Momentum Indicators
         df['ROC_10'] = ((df['close'] - df['close'].shift(10)) / df['close'].shift(10)) * 100
         
-        # Calculate RSI
+        # RSI
         delta = df['close'].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
         rs = gain / loss
         df['RSI'] = 100 - (100 / (1 + rs))
         
-        # Calculate VWAP
+        # VWAP (reset daily)
         df['VWAP'] = (df['volume'] * df['close']).cumsum() / df['volume'].cumsum()
         
+        # Trend Signals
+        for period in lookback_periods.values():
+            df[f'Trend_{period}'] = np.where(df['close'] > df[f'MA_{period}'], 'Bullish', 'Bearish')
+        
+        # Trend Strength (count of bullish signals)
+        trend_columns = [f'Trend_{period}' for period in lookback_periods.values()]
+        df['Trend_Strength'] = df[trend_columns].apply(
+            lambda x: sum(1 for trend in x if trend == 'Bullish'), axis=1
+        )
+
+        return df
+
+    def get_historical_data(self, contract, duration='1 Y', bar_size='1 day'):
+        """Enhanced get_historical_data with technical indicators"""
+        # Original data fetching code
+        self.ib.qualifyContracts(contract)
+        end_time = datetime.now().strftime('%Y%m%d-%H:%M:%S')
+        
+        try:
+            bars = self.ib.reqHistoricalData(
+                contract,
+                endDateTime=end_time,
+                durationStr=duration,
+                barSizeSetting=bar_size,
+                whatToShow='TRADES',
+                useRTH=True,
+                formatDate=1,
+                timeout=10
+            )
+            
+            if bars:
+                df = util.df(bars)
+                df.set_index('date', inplace=True)
+                # Add all technical indicators
+                df = self.add_technical_indicators(df)
+                return df
+            return None
+                
+        except Exception as e:
+            print(f"Error fetching data for {contract.symbol}: {str(e)}")
+            return None
+
+    def analyze_market_direction(self, lookback_periods={'short': 20, 'medium': 50, 'long': 200}):
+        """Enhanced analyze_market_direction that stores SPY data"""
+        if not self.spy_contract:
+            raise ValueError("IB connection not initialized. Call connect_ib() first.")
+            
+        self.spy_data = self.get_historical_data(self.spy_contract)
+        if self.spy_data is None:
+            raise ValueError("Failed to fetch SPY data from IB")
+        
+        # Calculate signals for the latest bar (original functionality)
+        latest = self.spy_data.iloc[-1]
         self.market_signals = {
             'trend': {
-                'short_term': 'Bullish' if current_price > mas['short'] else 'Bearish',
-                'medium_term': 'Bullish' if current_price > mas['medium'] else 'Bearish',
-                'long_term': 'Bullish' if current_price > mas['long'] else 'Bearish'
+                'short_term': latest['Trend_20'],
+                'medium_term': latest['Trend_50'],
+                'long_term': latest['Trend_200']
             },
             'momentum': {
-                'roc': df['ROC_10'].iloc[-1],
-                'rsi': df['RSI'].iloc[-1]
+                'roc': latest['ROC_10'],
+                'rsi': latest['RSI']
             },
             'price_levels': {
-                'current_price': current_price,
-                'moving_averages': mas,
-                'vwap': df['VWAP'].iloc[-1]
+                'current_price': latest['close'],
+                'moving_averages': {
+                    'short': latest['MA_20'],
+                    'medium': latest['MA_50'],
+                    'long': latest['MA_200']
+                },
+                'vwap': latest['VWAP']
             },
             'volume': {
-                'current': df['volume'].iloc[-1],
-                'avg_20d': df['volume'].rolling(20).mean().iloc[-1]
+                'current': latest['volume'],
+                'avg_20d': latest['Volume_MA20']
             }
         }
         
         return self.market_signals
-    
+
     def analyze_sector_strength(self, lookback_period=20):
-        """
-        Analyze relative strength of different market sectors using IB data
-        """
+        """Enhanced analyze_sector_strength that stores sector data"""
         sector_performance = {}
-        spy_data = self.get_historical_data(self.spy_contract)
-        spy_return = ((spy_data['close'].iloc[-1] - spy_data['close'].iloc[-lookback_period]) / 
-                     spy_data['close'].iloc[-lookback_period]) * 100
+        self.sector_data = {}  # Reset sector data dictionary
+        
+        if self.spy_data is None:
+            self.analyze_market_direction()
+            
+        spy_return = ((self.spy_data['close'].iloc[-1] - self.spy_data['close'].iloc[-lookback_period]) / 
+                     self.spy_data['close'].iloc[-lookback_period]) * 100
         
         for sector_name, contract in self.sector_etfs.items():
             df = self.get_historical_data(contract)
             if df is None:
                 continue
                 
-            # Calculate period returns
-            current_price = df['close'].iloc[-1]
+            self.sector_data[sector_name] = df  # Store sector dataframe
+            latest = df.iloc[-1]
             prev_price = df['close'].iloc[-lookback_period]
-            period_return = ((current_price - prev_price) / prev_price) * 100
-            
-            # Calculate relative strength vs SPY
-            relative_strength = period_return - spy_return
-            
-            # Calculate momentum
-            df['ROC_10'] = ((df['close'] - df['close'].shift(10)) / df['close'].shift(10)) * 100
-            
-            # Calculate volume trend
-            recent_volume = df['volume'].tail(lookback_period).mean()
-            previous_volume = df['volume'].tail(lookback_period * 2).head(lookback_period).mean()
-            volume_trend = 'Increasing' if recent_volume > previous_volume else 'Decreasing'
             
             sector_performance[sector_name] = {
-                'period_return': period_return,
-                'relative_strength': relative_strength,
-                'momentum': df['ROC_10'].iloc[-1],
-                'volume_trend': volume_trend
+                'period_return': ((latest['close'] - prev_price) / prev_price) * 100,
+                'relative_strength': ((latest['close'] - prev_price) / prev_price * 100) - spy_return,
+                'momentum': latest['ROC_10'],
+                'volume_trend': 'Increasing' if latest['Volume_Ratio'] > 1 else 'Decreasing'
             }
         
-        # Rank sectors by relative strength
         ranked_sectors = dict(sorted(sector_performance.items(), 
                                    key=lambda x: x[1]['relative_strength'], 
                                    reverse=True))
@@ -169,6 +173,69 @@ class IBMarketAnalyzer:
         }
         
         return self.sector_signals
+
+    # Add new methods to access stored data
+    def get_spy_data(self):
+        """Return the complete SPY dataframe with all indicators"""
+        return self.spy_data
+        
+    def get_sector_data(self, sector=None):
+        """Return sector dataframe(s) with all indicators
+        
+        Args:
+            sector (str, optional): Specific sector name. If None, returns all sectors
+        """
+        if sector:
+            return self.sector_data.get(sector)
+        return self.sector_data
+    
+    def get_latest_bar_analysis(self):
+        """Get analysis for the most recent bar"""
+        if not self.market_signals or not self.sector_signals:
+            self.analyze_market_direction()
+            self.analyze_sector_strength()
+        return self.get_trading_signals()
+    
+    def get_historical_analysis(self, start_date=None, end_date=None):
+        """Get analysis for a specific historical period
+        
+        Args:
+            start_date (str): Start date in format 'YYYY-MM-DD'
+            end_date (str): End date in format 'YYYY-MM-DD'
+        """
+        if self.spy_data is None:
+            self.analyze_market_direction()
+            self.analyze_sector_strength()
+            
+        # Filter data for the specified period
+        spy_slice = self.spy_data
+        if start_date:
+            spy_slice = spy_slice[spy_slice.index >= start_date]
+        if end_date:
+            spy_slice = spy_slice[spy_slice.index <= end_date]
+            
+        # Create analysis for each day
+        daily_analysis = []
+        for date in spy_slice.index:
+            day_data = {
+                'date': date,
+                'spy_close': spy_slice.loc[date, 'close'],
+                'trend_strength': spy_slice.loc[date, 'Trend_Strength'],
+                'rsi': spy_slice.loc[date, 'RSI'],
+                'roc': spy_slice.loc[date, 'ROC_10'],
+                'volume_ratio': spy_slice.loc[date, 'Volume_Ratio']
+            }
+            
+            # Add sector data
+            for sector, df in self.sector_data.items():
+                if date in df.index:
+                    day_data[f'{sector}_close'] = df.loc[date, 'close']
+                    day_data[f'{sector}_roc'] = df.loc[date, 'ROC_10']
+                    day_data[f'{sector}_volume_ratio'] = df.loc[date, 'Volume_Ratio']
+            
+            daily_analysis.append(day_data)
+            
+        return pd.DataFrame(daily_analysis)
     
     def get_trading_signals(self):
         """
@@ -227,7 +294,7 @@ class IBMarketAnalyzer:
         self.ib.disconnect()
 
 
-    def create_analysis_report(self):
+    def create_analysis_report(self, printout:bool=False):
         """
         Creates a comprehensive DataFrame containing ALL metrics for market and sectors
         """
@@ -380,30 +447,31 @@ class IBMarketAnalyzer:
         sector_df['Momentum Rank'] = sector_df['Momentum (ROC)'].rank(ascending=False)
         
         # Calculate overall score (lower is better)
-        sector_df['Overall Score'] = (sector_df['Relative Strength Rank'] + 
+        sector_df['Overall Score'] = 10 - ((sector_df['Relative Strength Rank'] + 
                                     sector_df['Return Rank'] + 
-                                    sector_df['Momentum Rank']) / 3
+                                    sector_df['Momentum Rank']) / 3)
         
         # Sort by Overall Score
         sector_df = sector_df.sort_values('Overall Score')
-        
-        # Format DataFrames
-        pd.set_option('display.float_format', lambda x: '%.2f' % x)
-        pd.set_option('display.max_rows', None)
-        pd.set_option('display.max_columns', None)
-        
-        print("\n=== Detailed Market Overview ===")
-        print(market_df.to_string(index=False))
-        
-        print("\n=== Detailed Sector Analysis ===")
-        print(sector_df.to_string(index=False))
-        
-        print("\n=== Trading Recommendation ===")
-        print(self.get_trading_signals()['recommendation'])
+
+        if printout:
+            # Format DataFrames
+            pd.set_option('display.float_format', lambda x: '%.2f' % x)
+            pd.set_option('display.max_rows', None)
+            pd.set_option('display.max_columns', None)
+            
+            print("\n=== Detailed Market Overview ===")
+            print(market_df.to_string(index=False))
+            
+            print("\n=== Detailed Sector Analysis ===")
+            print(sector_df.to_string(index=False))
+            
+            print("\n=== Trading Recommendation ===")
+            print(self.get_trading_signals()['recommendation'])
         
         return market_df, sector_df
 
-    def filter_sectors(self, sector_df, **kwargs):
+    def filter_sectors(self, sector_df, as_list_of_sectors:False, **kwargs):
         """
         Filter sector data based on multiple criteria
         
@@ -446,5 +514,12 @@ class IBMarketAnalyzer:
             
         if 'top_n' in kwargs:
             filtered_df = filtered_df.head(kwargs['top_n'])
-            
+
+        if 'min_score' in kwargs:
+            filtered_df = filtered_df[filtered_df['Overall Score'] >= kwargs['min_score']]
+
+        if as_list_of_sectors:
+            return filtered_df['Sector'].tolist()
+
         return filtered_df
+    

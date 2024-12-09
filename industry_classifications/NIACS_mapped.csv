@@ -1,0 +1,1013 @@
+Sector Code,Sector Name,Industry Group Code,Industry Group Name,Industry Code,Industry Name,Sub-Industry Code,Sub-Industry Name,gics_map,etf_ticker
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1111,Oilseed and Grain Farming,111110,Soybean Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1111,Oilseed and Grain Farming,111120,Oilseed (except Soybean) Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1111,Oilseed and Grain Farming,111130,Dry Pea and Bean Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1111,Oilseed and Grain Farming,111140,Wheat Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1111,Oilseed and Grain Farming,111150,Corn Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1111,Oilseed and Grain Farming,111160,Rice Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1111,Oilseed and Grain Farming,111191,Oilseed and Grain Combination Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1111,Oilseed and Grain Farming,111199,All Other Grain Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1112,Vegetable and Melon Farming,111211,Potato Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1112,Vegetable and Melon Farming,111219,Other Vegetable (except Potato) and Melon Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1113,Fruit and ree Nut Farming,111310,Orange Groves,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1113,Fruit and ree Nut Farming,111320,Citrus (except Orange) Groves,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1113,Fruit and ree Nut Farming,111331,Apple Orchards,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1113,Fruit and ree Nut Farming,111332,Grape Vineyards,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1113,Fruit and ree Nut Farming,111333,Strawberry Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1113,Fruit and ree Nut Farming,111334,Berry (except Strawberry) Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1113,Fruit and ree Nut Farming,111335,ree Nut Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1113,Fruit and ree Nut Farming,111336,Fruit and ree Nut Combination Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1113,Fruit and ree Nut Farming,111339,Other Noncitrus Fruit Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1114,"Greenhouse, Nursery, and Floriculture Production",111411,Mushroom Production,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1114,"Greenhouse, Nursery, and Floriculture Production",111419,Other Food Crops Grown Under Cover,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1114,"Greenhouse, Nursery, and Floriculture Production",111421,Nursery and ree Production,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1114,"Greenhouse, Nursery, and Floriculture Production",111422,Floriculture Production,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1119,Other Crop Farming,111910,obacco Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1119,Other Crop Farming,111920,Cotton Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1119,Other Crop Farming,111930,Sugarcane Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1119,Other Crop Farming,111940,Hay Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1119,Other Crop Farming,111991,Sugar Beet Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1119,Other Crop Farming,111992,Peanut Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",111,Crop Production,1119,Other Crop Farming,111998,All Other Miscellaneous Crop Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1121,Cattle Ranching and Farming,112111,Beef Cattle Ranching and Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1121,Cattle Ranching and Farming,112112,Cattle Feedlots,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1121,Cattle Ranching and Farming,112120,Dairy Cattle and Milk Production,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1121,Cattle Ranching and Farming,112130,Dual-Purpose Cattle Ranching and Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1122,Hog and Pig Farming,112210,Hog and Pig Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1123,Poultry and Egg Production,112310,Chicken Egg Production,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1123,Poultry and Egg Production,112320,Broilers and Other Meat ype Chicken Production,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1123,Poultry and Egg Production,112330,urkey Production,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1123,Poultry and Egg Production,112340,Poultry Hatcheries,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1123,Poultry and Egg Production,112390,Other Poultry Production,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1124,Sheep and Goat Farming,112410,Sheep Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1124,Sheep and Goat Farming,112420,Goat Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1125,Aquaculture,112511,Finfish Farming and Fish Hatcheries,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1125,Aquaculture,112512,Shellfish Farming,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1125,Aquaculture,112519,Other Aquaculture,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1129,Other Animal Production,112910,Apiculture,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1129,Other Animal Production,112920,Horses and Other Equine Production,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1129,Other Animal Production,112930,Fur-Bearing Animal and Rabbit Production,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",112,Animal Production and Aquaculture,1129,Other Animal Production,112990,All Other Animal Production,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",113,Forestry and Logging,1131,imber ract Operations,113110,imber ract Operations,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",113,Forestry and Logging,1132,Forest Nurseries and Gathering of Forest Products,113210,Forest Nurseries and Gathering of Forest Products,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",113,Forestry and Logging,1133,Logging,113310,Logging,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",114,"Fishing, Hunting and rapping",1141,Fishing,114111,Finfish Fishing,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",114,"Fishing, Hunting and rapping",1141,Fishing,114112,Shellfish Fishing,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",114,"Fishing, Hunting and rapping",1141,Fishing,114119,Other Marine Fishing,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",114,"Fishing, Hunting and rapping",1142,Hunting and rapping,114210,Hunting and rapping,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",115,Support Activities for Agriculture and Forestry,1151,Support Activities for Crop Production,115111,Cotton Ginning,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",115,Support Activities for Agriculture and Forestry,1151,Support Activities for Crop Production,115112,"Soil Preparation, Planting, and Cultivating",Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",115,Support Activities for Agriculture and Forestry,1151,Support Activities for Crop Production,115113,"Crop Harvesting, Primarily by Machine",Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",115,Support Activities for Agriculture and Forestry,1151,Support Activities for Crop Production,115114,Postharvest Crop Activities (except Cotton Ginning),Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",115,Support Activities for Agriculture and Forestry,1151,Support Activities for Crop Production,115115,Farm Labor Contractors and Crew Leaders,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",115,Support Activities for Agriculture and Forestry,1151,Support Activities for Crop Production,115116,Farm Management Services,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",115,Support Activities for Agriculture and Forestry,1152,Support Activities for Animal Production,115210,Support Activities for Animal Production,Consumer Staples,XLP
+11,"Agriculture, Forestry, Fishing and Hunting",115,Support Activities for Agriculture and Forestry,1153,Support Activities for Forestry,115310,Support Activities for Forestry,Consumer Staples,XLP
+21,"Mining, Quarrying, and Oil and Gas Extraction",211,Oil and Gas Extraction,2111,Oil and Gas Extraction,211120,Crude Petroleum Extraction,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",211,Oil and Gas Extraction,2111,Oil and Gas Extraction,211130,Natural Gas Extraction,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2121,Coal Mining,212114,Surface Coal Mining,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2121,Coal Mining,212115,Underground Coal Mining,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2122,Metal Ore Mining,212210,Iron Ore Mining,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2122,Metal Ore Mining,212220,Gold Ore and Silver Ore Mining,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2122,Metal Ore Mining,212230,"Copper, Nickel, Lead, and Zinc Mining","Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2122,Metal Ore Mining,212290,Other Metal Ore Mining,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2123,Nonmetallic Mineral Mining and Quarrying,212311,Dimension Stone Mining and Quarrying,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2123,Nonmetallic Mineral Mining and Quarrying,212312,Crushed and Broken Limestone Mining and Quarrying,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2123,Nonmetallic Mineral Mining and Quarrying,212313,Crushed and Broken Granite Mining and Quarrying,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2123,Nonmetallic Mineral Mining and Quarrying,212319,Other Crushed and Broken Stone Mining and Quarrying,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2123,Nonmetallic Mineral Mining and Quarrying,212321,Construction Sand and Gravel Mining,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2123,Nonmetallic Mineral Mining and Quarrying,212322,Industrial Sand Mining,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2123,Nonmetallic Mineral Mining and Quarrying,212323,"Kaolin, Clay, and Ceramic and Refractory Minerals Mining","Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",212,Mining (except Oil and Gas),2123,Nonmetallic Mineral Mining and Quarrying,212390,Other Nonmetallic Mineral Mining and Quarrying,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",213,Support Activities for Mining,2131,Support Activities for Mining,213111,Drilling Oil and Gas Wells,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",213,Support Activities for Mining,2131,Support Activities for Mining,213112,Support Activities for Oil and Gas Operations,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",213,Support Activities for Mining,2131,Support Activities for Mining,213113,Support Activities for Coal Mining,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",213,Support Activities for Mining,2131,Support Activities for Mining,213114,Support Activities for Metal Mining,"Energy, Materials","XLE, XLB"
+21,"Mining, Quarrying, and Oil and Gas Extraction",213,Support Activities for Mining,2131,Support Activities for Mining,213115,Support Activities for Nonmetallic Minerals (except Fuels) Mining,"Energy, Materials","XLE, XLB"
+22,Utilities,221,Utilities,2211,"Electric Power Generation, ransmission and Distribution",221111,Hydroelectric Power Generation,Utilities,XLU
+22,Utilities,221,Utilities,2211,"Electric Power Generation, ransmission and Distribution",221112,Fossil Fuel Electric Power Generation,Utilities,XLU
+22,Utilities,221,Utilities,2211,"Electric Power Generation, ransmission and Distribution",221113,Nuclear Electric Power Generation,Utilities,XLU
+22,Utilities,221,Utilities,2211,"Electric Power Generation, ransmission and Distribution",221114,Solar Electric Power Generation,Utilities,XLU
+22,Utilities,221,Utilities,2211,"Electric Power Generation, ransmission and Distribution",221115,Wind Electric Power Generation,Utilities,XLU
+22,Utilities,221,Utilities,2211,"Electric Power Generation, ransmission and Distribution",221116,Geothermal Electric Power Generation,Utilities,XLU
+22,Utilities,221,Utilities,2211,"Electric Power Generation, ransmission and Distribution",221117,Biomass Electric Power Generation,Utilities,XLU
+22,Utilities,221,Utilities,2211,"Electric Power Generation, ransmission and Distribution",221118,Other Electric Power Generation,Utilities,XLU
+22,Utilities,221,Utilities,2211,"Electric Power Generation, ransmission and Distribution",221121,Electric Bulk Power ransmission and Control,Utilities,XLU
+22,Utilities,221,Utilities,2211,"Electric Power Generation, ransmission and Distribution",221122,Electric Power Distribution,Utilities,XLU
+22,Utilities,221,Utilities,2212,Natural Gas Distribution,221210,Natural Gas Distribution,Utilities,XLU
+22,Utilities,221,Utilities,2213,"Water, Sewage and Other Systems",221310,Water Supply and Irrigation Systems,Utilities,XLU
+22,Utilities,221,Utilities,2213,"Water, Sewage and Other Systems",221320,Sewage reatment Facilities,Utilities,XLU
+22,Utilities,221,Utilities,2213,"Water, Sewage and Other Systems",221330,Steam and Air-Conditioning Supply,Utilities,XLU
+23,Construction,236,Construction of Buildings,2361,Residential Building Construction,236115,New Single-Family Housing Construction (except For-Sale Builders),Industrials,XLI
+23,Construction,236,Construction of Buildings,2361,Residential Building Construction,236116,New Multifamily Housing Construction (except For-Sale Builders),Industrials,XLI
+23,Construction,236,Construction of Buildings,2361,Residential Building Construction,236117,New Housing For-Sale Builders,Industrials,XLI
+23,Construction,236,Construction of Buildings,2361,Residential Building Construction,236118,Residential Remodelers,Industrials,XLI
+23,Construction,236,Construction of Buildings,2362,Nonresidential Building Construction,236210,Industrial Building Construction,Industrials,XLI
+23,Construction,236,Construction of Buildings,2362,Nonresidential Building Construction,236220,Commercial and Institutional Building Construction,Industrials,XLI
+23,Construction,237,Heavy and Civil Engineering Construction,2371,Utility System Construction,237110,Water and Sewer Line and Related Structures Construction,Industrials,XLI
+23,Construction,237,Heavy and Civil Engineering Construction,2371,Utility System Construction,237120,Oil and Gas Pipeline and Related Structures Construction,Industrials,XLI
+23,Construction,237,Heavy and Civil Engineering Construction,2371,Utility System Construction,237130,Power and Communication Line and Related Structures Construction,Industrials,XLI
+23,Construction,237,Heavy and Civil Engineering Construction,2372,Land Subdivision,237210,Land Subdivision,Industrials,XLI
+23,Construction,237,Heavy and Civil Engineering Construction,2373,"Highway, Street, and Bridge Construction",237310,"Highway, Street, and Bridge Construction",Industrials,XLI
+23,Construction,237,Heavy and Civil Engineering Construction,2379,Other Heavy and Civil Engineering Construction,237990,Other Heavy and Civil Engineering Construction,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2381,"Foundation, Structure, and Building Exterior Contractors",238110,Poured Concrete Foundation and Structure Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2381,"Foundation, Structure, and Building Exterior Contractors",238120,Structural Steel and Precast Concrete Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2381,"Foundation, Structure, and Building Exterior Contractors",238130,Framing Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2381,"Foundation, Structure, and Building Exterior Contractors",238140,Masonry Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2381,"Foundation, Structure, and Building Exterior Contractors",238150,Glass and Glazing Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2381,"Foundation, Structure, and Building Exterior Contractors",238160,Roofing Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2381,"Foundation, Structure, and Building Exterior Contractors",238170,Siding Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2381,"Foundation, Structure, and Building Exterior Contractors",238190,"Other Foundation, Structure, and Building Exterior Contractors",Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2382,Building Equipment Contractors,238210,Electrical Contractors and Other Wiring Installation Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2382,Building Equipment Contractors,238220,"Plumbing, Heating, and Air-Conditioning Contractors",Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2382,Building Equipment Contractors,238290,Other Building Equipment Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2383,Building Finishing Contractors,238310,Drywall and Insulation Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2383,Building Finishing Contractors,238320,Painting and Wall Covering Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2383,Building Finishing Contractors,238330,Flooring Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2383,Building Finishing Contractors,238340,ile and errazzo Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2383,Building Finishing Contractors,238350,Finish Carpentry Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2383,Building Finishing Contractors,238390,Other Building Finishing Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2389,Other Specialty rade Contractors,238910,Site Preparation Contractors,Industrials,XLI
+23,Construction,238,Specialty rade Contractors,2389,Other Specialty rade Contractors,238990,All Other Specialty rade Contractors,Industrials,XLI
+31,Construction,311,Food Manufacturing,3111,Animal Food Manufacturing,311111,Dog and Cat Food Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3111,Animal Food Manufacturing,311119,Other Animal Food Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3112,Grain and Oilseed Milling,311211,Flour Milling,Industrials,XLI
+31,Construction,311,Food Manufacturing,3112,Grain and Oilseed Milling,311212,Rice Milling,Industrials,XLI
+31,Construction,311,Food Manufacturing,3112,Grain and Oilseed Milling,311213,Malt Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3112,Grain and Oilseed Milling,311221,Wet Corn Milling and Starch Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3112,Grain and Oilseed Milling,311224,Soybean and Other Oilseed Processing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3112,Grain and Oilseed Milling,311225,Fats and Oils Refining and Blending,Industrials,XLI
+31,Construction,311,Food Manufacturing,3112,Grain and Oilseed Milling,311230,Breakfast Cereal Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3113,Sugar and Confectionery Product Manufacturing,311313,Beet Sugar Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3113,Sugar and Confectionery Product Manufacturing,311314,Cane Sugar Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3113,Sugar and Confectionery Product Manufacturing,311340,Nonchocolate Confectionery Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3113,Sugar and Confectionery Product Manufacturing,311351,Chocolate and Confectionery Manufacturing from Cacao Beans,Industrials,XLI
+31,Construction,311,Food Manufacturing,3113,Sugar and Confectionery Product Manufacturing,311352,Confectionery Manufacturing from Purchased Chocolate,Industrials,XLI
+31,Construction,311,Food Manufacturing,3114,Fruit and Vegetable Preserving and Specialty Food Manufacturing,311411,"Frozen Fruit, Juice, and Vegetable Manufacturing",Industrials,XLI
+31,Construction,311,Food Manufacturing,3114,Fruit and Vegetable Preserving and Specialty Food Manufacturing,311412,Frozen Specialty Food Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3114,Fruit and Vegetable Preserving and Specialty Food Manufacturing,311421,Fruit and Vegetable Canning,Industrials,XLI
+31,Construction,311,Food Manufacturing,3114,Fruit and Vegetable Preserving and Specialty Food Manufacturing,311422,Specialty Canning,Industrials,XLI
+31,Construction,311,Food Manufacturing,3114,Fruit and Vegetable Preserving and Specialty Food Manufacturing,311423,Dried and Dehydrated Food Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3115,Dairy Product Manufacturing,311511,Fluid Milk Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3115,Dairy Product Manufacturing,311512,Creamery Butter Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3115,Dairy Product Manufacturing,311513,Cheese Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3115,Dairy Product Manufacturing,311514,"Dry, Condensed, and Evaporated Dairy Product Manufacturing",Industrials,XLI
+31,Construction,311,Food Manufacturing,3115,Dairy Product Manufacturing,311520,Ice Cream and Frozen Dessert Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3116,Animal Slaughtering and Processing,311611,Animal (except Poultry) Slaughtering,Industrials,XLI
+31,Construction,311,Food Manufacturing,3116,Animal Slaughtering and Processing,311612,Meat Processed from Carcasses,Industrials,XLI
+31,Construction,311,Food Manufacturing,3116,Animal Slaughtering and Processing,311613,Rendering and Meat Byproduct Processing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3116,Animal Slaughtering and Processing,311615,Poultry Processing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3117,Seafood Product Preparation and Packaging,311710,Seafood Product Preparation and Packaging,Industrials,XLI
+31,Construction,311,Food Manufacturing,3118,Bakeries and ortilla Manufacturing,311811,Retail Bakeries,Industrials,XLI
+31,Construction,311,Food Manufacturing,3118,Bakeries and ortilla Manufacturing,311812,Commercial Bakeries,Industrials,XLI
+31,Construction,311,Food Manufacturing,3118,Bakeries and ortilla Manufacturing,311813,"Frozen Cakes, Pies, and Other Pastries Manufacturing",Industrials,XLI
+31,Construction,311,Food Manufacturing,3118,Bakeries and ortilla Manufacturing,311821,Cookie and Cracker Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3118,Bakeries and ortilla Manufacturing,311824,"Dry Pasta, Dough, and Flour Mixes Manufacturing from Purchased Flour",Industrials,XLI
+31,Construction,311,Food Manufacturing,3118,Bakeries and ortilla Manufacturing,311830,ortilla Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3119,Other Food Manufacturing,311911,Roasted Nuts and Peanut Butter Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3119,Other Food Manufacturing,311919,Other Snack Food Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3119,Other Food Manufacturing,311920,Coffee and ea Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3119,Other Food Manufacturing,311930,Flavoring Syrup and Concentrate Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3119,Other Food Manufacturing,311941,"Mayonnaise, Dressing, and Other Prepared Sauce Manufacturing",Industrials,XLI
+31,Construction,311,Food Manufacturing,3119,Other Food Manufacturing,311942,Spice and Extract Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3119,Other Food Manufacturing,311991,Perishable Prepared Food Manufacturing,Industrials,XLI
+31,Construction,311,Food Manufacturing,3119,Other Food Manufacturing,311999,All Other Miscellaneous Food Manufacturing,Industrials,XLI
+31,Construction,312,Beverage and obacco Product Manufacturing,3121,Beverage Manufacturing,312111,Soft Drink Manufacturing,Industrials,XLI
+31,Construction,312,Beverage and obacco Product Manufacturing,3121,Beverage Manufacturing,312112,Bottled Water Manufacturing,Industrials,XLI
+31,Construction,312,Beverage and obacco Product Manufacturing,3121,Beverage Manufacturing,312113,Ice Manufacturing,Industrials,XLI
+31,Construction,312,Beverage and obacco Product Manufacturing,3121,Beverage Manufacturing,312120,Breweries,Industrials,XLI
+31,Construction,312,Beverage and obacco Product Manufacturing,3121,Beverage Manufacturing,312130,Wineries,Industrials,XLI
+31,Construction,312,Beverage and obacco Product Manufacturing,3121,Beverage Manufacturing,312140,Distilleries,Industrials,XLI
+31,Construction,312,Beverage and obacco Product Manufacturing,3122,obacco Manufacturing,312230,obacco Manufacturing,Industrials,XLI
+31,Construction,313,extile Mills,3131,"Fiber, Yarn, and hread Mills",313110,"Fiber, Yarn, and hread Mills",Industrials,XLI
+31,Construction,313,extile Mills,3132,Fabric Mills,313210,Broadwoven Fabric Mills,Industrials,XLI
+31,Construction,313,extile Mills,3132,Fabric Mills,313220,Narrow Fabric Mills and Schiffli Machine Embroidery,Industrials,XLI
+31,Construction,313,extile Mills,3132,Fabric Mills,313230,Nonwoven Fabric Mills,Industrials,XLI
+31,Construction,313,extile Mills,3132,Fabric Mills,313240,Knit Fabric Mills,Industrials,XLI
+31,Construction,313,extile Mills,3133,extile and Fabric Finishing and Fabric Coating Mills,313310,extile and Fabric Finishing Mills,Industrials,XLI
+31,Construction,313,extile Mills,3133,extile and Fabric Finishing and Fabric Coating Mills,313320,Fabric Coating Mills,Industrials,XLI
+31,Construction,314,extile Product Mills,3141,extile Furnishings Mills,314110,Carpet and Rug Mills,Industrials,XLI
+31,Construction,314,extile Product Mills,3141,extile Furnishings Mills,314120,Curtain and Linen Mills,Industrials,XLI
+31,Construction,314,extile Product Mills,3149,Other extile Product Mills,314910,extile Bag and Canvas Mills,Industrials,XLI
+31,Construction,314,extile Product Mills,3149,Other extile Product Mills,314994,"Rope, Cordage, wine, ire Cord, and ire Fabric Mills",Industrials,XLI
+31,Construction,314,extile Product Mills,3149,Other extile Product Mills,314999,All Other Miscellaneous extile Product Mills,Industrials,XLI
+31,Construction,315,Apparel Manufacturing,3151,Apparel Knitting Mills,315120,Apparel Knitting Mills,Industrials,XLI
+31,Construction,315,Apparel Manufacturing,3152,Cut and Sew Apparel Manufacturing,315210,Cut and Sew Apparel Contractors,Industrials,XLI
+31,Construction,315,Apparel Manufacturing,3152,Cut and Sew Apparel Manufacturing,315250,Cut and Sew Apparel Manufacturing (except Contractors),Industrials,XLI
+31,Construction,315,Apparel Manufacturing,3159,Apparel Accessories and Other Apparel Manufacturing,315990,Apparel Accessories and Other Apparel Manufacturing,Industrials,XLI
+31,Construction,316,Leather and Allied Product Manufacturing,3161,Leather and Hide anning and Finishing,316110,Leather and Hide anning and Finishing,Industrials,XLI
+31,Construction,316,Leather and Allied Product Manufacturing,3162,Footwear Manufacturing,316210,Footwear Manufacturing,Industrials,XLI
+31,Construction,316,Leather and Allied Product Manufacturing,3169,Other Leather and Allied Product Manufacturing,316990,Other Leather and Allied Product Manufacturing,Industrials,XLI
+32,Construction,321,Wood Product Manufacturing,3211,Sawmills and Wood Preservation,321113,Sawmills,Industrials,XLI
+32,Construction,321,Wood Product Manufacturing,3211,Sawmills and Wood Preservation,321114,Wood Preservation,Industrials,XLI
+32,Construction,321,Wood Product Manufacturing,3212,"Veneer, Plywood, and Engineered Wood Product Manufacturing",321211,Hardwood Veneer and Plywood Manufacturing,Industrials,XLI
+32,Construction,321,Wood Product Manufacturing,3212,"Veneer, Plywood, and Engineered Wood Product Manufacturing",321212,Softwood Veneer and Plywood Manufacturing,Industrials,XLI
+32,Construction,321,Wood Product Manufacturing,3212,"Veneer, Plywood, and Engineered Wood Product Manufacturing",321215,Engineered Wood Member Manufacturing,Industrials,XLI
+32,Construction,321,Wood Product Manufacturing,3212,"Veneer, Plywood, and Engineered Wood Product Manufacturing",321219,Reconstituted Wood Product Manufacturing,Industrials,XLI
+32,Construction,321,Wood Product Manufacturing,3219,Other Wood Product Manufacturing,321911,Wood Window and Door Manufacturing,Industrials,XLI
+32,Construction,321,Wood Product Manufacturing,3219,Other Wood Product Manufacturing,321912,"Cut Stock, Resawing Lumber, and Planing",Industrials,XLI
+32,Construction,321,Wood Product Manufacturing,3219,Other Wood Product Manufacturing,321918,Other Millwork (including Flooring),Industrials,XLI
+32,Construction,321,Wood Product Manufacturing,3219,Other Wood Product Manufacturing,321920,Wood Container and Pallet Manufacturing,Industrials,XLI
+32,Construction,321,Wood Product Manufacturing,3219,Other Wood Product Manufacturing,321991,Manufactured Home (Mobile Home) Manufacturing,Industrials,XLI
+32,Construction,321,Wood Product Manufacturing,3219,Other Wood Product Manufacturing,321992,Prefabricated Wood Building Manufacturing,Industrials,XLI
+32,Construction,321,Wood Product Manufacturing,3219,Other Wood Product Manufacturing,321999,All Other Miscellaneous Wood Product Manufacturing,Industrials,XLI
+32,Construction,322,Paper Manufacturing,3221,"Pulp, Paper, and Paperboard Mills",322110,Pulp Mills,Industrials,XLI
+32,Construction,322,Paper Manufacturing,3221,"Pulp, Paper, and Paperboard Mills",322120,Paper Mills,Industrials,XLI
+32,Construction,322,Paper Manufacturing,3221,"Pulp, Paper, and Paperboard Mills",322130,Paperboard Mills,Industrials,XLI
+32,Construction,322,Paper Manufacturing,3222,Converted Paper Product Manufacturing,322211,Corrugated and Solid Fiber Box Manufacturing,Industrials,XLI
+32,Construction,322,Paper Manufacturing,3222,Converted Paper Product Manufacturing,322212,Folding Paperboard Box Manufacturing,Industrials,XLI
+32,Construction,322,Paper Manufacturing,3222,Converted Paper Product Manufacturing,322219,Other Paperboard Container Manufacturing,Industrials,XLI
+32,Construction,322,Paper Manufacturing,3222,Converted Paper Product Manufacturing,322220,Paper Bag and Coated and reated Paper Manufacturing,Industrials,XLI
+32,Construction,322,Paper Manufacturing,3222,Converted Paper Product Manufacturing,322230,Stationery Product Manufacturing,Industrials,XLI
+32,Construction,322,Paper Manufacturing,3222,Converted Paper Product Manufacturing,322291,Sanitary Paper Product Manufacturing,Industrials,XLI
+32,Construction,322,Paper Manufacturing,3222,Converted Paper Product Manufacturing,322299,All Other Converted Paper Product Manufacturing,Industrials,XLI
+32,Construction,323,Printing and Related Support Activities,3231,Printing and Related Support Activities,323111,Commercial Printing (except Screen and Books),Industrials,XLI
+32,Construction,323,Printing and Related Support Activities,3231,Printing and Related Support Activities,323113,Commercial Screen Printing,Industrials,XLI
+32,Construction,323,Printing and Related Support Activities,3231,Printing and Related Support Activities,323117,Books Printing,Industrials,XLI
+32,Construction,323,Printing and Related Support Activities,3231,Printing and Related Support Activities,323120,Support Activities for Printing,Industrials,XLI
+32,Construction,324,Petroleum and Coal Products Manufacturing,3241,Petroleum and Coal Products Manufacturing,324110,Petroleum Refineries,Industrials,XLI
+32,Construction,324,Petroleum and Coal Products Manufacturing,3241,Petroleum and Coal Products Manufacturing,324121,Asphalt Paving Mixture and Block Manufacturing,Industrials,XLI
+32,Construction,324,Petroleum and Coal Products Manufacturing,3241,Petroleum and Coal Products Manufacturing,324122,Asphalt Shingle and Coating Materials Manufacturing,Industrials,XLI
+32,Construction,324,Petroleum and Coal Products Manufacturing,3241,Petroleum and Coal Products Manufacturing,324191,Petroleum Lubricating Oil and Grease Manufacturing,Industrials,XLI
+32,Construction,324,Petroleum and Coal Products Manufacturing,3241,Petroleum and Coal Products Manufacturing,324199,All Other Petroleum and Coal Products Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3251,Basic Chemical Manufacturing,325110,Petrochemical Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3251,Basic Chemical Manufacturing,325120,Industrial Gas Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3251,Basic Chemical Manufacturing,325130,Synthetic Dye and Pigment Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3251,Basic Chemical Manufacturing,325180,Other Basic Inorganic Chemical Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3251,Basic Chemical Manufacturing,325193,Ethyl Alcohol Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3251,Basic Chemical Manufacturing,325194,"Cyclic Crude, Intermediate, and Gum and Wood Chemical Manufacturing",Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3251,Basic Chemical Manufacturing,325199,All Other Basic Organic Chemical Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3252,"Resin, Synthetic Rubber, and Artificial and Synthetic Fibers and Filaments Manufacturing",325211,Plastics Material and Resin Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3252,"Resin, Synthetic Rubber, and Artificial and Synthetic Fibers and Filaments Manufacturing",325212,Synthetic Rubber Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3252,"Resin, Synthetic Rubber, and Artificial and Synthetic Fibers and Filaments Manufacturing",325220,Artificial and Synthetic Fibers and Filaments Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3253,"Pesticide, Fertilizer, and Other Agricultural Chemical Manufacturing",325311,Nitrogenous Fertilizer Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3253,"Pesticide, Fertilizer, and Other Agricultural Chemical Manufacturing",325312,Phosphatic Fertilizer Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3253,"Pesticide, Fertilizer, and Other Agricultural Chemical Manufacturing",325314,Fertilizer (Mixing Only) Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3253,"Pesticide, Fertilizer, and Other Agricultural Chemical Manufacturing",325315,Compost Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3253,"Pesticide, Fertilizer, and Other Agricultural Chemical Manufacturing",325320,Pesticide and Other Agricultural Chemical Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3254,Pharmaceutical and Medicine Manufacturing,325411,Medicinal and Botanical Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3254,Pharmaceutical and Medicine Manufacturing,325412,Pharmaceutical Preparation Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3254,Pharmaceutical and Medicine Manufacturing,325413,In-Vitro Diagnostic Substance Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3254,Pharmaceutical and Medicine Manufacturing,325414,Biological Product (except Diagnostic) Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3255,"Paint, Coating, and Adhesive Manufacturing",325510,Paint and Coating Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3255,"Paint, Coating, and Adhesive Manufacturing",325520,Adhesive Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3256,"Soap, Cleaning Compound, and oilet Preparation Manufacturing",325611,Soap and Other Detergent Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3256,"Soap, Cleaning Compound, and oilet Preparation Manufacturing",325612,Polish and Other Sanitation Good Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3256,"Soap, Cleaning Compound, and oilet Preparation Manufacturing",325613,Surface Active Agent Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3256,"Soap, Cleaning Compound, and oilet Preparation Manufacturing",325620,oilet Preparation Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3259,Other Chemical Product and Preparation Manufacturing,325910,Printing Ink Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3259,Other Chemical Product and Preparation Manufacturing,325920,Explosives Manufacturing,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3259,Other Chemical Product and Preparation Manufacturing,325991,Custom Compounding of Purchased Resins,Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3259,Other Chemical Product and Preparation Manufacturing,325992,"Photographic Film, Paper, Plate, Chemical, and Copy oner Manufacturing",Industrials,XLI
+32,Construction,325,Chemical Manufacturing,3259,Other Chemical Product and Preparation Manufacturing,325998,All Other Miscellaneous Chemical Product and Preparation Manufacturing,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3261,Plastics Product Manufacturing,326111,Plastics Bag and Pouch Manufacturing,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3261,Plastics Product Manufacturing,326112,Plastics Packaging Film and Sheet (including Laminated) Manufacturing,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3261,Plastics Product Manufacturing,326113,Unlaminated Plastics Film and Sheet (except Packaging) Manufacturing,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3261,Plastics Product Manufacturing,326121,Unlaminated Plastics Profile Shape Manufacturing,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3261,Plastics Product Manufacturing,326122,Plastics Pipe and Pipe Fitting Manufacturing,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3261,Plastics Product Manufacturing,326130,"Laminated Plastics Plate, Sheet (except Packaging), and Shape Manufacturing",Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3261,Plastics Product Manufacturing,326140,Polystyrene Foam Product Manufacturing,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3261,Plastics Product Manufacturing,326150,Urethane and Other Foam Product (except Polystyrene) Manufacturing,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3261,Plastics Product Manufacturing,326160,Plastics Bottle Manufacturing,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3261,Plastics Product Manufacturing,326191,Plastics Plumbing Fixture Manufacturing,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3261,Plastics Product Manufacturing,326199,All Other Plastics Product Manufacturing,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3262,Rubber Product Manufacturing,326211,ire Manufacturing (except Retreading),Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3262,Rubber Product Manufacturing,326212,ire Retreading,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3262,Rubber Product Manufacturing,326220,Rubber and Plastics Hoses and Belting Manufacturing,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3262,Rubber Product Manufacturing,326291,Rubber Product Manufacturing for Mechanical Use,Industrials,XLI
+32,Construction,326,Plastics and Rubber Products Manufacturing,3262,Rubber Product Manufacturing,326299,All Other Rubber Product Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3271,Clay Product and Refractory Manufacturing,327110,"Pottery, Ceramics, and Plumbing Fixture Manufacturing",Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3271,Clay Product and Refractory Manufacturing,327120,Clay Building Material and Refractories Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3272,Glass and Glass Product Manufacturing,327211,Flat Glass Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3272,Glass and Glass Product Manufacturing,327212,Other Pressed and Blown Glass and Glassware Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3272,Glass and Glass Product Manufacturing,327213,Glass Container Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3272,Glass and Glass Product Manufacturing,327215,Glass Product Manufacturing Made of Purchased Glass,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3273,Cement and Concrete Product Manufacturing,327310,Cement Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3273,Cement and Concrete Product Manufacturing,327320,Ready-Mix Concrete Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3273,Cement and Concrete Product Manufacturing,327331,Concrete Block and Brick Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3273,Cement and Concrete Product Manufacturing,327332,Concrete Pipe Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3273,Cement and Concrete Product Manufacturing,327390,Other Concrete Product Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3274,Lime and Gypsum Product Manufacturing,327410,Lime Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3274,Lime and Gypsum Product Manufacturing,327420,Gypsum Product Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3279,Other Nonmetallic Mineral Product Manufacturing,327910,Abrasive Product Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3279,Other Nonmetallic Mineral Product Manufacturing,327991,Cut Stone and Stone Product Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3279,Other Nonmetallic Mineral Product Manufacturing,327992,Ground or reated Mineral and Earth Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3279,Other Nonmetallic Mineral Product Manufacturing,327993,Mineral Wool Manufacturing,Industrials,XLI
+32,Construction,327,Nonmetallic Mineral Product Manufacturing,3279,Other Nonmetallic Mineral Product Manufacturing,327999,All Other Miscellaneous Nonmetallic Mineral Product Manufacturing,Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3311,Iron and Steel Mills and Ferroalloy Manufacturing,331110,Iron and Steel Mills and Ferroalloy Manufacturing,Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3312,Steel Product Manufacturing from Purchased Steel,331210,Iron and Steel Pipe and ube Manufacturing from Purchased Steel,Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3312,Steel Product Manufacturing from Purchased Steel,331221,Rolled Steel Shape Manufacturing,Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3312,Steel Product Manufacturing from Purchased Steel,331222,Steel Wire Drawing,Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3313,Alumina and Aluminum Production and Processing,331313,Alumina Refining and Primary Aluminum Production,Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3313,Alumina and Aluminum Production and Processing,331314,Secondary Smelting and Alloying of Aluminum,Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3313,Alumina and Aluminum Production and Processing,331315,"Aluminum Sheet, Plate, and Foil Manufacturing",Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3313,Alumina and Aluminum Production and Processing,331318,"Other Aluminum Rolling, Drawing, and Extruding",Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3314,Nonferrous Metal (except Aluminum) Production and Processing,331410,Nonferrous Metal (except Aluminum) Smelting and Refining,Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3314,Nonferrous Metal (except Aluminum) Production and Processing,331420,"Copper Rolling, Drawing, Extruding, and Alloying",Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3314,Nonferrous Metal (except Aluminum) Production and Processing,331491,"Nonferrous Metal (except Copper and Aluminum) Rolling, Drawing, and Extruding",Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3314,Nonferrous Metal (except Aluminum) Production and Processing,331492,"Secondary Smelting, Refining, and Alloying of Nonferrous Metal (except Copper and Aluminum)",Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3315,Foundries,331511,Iron Foundries,Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3315,Foundries,331512,Steel Investment Foundries,Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3315,Foundries,331513,Steel Foundries (except Investment),Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3315,Foundries,331523,Nonferrous Metal Die-Casting Foundries,Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3315,Foundries,331524,Aluminum Foundries (except Die-Casting),Industrials,XLI
+33,Construction,331,Primary Metal Manufacturing,3315,Foundries,331529,Other Nonferrous Metal Foundries (except Die-Casting),Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3321,Forging and Stamping,332111,Iron and Steel Forging,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3321,Forging and Stamping,332112,Nonferrous Forging,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3321,Forging and Stamping,332114,Custom Roll Forming,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3321,Forging and Stamping,332117,Powder Metallurgy Part Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3321,Forging and Stamping,332119,"Metal Crown, Closure, and Other Metal Stamping (except Automotive)",Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3322,Cutlery and Handtool Manufacturing,332215,"Metal Kitchen Cookware, Utensil, Cutlery, and Flatware (except Precious) Manufacturing",Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3322,Cutlery and Handtool Manufacturing,332216,Saw Blade and Handtool Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3323,Architectural and Structural Metals Manufacturing,332311,Prefabricated Metal Building and Component Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3323,Architectural and Structural Metals Manufacturing,332312,Fabricated Structural Metal Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3323,Architectural and Structural Metals Manufacturing,332313,Plate Work Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3323,Architectural and Structural Metals Manufacturing,332321,Metal Window and Door Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3323,Architectural and Structural Metals Manufacturing,332322,Sheet Metal Work Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3323,Architectural and Structural Metals Manufacturing,332323,Ornamental and Architectural Metal Work Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3324,"Boiler, ank, and Shipping Container Manufacturing",332410,Power Boiler and Heat Exchanger Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3324,"Boiler, ank, and Shipping Container Manufacturing",332420,Metal ank (Heavy Gauge) Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3324,"Boiler, ank, and Shipping Container Manufacturing",332431,Metal Can Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3324,"Boiler, ank, and Shipping Container Manufacturing",332439,Other Metal Container Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3325,Hardware Manufacturing,332510,Hardware Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3326,Spring and Wire Product Manufacturing,332613,Spring Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3326,Spring and Wire Product Manufacturing,332618,Other Fabricated Wire Product Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3327,"Machine Shops; urned Product; and Screw, Nut, and Bolt Manufacturing",332710,Machine Shops,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3327,"Machine Shops; urned Product; and Screw, Nut, and Bolt Manufacturing",332721,Precision urned Product Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3327,"Machine Shops; urned Product; and Screw, Nut, and Bolt Manufacturing",332722,"Bolt, Nut, Screw, Rivet, and Washer Manufacturing",Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3328,"Coating, Engraving, Heat reating, and Allied Activities",332811,Metal Heat reating,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3328,"Coating, Engraving, Heat reating, and Allied Activities",332812,"Metal Coating, Engraving (except Jewelry and Silverware), and Allied Services to Manufacturers",Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3328,"Coating, Engraving, Heat reating, and Allied Activities",332813,"Electroplating, Plating, Polishing, Anodizing, and Coloring",Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3329,Other Fabricated Metal Product Manufacturing,332911,Industrial Valve Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3329,Other Fabricated Metal Product Manufacturing,332912,Fluid Power Valve and Hose Fitting Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3329,Other Fabricated Metal Product Manufacturing,332913,Plumbing Fixture Fitting and rim Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3329,Other Fabricated Metal Product Manufacturing,332919,Other Metal Valve and Pipe Fitting Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3329,Other Fabricated Metal Product Manufacturing,332991,Ball and Roller Bearing Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3329,Other Fabricated Metal Product Manufacturing,332992,Small Arms Ammunition Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3329,Other Fabricated Metal Product Manufacturing,332993,Ammunition (except Small Arms) Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3329,Other Fabricated Metal Product Manufacturing,332994,"Small Arms, Ordnance, and Ordnance Accessories Manufacturing",Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3329,Other Fabricated Metal Product Manufacturing,332996,Fabricated Pipe and Pipe Fitting Manufacturing,Industrials,XLI
+33,Construction,332,Fabricated Metal Product Manufacturing,3329,Other Fabricated Metal Product Manufacturing,332999,All Other Miscellaneous Fabricated Metal Product Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3331,"Agriculture, Construction, and Mining Machinery Manufacturing",333111,Farm Machinery and Equipment Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3331,"Agriculture, Construction, and Mining Machinery Manufacturing",333112,Lawn and Garden ractor and Home Lawn and Garden Equipment Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3331,"Agriculture, Construction, and Mining Machinery Manufacturing",333120,Construction Machinery Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3331,"Agriculture, Construction, and Mining Machinery Manufacturing",333131,Mining Machinery and Equipment Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3331,"Agriculture, Construction, and Mining Machinery Manufacturing",333132,Oil and Gas Field Machinery and Equipment Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3332,Industrial Machinery Manufacturing,333241,Food Product Machinery Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3332,Industrial Machinery Manufacturing,333242,Semiconductor Machinery Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3332,Industrial Machinery Manufacturing,333243,"Sawmill, Woodworking, and Paper Machinery Manufacturing",Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3332,Industrial Machinery Manufacturing,333248,All Other Industrial Machinery Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3333,Commercial and Service Industry Machinery Manufacturing,333310,Commercial and Service Industry Machinery Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3334,"Ventilation, Heating, Air-Conditioning, and Commercial Refrigeration Equipment Manufacturing",333413,Industrial and Commercial Fan and Blower and Air Purification Equipment Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3334,"Ventilation, Heating, Air-Conditioning, and Commercial Refrigeration Equipment Manufacturing",333414,Heating Equipment (except Warm Air Furnaces) Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3334,"Ventilation, Heating, Air-Conditioning, and Commercial Refrigeration Equipment Manufacturing",333415,Air-Conditioning and Warm Air Heating Equipment and Commercial and Industrial Refrigeration Equipment Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3335,Metalworking Machinery Manufacturing,333511,Industrial Mold Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3335,Metalworking Machinery Manufacturing,333514,"Special Die and ool, Die Set, Jig, and Fixture Manufacturing",Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3335,Metalworking Machinery Manufacturing,333515,Cutting ool and Machine ool Accessory Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3335,Metalworking Machinery Manufacturing,333517,Machine ool Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3335,Metalworking Machinery Manufacturing,333519,Rolling Mill and Other Metalworking Machinery Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3336,"Engine, urbine, and Power ransmission Equipment Manufacturing",333611,urbine and urbine Generator Set Units Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3336,"Engine, urbine, and Power ransmission Equipment Manufacturing",333612,"Speed Changer, Industrial High-Speed Drive, and Gear Manufacturing",Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3336,"Engine, urbine, and Power ransmission Equipment Manufacturing",333613,Mechanical Power ransmission Equipment Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3336,"Engine, urbine, and Power ransmission Equipment Manufacturing",333618,Other Engine Equipment Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3339,Other General Purpose Machinery Manufacturing,333912,Air and Gas Compressor Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3339,Other General Purpose Machinery Manufacturing,333914,"Measuring, Dispensing, and Other Pumping Equipment Manufacturing",Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3339,Other General Purpose Machinery Manufacturing,333921,Elevator and Moving Stairway Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3339,Other General Purpose Machinery Manufacturing,333922,Conveyor and Conveying Equipment Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3339,Other General Purpose Machinery Manufacturing,333923,"Overhead raveling Crane, Hoist, and Monorail System Manufacturing",Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3339,Other General Purpose Machinery Manufacturing,333924,"Industrial ruck, ractor, railer, and Stacker Machinery Manufacturing",Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3339,Other General Purpose Machinery Manufacturing,333991,Power-Driven Handtool Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3339,Other General Purpose Machinery Manufacturing,333992,Welding and Soldering Equipment Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3339,Other General Purpose Machinery Manufacturing,333993,Packaging Machinery Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3339,Other General Purpose Machinery Manufacturing,333994,Industrial Process Furnace and Oven Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3339,Other General Purpose Machinery Manufacturing,333995,Fluid Power Cylinder and Actuator Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3339,Other General Purpose Machinery Manufacturing,333996,Fluid Power Pump and Motor Manufacturing,Industrials,XLI
+33,Construction,333,Machinery Manufacturing,3339,Other General Purpose Machinery Manufacturing,333998,All Other Miscellaneous General Purpose Machinery Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3341,Computer and Peripheral Equipment Manufacturing,334111,Electronic Computer Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3341,Computer and Peripheral Equipment Manufacturing,334112,Computer Storage Device Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3341,Computer and Peripheral Equipment Manufacturing,334118,Computer erminal and Other Computer Peripheral Equipment Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3342,Communications Equipment Manufacturing,334210,elephone Apparatus Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3342,Communications Equipment Manufacturing,334220,Radio and elevision Broadcasting and Wireless Communications Equipment Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3342,Communications Equipment Manufacturing,334290,Other Communications Equipment Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3343,Audio and Video Equipment Manufacturing,334310,Audio and Video Equipment Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3344,Semiconductor and Other Electronic Component Manufacturing,334412,Bare Printed Circuit Board Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3344,Semiconductor and Other Electronic Component Manufacturing,334413,Semiconductor and Related Device Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3344,Semiconductor and Other Electronic Component Manufacturing,334416,"Capacitor, Resistor, Coil, ransformer, and Other Inductor Manufacturing",Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3344,Semiconductor and Other Electronic Component Manufacturing,334417,Electronic Connector Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3344,Semiconductor and Other Electronic Component Manufacturing,334418,Printed Circuit Assembly (Electronic Assembly) Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3344,Semiconductor and Other Electronic Component Manufacturing,334419,Other Electronic Component Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3345,"Navigational, Measuring, Electromedical, and Control Instruments Manufacturing",334510,Electromedical and Electrotherapeutic Apparatus Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3345,"Navigational, Measuring, Electromedical, and Control Instruments Manufacturing",334511,"Search, Detection, Navigation, Guidance, Aeronautical, and Nautical System and Instrument Manufacturing",Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3345,"Navigational, Measuring, Electromedical, and Control Instruments Manufacturing",334512,"Automatic Environmental Control Manufacturing for Residential, Commercial, and Appliance Use",Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3345,"Navigational, Measuring, Electromedical, and Control Instruments Manufacturing",334513,"Instruments and Related Products Manufacturing for Measuring, Displaying, and Controlling Industrial Process Variables",Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3345,"Navigational, Measuring, Electromedical, and Control Instruments Manufacturing",334514,otalizing Fluid Meter and Counting Device Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3345,"Navigational, Measuring, Electromedical, and Control Instruments Manufacturing",334515,Instrument Manufacturing for Measuring and esting Electricity and Electrical Signals,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3345,"Navigational, Measuring, Electromedical, and Control Instruments Manufacturing",334516,Analytical Laboratory Instrument Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3345,"Navigational, Measuring, Electromedical, and Control Instruments Manufacturing",334517,Irradiation Apparatus Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3345,"Navigational, Measuring, Electromedical, and Control Instruments Manufacturing",334519,Other Measuring and Controlling Device Manufacturing,Industrials,XLI
+33,Construction,334,Computer and Electronic Product Manufacturing,3346,Manufacturing and Reproducing Magnetic and Optical Media,334610,Manufacturing and Reproducing Magnetic and Optical Media,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3351,Electric Lighting Equipment Manufacturing,335131,Residential Electric Lighting Fixture Manufacturing,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3351,Electric Lighting Equipment Manufacturing,335132,"Commercial, Industrial, and Institutional Electric Lighting Fixture Manufacturing",Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3351,Electric Lighting Equipment Manufacturing,335139,Electric Lamp Bulb and Other Lighting Equipment Manufacturing,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3352,Household Appliance Manufacturing,335210,Small Electrical Appliance Manufacturing,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3352,Household Appliance Manufacturing,335220,Major Household Appliance Manufacturing,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3353,Electrical Equipment Manufacturing,335311,"Power, Distribution, and Specialty ransformer Manufacturing",Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3353,Electrical Equipment Manufacturing,335312,Motor and Generator Manufacturing,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3353,Electrical Equipment Manufacturing,335313,Switchgear and Switchboard Apparatus Manufacturing,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3353,Electrical Equipment Manufacturing,335314,Relay and Industrial Control Manufacturing,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3359,Other Electrical Equipment and Component Manufacturing,335910,Battery Manufacturing,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3359,Other Electrical Equipment and Component Manufacturing,335921,Fiber Optic Cable Manufacturing,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3359,Other Electrical Equipment and Component Manufacturing,335929,Other Communication and Energy Wire Manufacturing,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3359,Other Electrical Equipment and Component Manufacturing,335931,Current-Carrying Wiring Device Manufacturing,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3359,Other Electrical Equipment and Component Manufacturing,335932,Noncurrent-Carrying Wiring Device Manufacturing,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3359,Other Electrical Equipment and Component Manufacturing,335991,Carbon and Graphite Product Manufacturing,Industrials,XLI
+33,Construction,335,"Electrical Equipment, Appliance, and Component Manufacturing",3359,Other Electrical Equipment and Component Manufacturing,335999,All Other Miscellaneous Electrical Equipment and Component Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3361,Motor Vehicle Manufacturing,336110,Automobile and Light Duty Motor Vehicle Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3361,Motor Vehicle Manufacturing,336120,Heavy Duty ruck Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3362,Motor Vehicle Body and railer Manufacturing,336211,Motor Vehicle Body Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3362,Motor Vehicle Body and railer Manufacturing,336212,ruck railer Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3362,Motor Vehicle Body and railer Manufacturing,336213,Motor Home Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3362,Motor Vehicle Body and railer Manufacturing,336214,ravel railer and Camper Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3363,Motor Vehicle Parts Manufacturing,336310,Motor Vehicle Gasoline Engine and Engine Parts Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3363,Motor Vehicle Parts Manufacturing,336320,Motor Vehicle Electrical and Electronic Equipment Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3363,Motor Vehicle Parts Manufacturing,336330,Motor Vehicle Steering and Suspension Components (except Spring) Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3363,Motor Vehicle Parts Manufacturing,336340,Motor Vehicle Brake System Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3363,Motor Vehicle Parts Manufacturing,336350,Motor Vehicle ransmission and Power rain Parts Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3363,Motor Vehicle Parts Manufacturing,336360,Motor Vehicle Seating and Interior rim Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3363,Motor Vehicle Parts Manufacturing,336370,Motor Vehicle Metal Stamping,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3363,Motor Vehicle Parts Manufacturing,336390,Other Motor Vehicle Parts Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3364,Aerospace Product and Parts Manufacturing,336411,Aircraft Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3364,Aerospace Product and Parts Manufacturing,336412,Aircraft Engine and Engine Parts Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3364,Aerospace Product and Parts Manufacturing,336413,Other Aircraft Parts and Auxiliary Equipment Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3364,Aerospace Product and Parts Manufacturing,336414,Guided Missile and Space Vehicle Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3364,Aerospace Product and Parts Manufacturing,336415,Guided Missile and Space Vehicle Propulsion Unit and Propulsion Unit Parts Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3364,Aerospace Product and Parts Manufacturing,336419,Other Guided Missile and Space Vehicle Parts and Auxiliary Equipment Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3365,Railroad Rolling Stock Manufacturing,336510,Railroad Rolling Stock Manufacturing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3366,Ship and Boat Building,336611,Ship Building and Repairing,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3366,Ship and Boat Building,336612,Boat Building,Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3369,Other ransportation Equipment Manufacturing,336991,"Motorcycle, Bicycle, and Parts Manufacturing",Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3369,Other ransportation Equipment Manufacturing,336992,"Military Armored Vehicle, ank, and ank Component Manufacturing",Industrials,XLI
+33,Construction,336,ransportation Equipment Manufacturing,3369,Other ransportation Equipment Manufacturing,336999,All Other ransportation Equipment Manufacturing,Industrials,XLI
+33,Construction,337,Furniture and Related Product Manufacturing,3371,Household and Institutional Furniture and Kitchen Cabinet Manufacturing,337110,Wood Kitchen Cabinet and Countertop Manufacturing,Industrials,XLI
+33,Construction,337,Furniture and Related Product Manufacturing,3371,Household and Institutional Furniture and Kitchen Cabinet Manufacturing,337121,Upholstered Household Furniture Manufacturing,Industrials,XLI
+33,Construction,337,Furniture and Related Product Manufacturing,3371,Household and Institutional Furniture and Kitchen Cabinet Manufacturing,337122,Nonupholstered Wood Household Furniture Manufacturing,Industrials,XLI
+33,Construction,337,Furniture and Related Product Manufacturing,3371,Household and Institutional Furniture and Kitchen Cabinet Manufacturing,337126,Household Furniture (except Wood and Upholstered) Manufacturing,Industrials,XLI
+33,Construction,337,Furniture and Related Product Manufacturing,3371,Household and Institutional Furniture and Kitchen Cabinet Manufacturing,337127,Institutional Furniture Manufacturing,Industrials,XLI
+33,Construction,337,Furniture and Related Product Manufacturing,3372,Office Furniture (including Fixtures) Manufacturing,337211,Wood Office Furniture Manufacturing,Industrials,XLI
+33,Construction,337,Furniture and Related Product Manufacturing,3372,Office Furniture (including Fixtures) Manufacturing,337212,Custom Architectural Woodwork and Millwork Manufacturing,Industrials,XLI
+33,Construction,337,Furniture and Related Product Manufacturing,3372,Office Furniture (including Fixtures) Manufacturing,337214,Office Furniture (except Wood) Manufacturing,Industrials,XLI
+33,Construction,337,Furniture and Related Product Manufacturing,3372,Office Furniture (including Fixtures) Manufacturing,337215,"Showcase, Partition, Shelving, and Locker Manufacturing",Industrials,XLI
+33,Construction,337,Furniture and Related Product Manufacturing,3379,Other Furniture Related Product Manufacturing,337910,Mattress Manufacturing,Industrials,XLI
+33,Construction,337,Furniture and Related Product Manufacturing,3379,Other Furniture Related Product Manufacturing,337920,Blind and Shade Manufacturing,Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3391,Medical Equipment and Supplies Manufacturing,339112,Surgical and Medical Instrument Manufacturing,Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3391,Medical Equipment and Supplies Manufacturing,339113,Surgical Appliance and Supplies Manufacturing,Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3391,Medical Equipment and Supplies Manufacturing,339114,Dental Equipment and Supplies Manufacturing,Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3391,Medical Equipment and Supplies Manufacturing,339115,Ophthalmic Goods Manufacturing,Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3391,Medical Equipment and Supplies Manufacturing,339116,Dental Laboratories,Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3399,Other Miscellaneous Manufacturing,339910,Jewelry and Silverware Manufacturing,Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3399,Other Miscellaneous Manufacturing,339920,Sporting and Athletic Goods Manufacturing,Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3399,Other Miscellaneous Manufacturing,339930,"Doll, oy, and Game Manufacturing",Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3399,Other Miscellaneous Manufacturing,339940,Office Supplies (except Paper) Manufacturing,Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3399,Other Miscellaneous Manufacturing,339950,Sign Manufacturing,Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3399,Other Miscellaneous Manufacturing,339991,"Gasket, Packing, and Sealing Device Manufacturing",Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3399,Other Miscellaneous Manufacturing,339992,Musical Instrument Manufacturing,Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3399,Other Miscellaneous Manufacturing,339993,"Fastener, Button, Needle, and Pin Manufacturing",Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3399,Other Miscellaneous Manufacturing,339994,"Broom, Brush, and Mop Manufacturing",Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3399,Other Miscellaneous Manufacturing,339995,Burial Casket Manufacturing,Industrials,XLI
+33,Construction,339,Miscellaneous Manufacturing,3399,Other Miscellaneous Manufacturing,339999,All Other Miscellaneous Manufacturing,Industrials,XLI
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4231,Motor Vehicle and Motor Vehicle Parts and Supplies Merchant Wholesalers,423110,Automobile and Other Motor Vehicle Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4231,Motor Vehicle and Motor Vehicle Parts and Supplies Merchant Wholesalers,423120,Motor Vehicle Supplies and New Parts Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4231,Motor Vehicle and Motor Vehicle Parts and Supplies Merchant Wholesalers,423130,ire and ube Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4231,Motor Vehicle and Motor Vehicle Parts and Supplies Merchant Wholesalers,423140,Motor Vehicle Parts (Used) Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4232,Furniture and Home Furnishing Merchant Wholesalers,423210,Furniture Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4232,Furniture and Home Furnishing Merchant Wholesalers,423220,Home Furnishing Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4233,Lumber and Other Construction Materials Merchant Wholesalers,423310,"Lumber, Plywood, Millwork, and Wood Panel Merchant Wholesalers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4233,Lumber and Other Construction Materials Merchant Wholesalers,423320,"Brick, Stone, and Related Construction Material Merchant Wholesalers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4233,Lumber and Other Construction Materials Merchant Wholesalers,423330,"Roofing, Siding, and Insulation Material Merchant Wholesalers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4233,Lumber and Other Construction Materials Merchant Wholesalers,423390,Other Construction Material Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4234,Professional and Commercial Equipment and Supplies Merchant Wholesalers,423410,Photographic Equipment and Supplies Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4234,Professional and Commercial Equipment and Supplies Merchant Wholesalers,423420,Office Equipment Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4234,Professional and Commercial Equipment and Supplies Merchant Wholesalers,423430,Computer and Computer Peripheral Equipment and Software Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4234,Professional and Commercial Equipment and Supplies Merchant Wholesalers,423440,Other Commercial Equipment Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4234,Professional and Commercial Equipment and Supplies Merchant Wholesalers,423450,"Medical, Dental, and Hospital Equipment and Supplies Merchant Wholesalers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4234,Professional and Commercial Equipment and Supplies Merchant Wholesalers,423460,Ophthalmic Goods Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4234,Professional and Commercial Equipment and Supplies Merchant Wholesalers,423490,Other Professional Equipment and Supplies Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4235,Metal and Mineral (except Petroleum) Merchant Wholesalers,423510,Metal Service Centers and Other Metal Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4235,Metal and Mineral (except Petroleum) Merchant Wholesalers,423520,Coal and Other Mineral and Ore Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4236,Household Appliances and Electrical and Electronic Goods Merchant Wholesalers,423610,"Electrical Apparatus and Equipment, Wiring Supplies, and Related Equipment Merchant Wholesalers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4236,Household Appliances and Electrical and Electronic Goods Merchant Wholesalers,423620,"Household Appliances, Electric Housewares, and Consumer Electronics Merchant Wholesalers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4236,Household Appliances and Electrical and Electronic Goods Merchant Wholesalers,423690,Other Electronic Parts and Equipment Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4237,"Hardware, and Plumbing and Heating Equipment and Supplies Merchant Wholesalers",423710,Hardware Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4237,"Hardware, and Plumbing and Heating Equipment and Supplies Merchant Wholesalers",423720,Plumbing and Heating Equipment and Supplies (Hydronics) Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4237,"Hardware, and Plumbing and Heating Equipment and Supplies Merchant Wholesalers",423730,Warm Air Heating and Air-Conditioning Equipment and Supplies Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4237,"Hardware, and Plumbing and Heating Equipment and Supplies Merchant Wholesalers",423740,Refrigeration Equipment and Supplies Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4238,"Machinery, Equipment, and Supplies Merchant Wholesalers",423810,Construction and Mining (except Oil Well) Machinery and Equipment Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4238,"Machinery, Equipment, and Supplies Merchant Wholesalers",423820,Farm and Garden Machinery and Equipment Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4238,"Machinery, Equipment, and Supplies Merchant Wholesalers",423830,Industrial Machinery and Equipment Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4238,"Machinery, Equipment, and Supplies Merchant Wholesalers",423840,Industrial Supplies Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4238,"Machinery, Equipment, and Supplies Merchant Wholesalers",423850,Service Establishment Equipment and Supplies Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4238,"Machinery, Equipment, and Supplies Merchant Wholesalers",423860,ransportation Equipment and Supplies (except Motor Vehicle) Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4239,Miscellaneous Durable Goods Merchant Wholesalers,423910,Sporting and Recreational Goods and Supplies Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4239,Miscellaneous Durable Goods Merchant Wholesalers,423920,oy and Hobby Goods and Supplies Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4239,Miscellaneous Durable Goods Merchant Wholesalers,423930,Recyclable Material Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4239,Miscellaneous Durable Goods Merchant Wholesalers,423940,"Jewelry, Watch, Precious Stone, and Precious Metal Merchant Wholesalers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,423,"Merchant Wholesalers, Durable Goods",4239,Miscellaneous Durable Goods Merchant Wholesalers,423990,Other Miscellaneous Durable Goods Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4241,Paper and Paper Product Merchant Wholesalers,424110,Printing and Writing Paper Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4241,Paper and Paper Product Merchant Wholesalers,424120,Stationery and Office Supplies Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4241,Paper and Paper Product Merchant Wholesalers,424130,Industrial and Personal Service Paper Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4242,Drugs and Druggists' Sundries Merchant Wholesalers,424210,Drugs and Druggists' Sundries Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4243,"Apparel, Piece Goods, and Notions Merchant Wholesalers",424310,"Piece Goods, Notions, and Other Dry Goods Merchant Wholesalers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4243,"Apparel, Piece Goods, and Notions Merchant Wholesalers",424340,Footwear Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4243,"Apparel, Piece Goods, and Notions Merchant Wholesalers",424350,Clothing and Clothing Accessories Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4244,Grocery and Related Product Merchant Wholesalers,424410,General Line Grocery Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4244,Grocery and Related Product Merchant Wholesalers,424420,Packaged Frozen Food Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4244,Grocery and Related Product Merchant Wholesalers,424430,Dairy Product (except Dried or Canned) Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4244,Grocery and Related Product Merchant Wholesalers,424440,Poultry and Poultry Product Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4244,Grocery and Related Product Merchant Wholesalers,424450,Confectionery Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4244,Grocery and Related Product Merchant Wholesalers,424460,Fish and Seafood Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4244,Grocery and Related Product Merchant Wholesalers,424470,Meat and Meat Product Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4244,Grocery and Related Product Merchant Wholesalers,424480,Fresh Fruit and Vegetable Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4244,Grocery and Related Product Merchant Wholesalers,424490,Other Grocery and Related Products Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4245,Farm Product Raw Material Merchant Wholesalers,424510,Grain and Field Bean Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4245,Farm Product Raw Material Merchant Wholesalers,424520,Livestock Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4245,Farm Product Raw Material Merchant Wholesalers,424590,Other Farm Product Raw Material Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4246,Chemical and Allied Products Merchant Wholesalers,424610,Plastics Materials and Basic Forms and Shapes Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4246,Chemical and Allied Products Merchant Wholesalers,424690,Other Chemical and Allied Products Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4247,Petroleum and Petroleum Products Merchant Wholesalers,424710,Petroleum Bulk Stations and erminals,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4247,Petroleum and Petroleum Products Merchant Wholesalers,424720,Petroleum and Petroleum Products Merchant Wholesalers (except Bulk Stations and erminals),"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4248,"Beer, Wine, and Distilled Alcoholic Beverage Merchant Wholesalers",424810,Beer and Ale Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4248,"Beer, Wine, and Distilled Alcoholic Beverage Merchant Wholesalers",424820,Wine and Distilled Alcoholic Beverage Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4249,Miscellaneous Nondurable Goods Merchant Wholesalers,424910,Farm Supplies Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4249,Miscellaneous Nondurable Goods Merchant Wholesalers,424920,"Book, Periodical, and Newspaper Merchant Wholesalers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4249,Miscellaneous Nondurable Goods Merchant Wholesalers,424930,"Flower, Nursery Stock, and Florists' Supplies Merchant Wholesalers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4249,Miscellaneous Nondurable Goods Merchant Wholesalers,424940,obacco Product and Electronic Cigarette Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4249,Miscellaneous Nondurable Goods Merchant Wholesalers,424950,"Paint, Varnish, and Supplies Merchant Wholesalers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,424,"Merchant Wholesalers, Nondurable Goods",4249,Miscellaneous Nondurable Goods Merchant Wholesalers,424990,Other Miscellaneous Nondurable Goods Merchant Wholesalers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+42,Wholesale rade,425,Wholesale rade Agents and Brokers,4251,Wholesale rade Agents and Brokers,425120,Wholesale rade Agents and Brokers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,441,Motor Vehicle and Parts Dealers,4411,Automobile Dealers,441110,New Car Dealers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,441,Motor Vehicle and Parts Dealers,4411,Automobile Dealers,441120,Used Car Dealers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,441,Motor Vehicle and Parts Dealers,4412,Other Motor Vehicle Dealers,441210,Recreational Vehicle Dealers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,441,Motor Vehicle and Parts Dealers,4412,Other Motor Vehicle Dealers,441222,Boat Dealers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,441,Motor Vehicle and Parts Dealers,4412,Other Motor Vehicle Dealers,441227,"Motorcycle, AV, and All Other Motor Vehicle Dealers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,441,Motor Vehicle and Parts Dealers,4413,"Automotive Parts, Accessories, and ire Retailers",441330,Automotive Parts and Accessories Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,441,Motor Vehicle and Parts Dealers,4413,"Automotive Parts, Accessories, and ire Retailers",441340,ire Dealers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,444,Building Material and Garden Equipment and Supplies Dealers,4441,Building Material and Supplies Dealers,444110,Home Centers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,444,Building Material and Garden Equipment and Supplies Dealers,4441,Building Material and Supplies Dealers,444120,Paint and Wallpaper Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,444,Building Material and Garden Equipment and Supplies Dealers,4441,Building Material and Supplies Dealers,444140,Hardware Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,444,Building Material and Garden Equipment and Supplies Dealers,4441,Building Material and Supplies Dealers,444180,Other Building Material Dealers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,444,Building Material and Garden Equipment and Supplies Dealers,4442,Lawn and Garden Equipment and Supplies Retailers,444230,Outdoor Power Equipment Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,444,Building Material and Garden Equipment and Supplies Dealers,4442,Lawn and Garden Equipment and Supplies Retailers,444240,"Nursery, Garden Center, and Farm Supply Retailers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,445,Food and Beverage Retailers,4451,Grocery and Convenience Retailers,445110,Supermarkets and Other Grocery Retailers (except Convenience Retailers),"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,445,Food and Beverage Retailers,4451,Grocery and Convenience Retailers,445131,Convenience Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,445,Food and Beverage Retailers,4451,Grocery and Convenience Retailers,445132,Vending Machine Operators,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,445,Food and Beverage Retailers,4452,Specialty Food Retailers,445230,Fruit and Vegetable Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,445,Food and Beverage Retailers,4452,Specialty Food Retailers,445240,Meat Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,445,Food and Beverage Retailers,4452,Specialty Food Retailers,445250,Fish and Seafood Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,445,Food and Beverage Retailers,4452,Specialty Food Retailers,445291,Baked Goods Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,445,Food and Beverage Retailers,4452,Specialty Food Retailers,445292,Confectionery and Nut Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,445,Food and Beverage Retailers,4452,Specialty Food Retailers,445298,All Other Specialty Food Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,445,Food and Beverage Retailers,4453,"Beer, Wine, and Liquor Retailers",445320,"Beer, Wine, and Liquor Retailers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,449,"Furniture, Home Furnishings, Electronics, and Appliance Retailers",4491,Furniture and Home Furnishings Retailers,449110,Furniture Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,449,"Furniture, Home Furnishings, Electronics, and Appliance Retailers",4491,Furniture and Home Furnishings Retailers,449121,Floor Covering Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,449,"Furniture, Home Furnishings, Electronics, and Appliance Retailers",4491,Furniture and Home Furnishings Retailers,449122,Window reatment Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,449,"Furniture, Home Furnishings, Electronics, and Appliance Retailers",4491,Furniture and Home Furnishings Retailers,449129,All Other Home Furnishings Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+44,Wholesale rade,449,"Furniture, Home Furnishings, Electronics, and Appliance Retailers",4492,Electronics and Appliance Retailers,449210,Electronics and Appliance Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,455,General Merchandise Retailers,4551,Department Stores,455110,Department Stores,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,455,General Merchandise Retailers,4552,"Warehouse Clubs, Supercenters, and Other General Merchandise Retailers",455211,Warehouse Clubs and Supercenters,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,455,General Merchandise Retailers,4552,"Warehouse Clubs, Supercenters, and Other General Merchandise Retailers",455219,All Other General Merchandise Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,456,Health and Personal Care Retailers,4561,Health and Personal Care Retailers,456110,Pharmacies and Drug Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,456,Health and Personal Care Retailers,4561,Health and Personal Care Retailers,456120,"Cosmetics, Beauty Supplies, and Perfume Retailers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,456,Health and Personal Care Retailers,4561,Health and Personal Care Retailers,456130,Optical Goods Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,456,Health and Personal Care Retailers,4561,Health and Personal Care Retailers,456191,Food (Health) Supplement Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,456,Health and Personal Care Retailers,4561,Health and Personal Care Retailers,456199,All Other Health and Personal Care Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,457,Gasoline Stations and Fuel Dealers,4571,Gasoline Stations,457110,Gasoline Stations with Convenience Stores,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,457,Gasoline Stations and Fuel Dealers,4571,Gasoline Stations,457120,Other Gasoline Stations,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,457,Gasoline Stations and Fuel Dealers,4572,Fuel Dealers,457210,Fuel Dealers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,458,"Clothing, Clothing Accessories, Shoe, and Jewelry Retailers",4581,Clothing and Clothing Accessories Retailers,458110,Clothing and Clothing Accessories Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,458,"Clothing, Clothing Accessories, Shoe, and Jewelry Retailers",4582,Shoe Retailers,458210,Shoe Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,458,"Clothing, Clothing Accessories, Shoe, and Jewelry Retailers",4583,"Jewelry, Luggage, and Leather Goods Retailers",458310,Jewelry Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,458,"Clothing, Clothing Accessories, Shoe, and Jewelry Retailers",4583,"Jewelry, Luggage, and Leather Goods Retailers",458320,Luggage and Leather Goods Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4591,"Sporting Goods, Hobby, and Musical Instrument Retailers",459110,Sporting Goods Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4591,"Sporting Goods, Hobby, and Musical Instrument Retailers",459120,"Hobby, oy, and Game Retailers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4591,"Sporting Goods, Hobby, and Musical Instrument Retailers",459130,"Sewing, Needlework, and Piece Goods Retailers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4591,"Sporting Goods, Hobby, and Musical Instrument Retailers",459140,Musical Instrument and Supplies Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4592,Book Retailers and News Dealers,459210,Book Retailers and News Dealers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4593,Florists,459310,Florists,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4594,"Office Supplies, Stationery, and Gift Retailers",459410,Office Supplies and Stationery Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4594,"Office Supplies, Stationery, and Gift Retailers",459420,"Gift, Novelty, and Souvenir Retailers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4595,Used Merchandise Retailers,459510,Used Merchandise Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4599,Other Miscellaneous Retailers,459910,Pet and Pet Supplies Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4599,Other Miscellaneous Retailers,459920,Art Dealers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4599,Other Miscellaneous Retailers,459930,Manufactured (Mobile) Home Dealers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4599,Other Miscellaneous Retailers,459991,"obacco, Electronic Cigarette, and Other Smoking Supplies Retailers","Consumer Discretionary, Consumer Staples","XLY, XLP"
+45,Wholesale rade,459,"Sporting Goods, Hobby, Musical Instrument, Book, and Miscellaneous Retailers",4599,Other Miscellaneous Retailers,459999,All Other Miscellaneous Retailers,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,481,Air ransportation,4811,Scheduled Air ransportation,481111,Scheduled Passenger Air ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,481,Air ransportation,4811,Scheduled Air ransportation,481112,Scheduled Freight Air ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,481,Air ransportation,4812,Nonscheduled Air ransportation,481211,Nonscheduled Chartered Passenger Air ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,481,Air ransportation,4812,Nonscheduled Air ransportation,481212,Nonscheduled Chartered Freight Air ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,481,Air ransportation,4812,Nonscheduled Air ransportation,481219,Other Nonscheduled Air ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,482,Rail ransportation,4821,Rail ransportation,482111,Line-Haul Railroads,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,482,Rail ransportation,4821,Rail ransportation,482112,Short Line Railroads,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,483,Water ransportation,4831,"Deep Sea, Coastal, and Great Lakes Water ransportation",483111,Deep Sea Freight ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,483,Water ransportation,4831,"Deep Sea, Coastal, and Great Lakes Water ransportation",483112,Deep Sea Passenger ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,483,Water ransportation,4831,"Deep Sea, Coastal, and Great Lakes Water ransportation",483113,Coastal and Great Lakes Freight ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,483,Water ransportation,4831,"Deep Sea, Coastal, and Great Lakes Water ransportation",483114,Coastal and Great Lakes Passenger ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,483,Water ransportation,4832,Inland Water ransportation,483211,Inland Water Freight ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,483,Water ransportation,4832,Inland Water ransportation,483212,Inland Water Passenger ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,484,ruck ransportation,4841,General Freight rucking,484110,"General Freight rucking, Local","Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,484,ruck ransportation,4841,General Freight rucking,484121,"General Freight rucking, Long-Distance, ruckload","Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,484,ruck ransportation,4841,General Freight rucking,484122,"General Freight rucking, Long-Distance, Less han ruckload","Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,484,ruck ransportation,4842,Specialized Freight rucking,484210,Used Household and Office Goods Moving,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,484,ruck ransportation,4842,Specialized Freight rucking,484220,"Specialized Freight (except Used Goods) rucking, Local","Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,484,ruck ransportation,4842,Specialized Freight rucking,484230,"Specialized Freight (except Used Goods) rucking, Long-Distance","Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,485,ransit and Ground Passenger ransportation,4851,Urban ransit Systems,485111,Mixed Mode ransit Systems,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,485,ransit and Ground Passenger ransportation,4851,Urban ransit Systems,485112,Commuter Rail Systems,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,485,ransit and Ground Passenger ransportation,4851,Urban ransit Systems,485113,Bus and Other Motor Vehicle ransit Systems,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,485,ransit and Ground Passenger ransportation,4851,Urban ransit Systems,485119,Other Urban ransit Systems,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,485,ransit and Ground Passenger ransportation,4852,Interurban and Rural Bus ransportation,485210,Interurban and Rural Bus ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,485,ransit and Ground Passenger ransportation,4853,axi and Limousine Service,485310,axi and Ridesharing Services,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,485,ransit and Ground Passenger ransportation,4853,axi and Limousine Service,485320,Limousine Service,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,485,ransit and Ground Passenger ransportation,4854,School and Employee Bus ransportation,485410,School and Employee Bus ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,485,ransit and Ground Passenger ransportation,4855,Charter Bus Industry,485510,Charter Bus Industry,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,485,ransit and Ground Passenger ransportation,4859,Other ransit and Ground Passenger ransportation,485991,Special Needs ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,485,ransit and Ground Passenger ransportation,4859,Other ransit and Ground Passenger ransportation,485999,All Other ransit and Ground Passenger ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,486,Pipeline ransportation,4861,Pipeline ransportation of Crude Oil,486110,Pipeline ransportation of Crude Oil,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,486,Pipeline ransportation,4862,Pipeline ransportation of Natural Gas,486210,Pipeline ransportation of Natural Gas,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,486,Pipeline ransportation,4869,Other Pipeline ransportation,486910,Pipeline ransportation of Refined Petroleum Products,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,486,Pipeline ransportation,4869,Other Pipeline ransportation,486990,All Other Pipeline ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,487,Scenic and Sightseeing ransportation,4871,"Scenic and Sightseeing ransportation, Land",487110,"Scenic and Sightseeing ransportation, Land","Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,487,Scenic and Sightseeing ransportation,4872,"Scenic and Sightseeing ransportation, Water",487210,"Scenic and Sightseeing ransportation, Water","Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,487,Scenic and Sightseeing ransportation,4879,"Scenic and Sightseeing ransportation, Other",487990,"Scenic and Sightseeing ransportation, Other","Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,488,Support Activities for ransportation,4881,Support Activities for Air ransportation,488111,Air raffic Control,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,488,Support Activities for ransportation,4881,Support Activities for Air ransportation,488119,Other Airport Operations,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,488,Support Activities for ransportation,4881,Support Activities for Air ransportation,488190,Other Support Activities for Air ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,488,Support Activities for ransportation,4882,Support Activities for Rail ransportation,488210,Support Activities for Rail ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,488,Support Activities for ransportation,4883,Support Activities for Water ransportation,488310,Port and Harbor Operations,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,488,Support Activities for ransportation,4883,Support Activities for Water ransportation,488320,Marine Cargo Handling,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,488,Support Activities for ransportation,4883,Support Activities for Water ransportation,488330,Navigational Services to Shipping,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,488,Support Activities for ransportation,4883,Support Activities for Water ransportation,488390,Other Support Activities for Water ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,488,Support Activities for ransportation,4884,Support Activities for Road ransportation,488410,Motor Vehicle owing,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,488,Support Activities for ransportation,4884,Support Activities for Road ransportation,488490,Other Support Activities for Road ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,488,Support Activities for ransportation,4885,Freight ransportation Arrangement,488510,Freight ransportation Arrangement,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,488,Support Activities for ransportation,4889,Other Support Activities for ransportation,488991,Packing and Crating,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+48,Wholesale rade,488,Support Activities for ransportation,4889,Other Support Activities for ransportation,488999,All Other Support Activities for ransportation,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+49,Wholesale rade,491,Postal Service,4911,Postal Service,491110,Postal Service,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+49,Wholesale rade,492,Couriers and Messengers,4921,Couriers and Express Delivery Services,492110,Couriers and Express Delivery Services,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+49,Wholesale rade,492,Couriers and Messengers,4922,Local Messengers and Local Delivery,492210,Local Messengers and Local Delivery,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+49,Wholesale rade,493,Warehousing and Storage,4931,Warehousing and Storage,493110,General Warehousing and Storage,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+49,Wholesale rade,493,Warehousing and Storage,4931,Warehousing and Storage,493120,Refrigerated Warehousing and Storage,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+49,Wholesale rade,493,Warehousing and Storage,4931,Warehousing and Storage,493130,Farm Product Warehousing and Storage,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+49,Wholesale rade,493,Warehousing and Storage,4931,Warehousing and Storage,493190,Other Warehousing and Storage,"Consumer Discretionary, Consumer Staples","XLY, XLP"
+51,Information,512,Motion Picture and Sound Recording Industries,5121,Motion Picture and Video Industries,512110,Motion Picture and Video Production,"Information Technology, Communication Services","XLK, XLC"
+51,Information,512,Motion Picture and Sound Recording Industries,5121,Motion Picture and Video Industries,512120,Motion Picture and Video Distribution,"Information Technology, Communication Services","XLK, XLC"
+51,Information,512,Motion Picture and Sound Recording Industries,5121,Motion Picture and Video Industries,512131,Motion Picture heaters (except Drive-Ins),"Information Technology, Communication Services","XLK, XLC"
+51,Information,512,Motion Picture and Sound Recording Industries,5121,Motion Picture and Video Industries,512132,Drive-In Motion Picture heaters,"Information Technology, Communication Services","XLK, XLC"
+51,Information,512,Motion Picture and Sound Recording Industries,5121,Motion Picture and Video Industries,512191,eleproduction and Other Postproduction Services,"Information Technology, Communication Services","XLK, XLC"
+51,Information,512,Motion Picture and Sound Recording Industries,5121,Motion Picture and Video Industries,512199,Other Motion Picture and Video Industries,"Information Technology, Communication Services","XLK, XLC"
+51,Information,512,Motion Picture and Sound Recording Industries,5122,Sound Recording Industries,512230,Music Publishers,"Information Technology, Communication Services","XLK, XLC"
+51,Information,512,Motion Picture and Sound Recording Industries,5122,Sound Recording Industries,512240,Sound Recording Studios,"Information Technology, Communication Services","XLK, XLC"
+51,Information,512,Motion Picture and Sound Recording Industries,5122,Sound Recording Industries,512250,Record Production and Distribution,"Information Technology, Communication Services","XLK, XLC"
+51,Information,512,Motion Picture and Sound Recording Industries,5122,Sound Recording Industries,512290,Other Sound Recording Industries,"Information Technology, Communication Services","XLK, XLC"
+51,Information,513,Publishing Industries,5131,"Newspaper, Periodical, Book, and Directory Publishers",513110,Newspaper Publishers,"Information Technology, Communication Services","XLK, XLC"
+51,Information,513,Publishing Industries,5131,"Newspaper, Periodical, Book, and Directory Publishers",513120,Periodical Publishers,"Information Technology, Communication Services","XLK, XLC"
+51,Information,513,Publishing Industries,5131,"Newspaper, Periodical, Book, and Directory Publishers",513130,Book Publishers,"Information Technology, Communication Services","XLK, XLC"
+51,Information,513,Publishing Industries,5131,"Newspaper, Periodical, Book, and Directory Publishers",513140,Directory and Mailing List Publishers,"Information Technology, Communication Services","XLK, XLC"
+51,Information,513,Publishing Industries,5131,"Newspaper, Periodical, Book, and Directory Publishers",513191,Greeting Card Publishers,"Information Technology, Communication Services","XLK, XLC"
+51,Information,513,Publishing Industries,5131,"Newspaper, Periodical, Book, and Directory Publishers",513199,All Other Publishers,"Information Technology, Communication Services","XLK, XLC"
+51,Information,513,Publishing Industries,5132,Software Publishers,513210,Software Publishers,"Information Technology, Communication Services","XLK, XLC"
+51,Information,516,Broadcasting and Content Providers,5161,Radio and elevision Broadcasting Stations,516110,Radio Broadcasting Stations,"Information Technology, Communication Services","XLK, XLC"
+51,Information,516,Broadcasting and Content Providers,5161,Radio and elevision Broadcasting Stations,516120,elevision Broadcasting Stations,"Information Technology, Communication Services","XLK, XLC"
+51,Information,516,Broadcasting and Content Providers,5162,"Media Streaming Distribution Services, Social Networks, and Other Media Networks and Content Providers",516210,"Media Streaming Distribution Services, Social Networks, and Other Media Networks and Content Providers","Information Technology, Communication Services","XLK, XLC"
+51,Information,517,elecommunications,5171,Wired and Wireless elecommunications (except Satellite),517111,Wired elecommunications Carriers,"Information Technology, Communication Services","XLK, XLC"
+51,Information,517,elecommunications,5171,Wired and Wireless elecommunications (except Satellite),517112,Wireless elecommunications Carriers (except Satellite),"Information Technology, Communication Services","XLK, XLC"
+51,Information,517,elecommunications,5171,Wired and Wireless elecommunications (except Satellite),517121,elecommunications Resellers,"Information Technology, Communication Services","XLK, XLC"
+51,Information,517,elecommunications,5171,Wired and Wireless elecommunications (except Satellite),517122,Agents for Wireless elecommunications Services,"Information Technology, Communication Services","XLK, XLC"
+51,Information,517,elecommunications,5174,Satellite elecommunications,517410,Satellite elecommunications,"Information Technology, Communication Services","XLK, XLC"
+51,Information,517,elecommunications,5178,All Other elecommunications,517810,All Other elecommunications,"Information Technology, Communication Services","XLK, XLC"
+51,Information,518,"Computing Infrastructure Providers, Data Processing, Web Hosting, and Related Services",5182,"Computing Infrastructure Providers, Data Processing, Web Hosting, and Related Services",518210,"Computing Infrastructure Providers, Data Processing, Web Hosting, and Related Services","Information Technology, Communication Services","XLK, XLC"
+51,Information,519,"Web Search Portals, Libraries, Archives, and Other Information Services",5192,"Web Search Portals, Libraries, Archives, and Other Information Services",519210,Libraries and Archives,"Information Technology, Communication Services","XLK, XLC"
+51,Information,519,"Web Search Portals, Libraries, Archives, and Other Information Services",5192,"Web Search Portals, Libraries, Archives, and Other Information Services",519290,Web Search Portals and All Other Information Services,"Information Technology, Communication Services","XLK, XLC"
+52,Finance and Insurance,521,Monetary Authorities-Central Bank,5211,Monetary Authorities-Central Bank,521110,Monetary Authorities-Central Bank,Financials,XLF
+52,Finance and Insurance,522,Credit Intermediation and Related Activities,5221,Depository Credit Intermediation,522110,Commercial Banking,Financials,XLF
+52,Finance and Insurance,522,Credit Intermediation and Related Activities,5221,Depository Credit Intermediation,522130,Credit Unions,Financials,XLF
+52,Finance and Insurance,522,Credit Intermediation and Related Activities,5221,Depository Credit Intermediation,522180,Savings Institutions and Other Depository Credit Intermediation,Financials,XLF
+52,Finance and Insurance,522,Credit Intermediation and Related Activities,5222,Nondepository Credit Intermediation,522210,Credit Card Issuing,Financials,XLF
+52,Finance and Insurance,522,Credit Intermediation and Related Activities,5222,Nondepository Credit Intermediation,522220,Sales Financing,Financials,XLF
+52,Finance and Insurance,522,Credit Intermediation and Related Activities,5222,Nondepository Credit Intermediation,522291,Consumer Lending,Financials,XLF
+52,Finance and Insurance,522,Credit Intermediation and Related Activities,5222,Nondepository Credit Intermediation,522292,Real Estate Credit,Financials,XLF
+52,Finance and Insurance,522,Credit Intermediation and Related Activities,5222,Nondepository Credit Intermediation,522299,"International, Secondary Market, and All Other Nondepository Credit Intermediation",Financials,XLF
+52,Finance and Insurance,522,Credit Intermediation and Related Activities,5223,Activities Related to Credit Intermediation,522310,Mortgage and Nonmortgage Loan Brokers,Financials,XLF
+52,Finance and Insurance,522,Credit Intermediation and Related Activities,5223,Activities Related to Credit Intermediation,522320,"Financial ransactions Processing, Reserve, and Clearinghouse Activities",Financials,XLF
+52,Finance and Insurance,522,Credit Intermediation and Related Activities,5223,Activities Related to Credit Intermediation,522390,Other Activities Related to Credit Intermediation,Financials,XLF
+52,Finance and Insurance,523,"Securities, Commodity Contracts, and Other Financial Investments and Related Activities",5231,Securities and Commodity Contracts Intermediation and Brokerage,523150,Investment Banking and Securities Intermediation,Financials,XLF
+52,Finance and Insurance,523,"Securities, Commodity Contracts, and Other Financial Investments and Related Activities",5231,Securities and Commodity Contracts Intermediation and Brokerage,523160,Commodity Contracts Intermediation,Financials,XLF
+52,Finance and Insurance,523,"Securities, Commodity Contracts, and Other Financial Investments and Related Activities",5232,Securities and Commodity Exchanges,523210,Securities and Commodity Exchanges,Financials,XLF
+52,Finance and Insurance,523,"Securities, Commodity Contracts, and Other Financial Investments and Related Activities",5239,Other Financial Investment Activities,523910,Miscellaneous Intermediation,Financials,XLF
+52,Finance and Insurance,523,"Securities, Commodity Contracts, and Other Financial Investments and Related Activities",5239,Other Financial Investment Activities,523940,Portfolio Management and Investment Advice,Financials,XLF
+52,Finance and Insurance,523,"Securities, Commodity Contracts, and Other Financial Investments and Related Activities",5239,Other Financial Investment Activities,523991,"rust, Fiduciary, and Custody Activities",Financials,XLF
+52,Finance and Insurance,523,"Securities, Commodity Contracts, and Other Financial Investments and Related Activities",5239,Other Financial Investment Activities,523999,Miscellaneous Financial Investment Activities,Financials,XLF
+52,Finance and Insurance,524,Insurance Carriers and Related Activities,5241,Insurance Carriers,524113,Direct Life Insurance Carriers,Financials,XLF
+52,Finance and Insurance,524,Insurance Carriers and Related Activities,5241,Insurance Carriers,524114,Direct Health and Medical Insurance Carriers,Financials,XLF
+52,Finance and Insurance,524,Insurance Carriers and Related Activities,5241,Insurance Carriers,524126,Direct Property and Casualty Insurance Carriers,Financials,XLF
+52,Finance and Insurance,524,Insurance Carriers and Related Activities,5241,Insurance Carriers,524127,Direct itle Insurance Carriers,Financials,XLF
+52,Finance and Insurance,524,Insurance Carriers and Related Activities,5241,Insurance Carriers,524128,"Other Direct Insurance (except Life, Health, and Medical) Carriers",Financials,XLF
+52,Finance and Insurance,524,Insurance Carriers and Related Activities,5241,Insurance Carriers,524130,Reinsurance Carriers,Financials,XLF
+52,Finance and Insurance,524,Insurance Carriers and Related Activities,5242,"Agencies, Brokerages, and Other Insurance Related Activities",524210,Insurance Agencies and Brokerages,Financials,XLF
+52,Finance and Insurance,524,Insurance Carriers and Related Activities,5242,"Agencies, Brokerages, and Other Insurance Related Activities",524291,Claims Adjusting,Financials,XLF
+52,Finance and Insurance,524,Insurance Carriers and Related Activities,5242,"Agencies, Brokerages, and Other Insurance Related Activities",524292,Pharmacy Benefit Management and Other hird Party Administration of Insurance and Pension Funds,Financials,XLF
+52,Finance and Insurance,524,Insurance Carriers and Related Activities,5242,"Agencies, Brokerages, and Other Insurance Related Activities",524298,All Other Insurance Related Activities,Financials,XLF
+52,Finance and Insurance,525,"Funds, rusts, and Other Financial Vehicles",5251,Insurance and Employee Benefit Funds,525110,Pension Funds,Financials,XLF
+52,Finance and Insurance,525,"Funds, rusts, and Other Financial Vehicles",5251,Insurance and Employee Benefit Funds,525120,Health and Welfare Funds,Financials,XLF
+52,Finance and Insurance,525,"Funds, rusts, and Other Financial Vehicles",5251,Insurance and Employee Benefit Funds,525190,Other Insurance Funds,Financials,XLF
+52,Finance and Insurance,525,"Funds, rusts, and Other Financial Vehicles",5259,Other Investment Pools and Funds,525910,Open-End Investment Funds,Financials,XLF
+52,Finance and Insurance,525,"Funds, rusts, and Other Financial Vehicles",5259,Other Investment Pools and Funds,525920,"rusts, Estates, and Agency Accounts",Financials,XLF
+52,Finance and Insurance,525,"Funds, rusts, and Other Financial Vehicles",5259,Other Investment Pools and Funds,525990,Other Financial Vehicles,Financials,XLF
+53,Real Estate and Rental and Leasing,531,Real Estate,5311,Lessors of Real Estate,531110,Lessors of Residential Buildings and Dwellings,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,531,Real Estate,5311,Lessors of Real Estate,531120,Lessors of Nonresidential Buildings (except Miniwarehouses),Real Estate,XLRE
+53,Real Estate and Rental and Leasing,531,Real Estate,5311,Lessors of Real Estate,531130,Lessors of Miniwarehouses and Self-Storage Units,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,531,Real Estate,5311,Lessors of Real Estate,531190,Lessors of Other Real Estate Property,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,531,Real Estate,5312,Offices of Real Estate Agents and Brokers,531210,Offices of Real Estate Agents and Brokers,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,531,Real Estate,5313,Activities Related to Real Estate,531311,Residential Property Managers,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,531,Real Estate,5313,Activities Related to Real Estate,531312,Nonresidential Property Managers,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,531,Real Estate,5313,Activities Related to Real Estate,531320,Offices of Real Estate Appraisers,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,531,Real Estate,5313,Activities Related to Real Estate,531390,Other Activities Related to Real Estate,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5321,Automotive Equipment Rental and Leasing,532111,Passenger Car Rental,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5321,Automotive Equipment Rental and Leasing,532112,Passenger Car Leasing,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5321,Automotive Equipment Rental and Leasing,532120,"ruck, Utility railer, and RV (Recreational Vehicle) Rental and Leasing",Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5322,Consumer Goods Rental,532210,Consumer Electronics and Appliances Rental,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5322,Consumer Goods Rental,532281,Formal Wear and Costume Rental,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5322,Consumer Goods Rental,532282,Video ape and Disc Rental,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5322,Consumer Goods Rental,532283,Home Health Equipment Rental,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5322,Consumer Goods Rental,532284,Recreational Goods Rental,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5322,Consumer Goods Rental,532289,All Other Consumer Goods Rental,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5323,General Rental Centers,532310,General Rental Centers,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5324,Commercial and Industrial Machinery and Equipment Rental and Leasing,532411,"Commercial Air, Rail, and Water ransportation Equipment Rental and Leasing",Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5324,Commercial and Industrial Machinery and Equipment Rental and Leasing,532412,"Construction, Mining, and Forestry Machinery and Equipment Rental and Leasing",Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5324,Commercial and Industrial Machinery and Equipment Rental and Leasing,532420,Office Machinery and Equipment Rental and Leasing,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,532,Rental and Leasing Services,5324,Commercial and Industrial Machinery and Equipment Rental and Leasing,532490,Other Commercial and Industrial Machinery and Equipment Rental and Leasing,Real Estate,XLRE
+53,Real Estate and Rental and Leasing,533,Lessors of Nonfinancial Intangible Assets (except Copyrighted Works),5331,Lessors of Nonfinancial Intangible Assets (except Copyrighted Works),533110,Lessors of Nonfinancial Intangible Assets (except Copyrighted Works),Real Estate,XLRE
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5411,Legal Services,541110,Offices of Lawyers,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5411,Legal Services,541120,Offices of Notaries,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5411,Legal Services,541191,itle Abstract and Settlement Offices,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5411,Legal Services,541199,All Other Legal Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5412,"Accounting, ax Preparation, Bookkeeping, and Payroll Services",541211,Offices of Certified Public Accountants,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5412,"Accounting, ax Preparation, Bookkeeping, and Payroll Services",541213,ax Preparation Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5412,"Accounting, ax Preparation, Bookkeeping, and Payroll Services",541214,Payroll Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5412,"Accounting, ax Preparation, Bookkeeping, and Payroll Services",541219,Other Accounting Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5413,"Architectural, Engineering, and Related Services",541310,Architectural Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5413,"Architectural, Engineering, and Related Services",541320,Landscape Architectural Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5413,"Architectural, Engineering, and Related Services",541330,Engineering Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5413,"Architectural, Engineering, and Related Services",541340,Drafting Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5413,"Architectural, Engineering, and Related Services",541350,Building Inspection Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5413,"Architectural, Engineering, and Related Services",541360,Geophysical Surveying and Mapping Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5413,"Architectural, Engineering, and Related Services",541370,Surveying and Mapping (except Geophysical) Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5413,"Architectural, Engineering, and Related Services",541380,esting Laboratories and Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5414,Specialized Design Services,541410,Interior Design Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5414,Specialized Design Services,541420,Industrial Design Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5414,Specialized Design Services,541430,Graphic Design Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5414,Specialized Design Services,541490,Other Specialized Design Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5415,Computer Systems Design and Related Services,541511,Custom Computer Programming Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5415,Computer Systems Design and Related Services,541512,Computer Systems Design Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5415,Computer Systems Design and Related Services,541513,Computer Facilities Management Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5415,Computer Systems Design and Related Services,541519,Other Computer Related Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5416,"Management, Scientific, and echnical Consulting Services",541611,Administrative Management and General Management Consulting Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5416,"Management, Scientific, and echnical Consulting Services",541612,Human Resources Consulting Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5416,"Management, Scientific, and echnical Consulting Services",541613,Marketing Consulting Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5416,"Management, Scientific, and echnical Consulting Services",541614,"Process, Physical Distribution, and Logistics Consulting Services","Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5416,"Management, Scientific, and echnical Consulting Services",541618,Other Management Consulting Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5416,"Management, Scientific, and echnical Consulting Services",541620,Environmental Consulting Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5416,"Management, Scientific, and echnical Consulting Services",541690,Other Scientific and echnical Consulting Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5417,Scientific Research and Development Services,541713,Research and Development in Nanotechnology,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5417,Scientific Research and Development Services,541714,Research and Development in Biotechnology (except Nanobiotechnology),"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5417,Scientific Research and Development Services,541715,"Research and Development in the Physical, Engineering, and Life Sciences (except Nanotechnology and Biotechnology)","Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5417,Scientific Research and Development Services,541720,Research and Development in the Social Sciences and Humanities,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5418,"Advertising, Public Relations, and Related Services",541810,Advertising Agencies,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5418,"Advertising, Public Relations, and Related Services",541820,Public Relations Agencies,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5418,"Advertising, Public Relations, and Related Services",541830,Media Buying Agencies,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5418,"Advertising, Public Relations, and Related Services",541840,Media Representatives,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5418,"Advertising, Public Relations, and Related Services",541850,Indoor and Outdoor Display Advertising,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5418,"Advertising, Public Relations, and Related Services",541860,Direct Mail Advertising,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5418,"Advertising, Public Relations, and Related Services",541870,Advertising Material Distribution Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5418,"Advertising, Public Relations, and Related Services",541890,Other Services Related to Advertising,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5419,"Other Professional, Scientific, and echnical Services",541910,Marketing Research and Public Opinion Polling,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5419,"Other Professional, Scientific, and echnical Services",541921,"Photography Studios, Portrait","Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5419,"Other Professional, Scientific, and echnical Services",541922,Commercial Photography,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5419,"Other Professional, Scientific, and echnical Services",541930,ranslation and Interpretation Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5419,"Other Professional, Scientific, and echnical Services",541940,Veterinary Services,"Information Technology, Industrials","XLK, XLI"
+54,"Professional, Scientific, and echnical Services",541,"Professional, Scientific, and echnical Services",5419,"Other Professional, Scientific, and echnical Services",541990,"All Other Professional, Scientific, and echnical Services","Information Technology, Industrials","XLK, XLI"
+55,Management of Companies and Enterprises,551,Management of Companies and Enterprises,5511,Management of Companies and Enterprises,551111,Offices of Bank Holding Companies,Financials,XLF
+55,Management of Companies and Enterprises,551,Management of Companies and Enterprises,5511,Management of Companies and Enterprises,551112,Offices of Other Holding Companies,Financials,XLF
+55,Management of Companies and Enterprises,551,Management of Companies and Enterprises,5511,Management of Companies and Enterprises,551114,"Corporate, Subsidiary, and Regional Managing Offices",Financials,XLF
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5611,Office Administrative Services,561110,Office Administrative Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5612,Facilities Support Services,561210,Facilities Support Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5613,Employment Services,561311,Employment Placement Agencies,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5613,Employment Services,561312,Executive Search Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5613,Employment Services,561320,emporary Help Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5613,Employment Services,561330,Professional Employer Organizations,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5614,Business Support Services,561410,Document Preparation Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5614,Business Support Services,561421,elephone Answering Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5614,Business Support Services,561422,elemarketing Bureaus and Other Contact Centers,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5614,Business Support Services,561431,Private Mail Centers,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5614,Business Support Services,561439,Other Business Service Centers (including Copy Shops),Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5614,Business Support Services,561440,Collection Agencies,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5614,Business Support Services,561450,Credit Bureaus,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5614,Business Support Services,561491,Repossession Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5614,Business Support Services,561492,Court Reporting and Stenotype Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5614,Business Support Services,561499,All Other Business Support Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5615,ravel Arrangement and Reservation Services,561510,ravel Agencies,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5615,ravel Arrangement and Reservation Services,561520,our Operators,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5615,ravel Arrangement and Reservation Services,561591,Convention and Visitors Bureaus,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5615,ravel Arrangement and Reservation Services,561599,All Other ravel Arrangement and Reservation Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5616,Investigation and Security Services,561611,Investigation and Personal Background Check Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5616,Investigation and Security Services,561612,Security Guards and Patrol Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5616,Investigation and Security Services,561613,Armored Car Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5616,Investigation and Security Services,561621,Security Systems Services (except Locksmiths),Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5616,Investigation and Security Services,561622,Locksmiths,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5617,Services to Buildings and Dwellings,561710,Exterminating and Pest Control Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5617,Services to Buildings and Dwellings,561720,Janitorial Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5617,Services to Buildings and Dwellings,561730,Landscaping Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5617,Services to Buildings and Dwellings,561740,Carpet and Upholstery Cleaning Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5617,Services to Buildings and Dwellings,561790,Other Services to Buildings and Dwellings,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5619,Other Support Services,561910,Packaging and Labeling Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5619,Other Support Services,561920,Convention and rade Show Organizers,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,561,Administrative and Support Services,5619,Other Support Services,561990,All Other Support Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,562,Waste Management and Remediation Services,5621,Waste Collection,562111,Solid Waste Collection,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,562,Waste Management and Remediation Services,5621,Waste Collection,562112,Hazardous Waste Collection,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,562,Waste Management and Remediation Services,5621,Waste Collection,562119,Other Waste Collection,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,562,Waste Management and Remediation Services,5622,Waste reatment and Disposal,562211,Hazardous Waste reatment and Disposal,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,562,Waste Management and Remediation Services,5622,Waste reatment and Disposal,562212,Solid Waste Landfill,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,562,Waste Management and Remediation Services,5622,Waste reatment and Disposal,562213,Solid Waste Combustors and Incinerators,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,562,Waste Management and Remediation Services,5622,Waste reatment and Disposal,562219,Other Nonhazardous Waste reatment and Disposal,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,562,Waste Management and Remediation Services,5629,Remediation and Other Waste Management Services,562910,Remediation Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,562,Waste Management and Remediation Services,5629,Remediation and Other Waste Management Services,562920,Materials Recovery Facilities,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,562,Waste Management and Remediation Services,5629,Remediation and Other Waste Management Services,562991,Septic ank and Related Services,Industrials,XLI
+56,Administrative and Support and Waste Management and Remediation Services,562,Waste Management and Remediation Services,5629,Remediation and Other Waste Management Services,562998,All Other Miscellaneous Waste Management Services,Industrials,XLI
+61,Educational Services,611,Educational Services,6111,Elementary and Secondary Schools,611110,Elementary and Secondary Schools,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6112,Junior Colleges,611210,Junior Colleges,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6113,"Colleges, Universities, and Professional Schools",611310,"Colleges, Universities, and Professional Schools",Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6114,Business Schools and Computer and Management raining,611410,Business and Secretarial Schools,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6114,Business Schools and Computer and Management raining,611420,Computer raining,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6114,Business Schools and Computer and Management raining,611430,Professional and Management Development raining,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6115,echnical and rade Schools,611511,Cosmetology and Barber Schools,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6115,echnical and rade Schools,611512,Flight raining,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6115,echnical and rade Schools,611513,Apprenticeship raining,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6115,echnical and rade Schools,611519,Other echnical and rade Schools,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6116,Other Schools and Instruction,611610,Fine Arts Schools,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6116,Other Schools and Instruction,611620,Sports and Recreation Instruction,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6116,Other Schools and Instruction,611630,Language Schools,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6116,Other Schools and Instruction,611691,Exam Preparation and utoring,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6116,Other Schools and Instruction,611692,Automobile Driving Schools,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6116,Other Schools and Instruction,611699,All Other Miscellaneous Schools and Instruction,Consumer Discretionary,XLY
+61,Educational Services,611,Educational Services,6117,Educational Support Services,611710,Educational Support Services,Consumer Discretionary,XLY
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6211,Offices of Physicians,621111,Offices of Physicians (except Mental Health Specialists),Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6211,Offices of Physicians,621112,"Offices of Physicians, Mental Health Specialists",Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6212,Offices of Dentists,621210,Offices of Dentists,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6213,Offices of Other Health Practitioners,621310,Offices of Chiropractors,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6213,Offices of Other Health Practitioners,621320,Offices of Optometrists,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6213,Offices of Other Health Practitioners,621330,Offices of Mental Health Practitioners (except Physicians),Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6213,Offices of Other Health Practitioners,621340,"Offices of Physical, Occupational and Speech herapists, and Audiologists",Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6213,Offices of Other Health Practitioners,621391,Offices of Podiatrists,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6213,Offices of Other Health Practitioners,621399,Offices of All Other Miscellaneous Health Practitioners,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6214,Outpatient Care Centers,621410,Family Planning Centers,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6214,Outpatient Care Centers,621420,Outpatient Mental Health and Substance Abuse Centers,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6214,Outpatient Care Centers,621491,HMO Medical Centers,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6214,Outpatient Care Centers,621492,Kidney Dialysis Centers,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6214,Outpatient Care Centers,621493,Freestanding Ambulatory Surgical and Emergency Centers,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6214,Outpatient Care Centers,621498,All Other Outpatient Care Centers,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6215,Medical and Diagnostic Laboratories,621511,Medical Laboratories,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6215,Medical and Diagnostic Laboratories,621512,Diagnostic Imaging Centers,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6216,Home Health Care Services,621610,Home Health Care Services,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6219,Other Ambulatory Health Care Services,621910,Ambulance Services,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6219,Other Ambulatory Health Care Services,621991,Blood and Organ Banks,Health Care,XLV
+62,Health Care and Social Assistance,621,Ambulatory Health Care Services,6219,Other Ambulatory Health Care Services,621999,All Other Miscellaneous Ambulatory Health Care Services,Health Care,XLV
+62,Health Care and Social Assistance,622,Hospitals,6221,General Medical and Surgical Hospitals,622110,General Medical and Surgical Hospitals,Health Care,XLV
+62,Health Care and Social Assistance,622,Hospitals,6222,Psychiatric and Substance Abuse Hospitals,622210,Psychiatric and Substance Abuse Hospitals,Health Care,XLV
+62,Health Care and Social Assistance,622,Hospitals,6223,Specialty (except Psychiatric and Substance Abuse) Hospitals,622310,Specialty (except Psychiatric and Substance Abuse) Hospitals,Health Care,XLV
+62,Health Care and Social Assistance,623,Nursing and Residential Care Facilities,6231,Nursing Care Facilities (Skilled Nursing Facilities),623110,Nursing Care Facilities (Skilled Nursing Facilities),Health Care,XLV
+62,Health Care and Social Assistance,623,Nursing and Residential Care Facilities,6232,"Residential Intellectual and Developmental Disability, Mental Health, and Substance Abuse Facilities",623210,Residential Intellectual and Developmental Disability Facilities,Health Care,XLV
+62,Health Care and Social Assistance,623,Nursing and Residential Care Facilities,6232,"Residential Intellectual and Developmental Disability, Mental Health, and Substance Abuse Facilities",623220,Residential Mental Health and Substance Abuse Facilities,Health Care,XLV
+62,Health Care and Social Assistance,623,Nursing and Residential Care Facilities,6233,Continuing Care Retirement Communities and Assisted Living Facilities for the Elderly,623311,Continuing Care Retirement Communities,Health Care,XLV
+62,Health Care and Social Assistance,623,Nursing and Residential Care Facilities,6233,Continuing Care Retirement Communities and Assisted Living Facilities for the Elderly,623312,Assisted Living Facilities for the Elderly,Health Care,XLV
+62,Health Care and Social Assistance,623,Nursing and Residential Care Facilities,6239,Other Residential Care Facilities,623990,Other Residential Care Facilities,Health Care,XLV
+62,Health Care and Social Assistance,624,Social Assistance,6241,Individual and Family Services,624110,Child and Youth Services,Health Care,XLV
+62,Health Care and Social Assistance,624,Social Assistance,6241,Individual and Family Services,624120,Services for the Elderly and Persons with Disabilities,Health Care,XLV
+62,Health Care and Social Assistance,624,Social Assistance,6241,Individual and Family Services,624190,Other Individual and Family Services,Health Care,XLV
+62,Health Care and Social Assistance,624,Social Assistance,6242,"Community Food and Housing, and Emergency and Other Relief Services",624210,Community Food Services,Health Care,XLV
+62,Health Care and Social Assistance,624,Social Assistance,6242,"Community Food and Housing, and Emergency and Other Relief Services",624221,emporary Shelters,Health Care,XLV
+62,Health Care and Social Assistance,624,Social Assistance,6242,"Community Food and Housing, and Emergency and Other Relief Services",624229,Other Community Housing Services,Health Care,XLV
+62,Health Care and Social Assistance,624,Social Assistance,6242,"Community Food and Housing, and Emergency and Other Relief Services",624230,Emergency and Other Relief Services,Health Care,XLV
+62,Health Care and Social Assistance,624,Social Assistance,6243,Vocational Rehabilitation Services,624310,Vocational Rehabilitation Services,Health Care,XLV
+62,Health Care and Social Assistance,624,Social Assistance,6244,Child Care Services,624410,Child Care Services,Health Care,XLV
+71,"Arts, Entertainment, and Recreation",711,"Performing Arts, Spectator Sports, and Related Industries",7111,Performing Arts Companies,711110,heater Companies and Dinner heaters,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",711,"Performing Arts, Spectator Sports, and Related Industries",7111,Performing Arts Companies,711120,Dance Companies,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",711,"Performing Arts, Spectator Sports, and Related Industries",7111,Performing Arts Companies,711130,Musical Groups and Artists,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",711,"Performing Arts, Spectator Sports, and Related Industries",7111,Performing Arts Companies,711190,Other Performing Arts Companies,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",711,"Performing Arts, Spectator Sports, and Related Industries",7112,Spectator Sports,711211,Sports eams and Clubs,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",711,"Performing Arts, Spectator Sports, and Related Industries",7112,Spectator Sports,711212,Racetracks,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",711,"Performing Arts, Spectator Sports, and Related Industries",7112,Spectator Sports,711219,Other Spectator Sports,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",711,"Performing Arts, Spectator Sports, and Related Industries",7113,"Promoters of Performing Arts, Sports, and Similar Events",711310,"Promoters of Performing Arts, Sports, and Similar Events with Facilities",Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",711,"Performing Arts, Spectator Sports, and Related Industries",7113,"Promoters of Performing Arts, Sports, and Similar Events",711320,"Promoters of Performing Arts, Sports, and Similar Events without Facilities",Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",711,"Performing Arts, Spectator Sports, and Related Industries",7114,"Agents and Managers for Artists, Athletes, Entertainers, and Other Public Figures",711410,"Agents and Managers for Artists, Athletes, Entertainers, and Other Public Figures",Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",711,"Performing Arts, Spectator Sports, and Related Industries",7115,"Independent Artists, Writers, and Performers",711510,"Independent Artists, Writers, and Performers",Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",712,"Museums, Historical Sites, and Similar Institutions",7121,"Museums, Historical Sites, and Similar Institutions",712110,Museums,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",712,"Museums, Historical Sites, and Similar Institutions",7121,"Museums, Historical Sites, and Similar Institutions",712120,Historical Sites,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",712,"Museums, Historical Sites, and Similar Institutions",7121,"Museums, Historical Sites, and Similar Institutions",712130,Zoos and Botanical Gardens,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",712,"Museums, Historical Sites, and Similar Institutions",7121,"Museums, Historical Sites, and Similar Institutions",712190,Nature Parks and Other Similar Institutions,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",713,"Amusement, Gambling, and Recreation Industries",7131,Amusement Parks and Arcades,713110,Amusement and heme Parks,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",713,"Amusement, Gambling, and Recreation Industries",7131,Amusement Parks and Arcades,713120,Amusement Arcades,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",713,"Amusement, Gambling, and Recreation Industries",7132,Gambling Industries,713210,Casinos (except Casino Hotels),Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",713,"Amusement, Gambling, and Recreation Industries",7132,Gambling Industries,713290,Other Gambling Industries,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",713,"Amusement, Gambling, and Recreation Industries",7139,Other Amusement and Recreation Industries,713910,Golf Courses and Country Clubs,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",713,"Amusement, Gambling, and Recreation Industries",7139,Other Amusement and Recreation Industries,713920,Skiing Facilities,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",713,"Amusement, Gambling, and Recreation Industries",7139,Other Amusement and Recreation Industries,713930,Marinas,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",713,"Amusement, Gambling, and Recreation Industries",7139,Other Amusement and Recreation Industries,713940,Fitness and Recreational Sports Centers,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",713,"Amusement, Gambling, and Recreation Industries",7139,Other Amusement and Recreation Industries,713950,Bowling Centers,Consumer Discretionary,XLY
+71,"Arts, Entertainment, and Recreation",713,"Amusement, Gambling, and Recreation Industries",7139,Other Amusement and Recreation Industries,713990,All Other Amusement and Recreation Industries,Consumer Discretionary,XLY
+72,Accommodation and Food Services,721,Accommodation,7211,raveler Accommodation,721110,Hotels (except Casino Hotels) and Motels,Consumer Discretionary,XLY
+72,Accommodation and Food Services,721,Accommodation,7211,raveler Accommodation,721120,Casino Hotels,Consumer Discretionary,XLY
+72,Accommodation and Food Services,721,Accommodation,7211,raveler Accommodation,721191,Bed-and-Breakfast Inns,Consumer Discretionary,XLY
+72,Accommodation and Food Services,721,Accommodation,7211,raveler Accommodation,721199,All Other raveler Accommodation,Consumer Discretionary,XLY
+72,Accommodation and Food Services,721,Accommodation,7212,RV (Recreational Vehicle) Parks and Recreational Camps,721211,RV (Recreational Vehicle) Parks and Campgrounds,Consumer Discretionary,XLY
+72,Accommodation and Food Services,721,Accommodation,7212,RV (Recreational Vehicle) Parks and Recreational Camps,721214,Recreational and Vacation Camps (except Campgrounds),Consumer Discretionary,XLY
+72,Accommodation and Food Services,721,Accommodation,7213,"Rooming and Boarding Houses, Dormitories, and Workers' Camps",721310,"Rooming and Boarding Houses, Dormitories, and Workers' Camps",Consumer Discretionary,XLY
+72,Accommodation and Food Services,722,Food Services and Drinking Places,7223,Special Food Services,722310,Food Service Contractors,Consumer Discretionary,XLY
+72,Accommodation and Food Services,722,Food Services and Drinking Places,7223,Special Food Services,722320,Caterers,Consumer Discretionary,XLY
+72,Accommodation and Food Services,722,Food Services and Drinking Places,7223,Special Food Services,722330,Mobile Food Services,Consumer Discretionary,XLY
+72,Accommodation and Food Services,722,Food Services and Drinking Places,7224,Drinking Places (Alcoholic Beverages),722410,Drinking Places (Alcoholic Beverages),Consumer Discretionary,XLY
+72,Accommodation and Food Services,722,Food Services and Drinking Places,7225,Restaurants and Other Eating Places,722511,Full-Service Restaurants,Consumer Discretionary,XLY
+72,Accommodation and Food Services,722,Food Services and Drinking Places,7225,Restaurants and Other Eating Places,722513,Limited-Service Restaurants,Consumer Discretionary,XLY
+72,Accommodation and Food Services,722,Food Services and Drinking Places,7225,Restaurants and Other Eating Places,722514,"Cafeterias, Grill Buffets, and Buffets",Consumer Discretionary,XLY
+72,Accommodation and Food Services,722,Food Services and Drinking Places,7225,Restaurants and Other Eating Places,722515,Snack and Nonalcoholic Beverage Bars,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8111,Automotive Repair and Maintenance,811111,General Automotive Repair,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8111,Automotive Repair and Maintenance,811114,Specialized Automotive Repair,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8111,Automotive Repair and Maintenance,811121,"Automotive Body, Paint, and Interior Repair and Maintenance",Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8111,Automotive Repair and Maintenance,811122,Automotive Glass Replacement Shops,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8111,Automotive Repair and Maintenance,811191,Automotive Oil Change and Lubrication Shops,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8111,Automotive Repair and Maintenance,811192,Car Washes,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8111,Automotive Repair and Maintenance,811198,All Other Automotive Repair and Maintenance,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8112,Electronic and Precision Equipment Repair and Maintenance,811210,Electronic and Precision Equipment Repair and Maintenance,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8113,Commercial and Industrial Machinery and Equipment (except Automotive and Electronic) Repair and Maintenance,811310,Commercial and Industrial Machinery and Equipment (except Automotive and Electronic) Repair and Maintenance,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8114,Personal and Household Goods Repair and Maintenance,811411,Home and Garden Equipment Repair and Maintenance,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8114,Personal and Household Goods Repair and Maintenance,811412,Appliance Repair and Maintenance,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8114,Personal and Household Goods Repair and Maintenance,811420,Reupholstery and Furniture Repair,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8114,Personal and Household Goods Repair and Maintenance,811430,Footwear and Leather Goods Repair,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),811,Repair and Maintenance,8114,Personal and Household Goods Repair and Maintenance,811490,Other Personal and Household Goods Repair and Maintenance,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8121,Personal Care Services,812111,Barber Shops,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8121,Personal Care Services,812112,Beauty Salons,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8121,Personal Care Services,812113,Nail Salons,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8121,Personal Care Services,812191,Diet and Weight Reducing Centers,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8121,Personal Care Services,812199,Other Personal Care Services,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8122,Death Care Services,812210,Funeral Homes and Funeral Services,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8122,Death Care Services,812220,Cemeteries and Crematories,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8123,Drycleaning and Laundry Services,812310,Coin-Operated Laundries and Drycleaners,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8123,Drycleaning and Laundry Services,812320,Drycleaning and Laundry Services (except Coin-Operated),Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8123,Drycleaning and Laundry Services,812331,Linen Supply,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8123,Drycleaning and Laundry Services,812332,Industrial Launderers,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8129,Other Personal Services,812910,Pet Care (except Veterinary) Services,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8129,Other Personal Services,812921,Photofinishing Laboratories (except One-Hour),Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8129,Other Personal Services,812922,One-Hour Photofinishing,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8129,Other Personal Services,812930,Parking Lots and Garages,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),812,Personal and Laundry Services,8129,Other Personal Services,812990,All Other Personal Services,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),813,"Religious, Grantmaking, Civic, Professional, and Similar Organizations",8131,Religious Organizations,813110,Religious Organizations,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),813,"Religious, Grantmaking, Civic, Professional, and Similar Organizations",8132,Grantmaking and Giving Services,813211,Grantmaking Foundations,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),813,"Religious, Grantmaking, Civic, Professional, and Similar Organizations",8132,Grantmaking and Giving Services,813212,Voluntary Health Organizations,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),813,"Religious, Grantmaking, Civic, Professional, and Similar Organizations",8132,Grantmaking and Giving Services,813219,Other Grantmaking and Giving Services,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),813,"Religious, Grantmaking, Civic, Professional, and Similar Organizations",8133,Social Advocacy Organizations,813311,Human Rights Organizations,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),813,"Religious, Grantmaking, Civic, Professional, and Similar Organizations",8133,Social Advocacy Organizations,813312,"Environment, Conservation and Wildlife Organizations",Consumer Discretionary,XLY
+81,Other Services (except Public Administration),813,"Religious, Grantmaking, Civic, Professional, and Similar Organizations",8133,Social Advocacy Organizations,813319,Other Social Advocacy Organizations,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),813,"Religious, Grantmaking, Civic, Professional, and Similar Organizations",8134,Civic and Social Organizations,813410,Civic and Social Organizations,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),813,"Religious, Grantmaking, Civic, Professional, and Similar Organizations",8139,"Business, Professional, Labor, Political, and Similar Organizations",813910,Business Associations,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),813,"Religious, Grantmaking, Civic, Professional, and Similar Organizations",8139,"Business, Professional, Labor, Political, and Similar Organizations",813920,Professional Organizations,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),813,"Religious, Grantmaking, Civic, Professional, and Similar Organizations",8139,"Business, Professional, Labor, Political, and Similar Organizations",813930,Labor Unions and Similar Labor Organizations,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),813,"Religious, Grantmaking, Civic, Professional, and Similar Organizations",8139,"Business, Professional, Labor, Political, and Similar Organizations",813940,Political Organizations,Consumer Discretionary,XLY
+81,Other Services (except Public Administration),813,"Religious, Grantmaking, Civic, Professional, and Similar Organizations",8139,"Business, Professional, Labor, Political, and Similar Organizations",813990,"Other Similar Organizations (except Business, Professional, Labor, and Political Organizations)",Consumer Discretionary,XLY
+81,Other Services (except Public Administration),814,Private Households,8141,Private Households,814110,Private Households,Consumer Discretionary,XLY
+92,Public Administration,921,"Executive, Legislative, and Other General Government Support",9211,"Executive, Legislative, and Other General Government Support",921110,Executive Offices,Industrials,XLI
+92,Public Administration,921,"Executive, Legislative, and Other General Government Support",9211,"Executive, Legislative, and Other General Government Support",921120,Legislative Bodies,Industrials,XLI
+92,Public Administration,921,"Executive, Legislative, and Other General Government Support",9211,"Executive, Legislative, and Other General Government Support",921130,Public Finance Activities,Industrials,XLI
+92,Public Administration,921,"Executive, Legislative, and Other General Government Support",9211,"Executive, Legislative, and Other General Government Support",921140,"Executive and Legislative Offices, Combined",Industrials,XLI
+92,Public Administration,921,"Executive, Legislative, and Other General Government Support",9211,"Executive, Legislative, and Other General Government Support",921150,American Indian and Alaska Native ribal Governments,Industrials,XLI
+92,Public Administration,921,"Executive, Legislative, and Other General Government Support",9211,"Executive, Legislative, and Other General Government Support",921190,Other General Government Support,Industrials,XLI
+92,Public Administration,922,"Justice, Public Order, and Safety Activities",9221,"Justice, Public Order, and Safety Activities",922110,Courts,Industrials,XLI
+92,Public Administration,922,"Justice, Public Order, and Safety Activities",9221,"Justice, Public Order, and Safety Activities",922120,Police Protection,Industrials,XLI
+92,Public Administration,922,"Justice, Public Order, and Safety Activities",9221,"Justice, Public Order, and Safety Activities",922130,Legal Counsel and Prosecution,Industrials,XLI
+92,Public Administration,922,"Justice, Public Order, and Safety Activities",9221,"Justice, Public Order, and Safety Activities",922140,Correctional Institutions,Industrials,XLI
+92,Public Administration,922,"Justice, Public Order, and Safety Activities",9221,"Justice, Public Order, and Safety Activities",922150,Parole Offices and Probation Offices,Industrials,XLI
+92,Public Administration,922,"Justice, Public Order, and Safety Activities",9221,"Justice, Public Order, and Safety Activities",922160,Fire Protection,Industrials,XLI
+92,Public Administration,922,"Justice, Public Order, and Safety Activities",9221,"Justice, Public Order, and Safety Activities",922190,"Other Justice, Public Order, and Safety Activities",Industrials,XLI
+92,Public Administration,923,Administration of Human Resource Programs,9231,Administration of Human Resource Programs,923110,Administration of Education Programs,Industrials,XLI
+92,Public Administration,923,Administration of Human Resource Programs,9231,Administration of Human Resource Programs,923120,Administration of Public Health Programs,Industrials,XLI
+92,Public Administration,923,Administration of Human Resource Programs,9231,Administration of Human Resource Programs,923130,"Administration of Human Resource Programs (except Education, Public Health, and Veterans' Affairs Programs)",Industrials,XLI
+92,Public Administration,923,Administration of Human Resource Programs,9231,Administration of Human Resource Programs,923140,Administration of Veterans' Affairs,Industrials,XLI
+92,Public Administration,924,Administration of Environmental Quality Programs,9241,Administration of Environmental Quality Programs,924110,Administration of Air and Water Resource and Solid Waste Management Programs,Industrials,XLI
+92,Public Administration,924,Administration of Environmental Quality Programs,9241,Administration of Environmental Quality Programs,924120,Administration of Conservation Programs,Industrials,XLI
+92,Public Administration,925,"Administration of Housing Programs, Urban Planning, and Community Development",9251,"Administration of Housing Programs, Urban Planning, and Community Development",925110,Administration of Housing Programs,Industrials,XLI
+92,Public Administration,925,"Administration of Housing Programs, Urban Planning, and Community Development",9251,"Administration of Housing Programs, Urban Planning, and Community Development",925120,Administration of Urban Planning and Community and Rural Development,Industrials,XLI
+92,Public Administration,926,Administration of Economic Programs,9261,Administration of Economic Programs,926110,Administration of General Economic Programs,Industrials,XLI
+92,Public Administration,926,Administration of Economic Programs,9261,Administration of Economic Programs,926120,Regulation and Administration of ransportation Programs,Industrials,XLI
+92,Public Administration,926,Administration of Economic Programs,9261,Administration of Economic Programs,926130,"Regulation and Administration of Communications, Electric, Gas, and Other Utilities",Industrials,XLI
+92,Public Administration,926,Administration of Economic Programs,9261,Administration of Economic Programs,926140,Regulation of Agricultural Marketing and Commodities,Industrials,XLI
+92,Public Administration,926,Administration of Economic Programs,9261,Administration of Economic Programs,926150,"Regulation, Licensing, and Inspection of Miscellaneous Commercial Sectors",Industrials,XLI
+92,Public Administration,927,Space Research and echnology,9271,Space Research and echnology,927110,Space Research and echnology,Industrials,XLI
+92,Public Administration,928,National Security and International Affairs,9281,National Security and International Affairs,928110,National Security,Industrials,XLI
+92,Public Administration,928,National Security and International Affairs,9281,National Security and International Affairs,928120,International Affairs,Industrials,XLI

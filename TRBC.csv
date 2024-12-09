@@ -1,0 +1,896 @@
+Economic Sector,Business Sector,Industry Group,Industry,Activity,Hierarchical ID
+Energy,Energy - Fossil Fuels,Coal,Coal,Coal (NEC),5010101010
+Energy,Energy - Fossil Fuels,Coal,Coal,Coal Mining Support,5010101011
+Energy,Energy - Fossil Fuels,Coal,Coal,Coal Wholesale,5010101012
+Energy,Energy - Fossil Fuels,Oil & Gas,Integrated Oil & Gas,Integrated Oil & Gas,5010201010
+Energy,Energy - Fossil Fuels,Oil & Gas,Oil & Gas Exploration and Production,Oil & Gas Exploration and Production (NEC),5010202010
+Energy,Energy - Fossil Fuels,Oil & Gas,Oil & Gas Exploration and Production,Oil Exploration & Production - Onshore,5010202011
+Energy,Energy - Fossil Fuels,Oil & Gas,Oil & Gas Exploration and Production,Oil Exploration & Production - Offshore,5010202012
+Energy,Energy - Fossil Fuels,Oil & Gas,Oil & Gas Exploration and Production,Natural Gas Exploration & Production - Onshore,5010202013
+Energy,Energy - Fossil Fuels,Oil & Gas,Oil & Gas Exploration and Production,Natural Gas Exploration & Production - Offshore,5010202014
+Energy,Energy - Fossil Fuels,Oil & Gas,Oil & Gas Exploration and Production,Unconventional Oil & Gas Production,5010202015
+Energy,Energy - Fossil Fuels,Oil & Gas,Oil & Gas Refining and Marketing,Oil & Gas Refining and Marketing (NEC),5010203010
+Energy,Energy - Fossil Fuels,Oil & Gas,Oil & Gas Refining and Marketing,Petroleum Refining,5010203011
+Energy,Energy - Fossil Fuels,Oil & Gas,Oil & Gas Refining and Marketing,Gasoline Stations,5010203012
+Energy,Energy - Fossil Fuels,Oil & Gas,Oil & Gas Refining and Marketing,Petroleum Product Wholesale,5010203013
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil & Gas Drilling,Oil & Gas Drilling (NEC),5010301010
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil & Gas Drilling,Oil Drilling - Onshore,5010301011
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil & Gas Drilling,Gas Drilling - Onshore,5010301012
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil & Gas Drilling,Oil Drilling - Offshore,5010301013
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil & Gas Drilling,Gas Drilling - Offshore,5010301014
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil & Gas Drilling,Unconventional Oil & Gas Drilling,5010301015
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil Related Services and Equipment,Oil Related Services and Equipment (NEC),5010302010
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil Related Services and Equipment,Oil Related Services,5010302011
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil Related Services and Equipment,Oil Related Equipment,5010302012
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil Related Services and Equipment,Oil Related - Surveying & Mapping Services,5010302013
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil & Gas Transportation Services,Oil & Gas Transportation Services (NEC),5010303010
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil & Gas Transportation Services,LNG Transportation & Storage,5010303011
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil & Gas Transportation Services,Natural Gas Pipeline Transportation,5010303012
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil & Gas Transportation Services,Oil Pipeline Transportation,5010303013
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil & Gas Transportation Services,Sea-Borne Tankers,5010303014
+Energy,Energy - Fossil Fuels,Oil & Gas Related Equipment and Services,Oil & Gas Transportation Services,Oil & Gas Storage,5010303015
+Energy,Renewable Energy,Renewable Energy,Renewable Energy Equipment & Services,Renewable Energy Equipment & Services (NEC),5020101010
+Energy,Renewable Energy,Renewable Energy,Renewable Energy Equipment & Services,Wind Systems & Equipment,5020101011
+Energy,Renewable Energy,Renewable Energy,Renewable Energy Equipment & Services,Stationary Fuel Cells,5020101012
+Energy,Renewable Energy,Renewable Energy,Renewable Energy Equipment & Services,Photovoltaic Solar Systems & Equipment,5020101013
+Energy,Renewable Energy,Renewable Energy,Renewable Energy Equipment & Services,Thermal Solar Systems & Equipment,5020101014
+Energy,Renewable Energy,Renewable Energy,Renewable Energy Equipment & Services,Biomass Power Energy Equipment,5020101015
+Energy,Renewable Energy,Renewable Energy,Renewable Energy Equipment & Services,Waste to Energy Systems & Equipment,5020101016
+Energy,Renewable Energy,Renewable Energy,Renewable Energy Equipment & Services,Hydropower Equipment,5020101017
+Energy,Renewable Energy,Renewable Energy,Renewable Energy Equipment & Services,Wave Power Energy Equipment,5020101018
+Energy,Renewable Energy,Renewable Energy,Renewable Energy Equipment & Services,Renewable Energy Services,5020101019
+Energy,Renewable Energy,Renewable Energy,Renewable Energy Equipment & Services,Geothermal Equipment,5020101020
+Energy,Renewable Energy,Renewable Energy,Renewable Fuels,Renewable Fuels (NEC),5020102010
+Energy,Renewable Energy,Renewable Energy,Renewable Fuels,Biodiesel,5020102011
+Energy,Renewable Energy,Renewable Energy,Renewable Fuels,Ethanol Fuels,5020102012
+Energy,Renewable Energy,Renewable Energy,Renewable Fuels,Pyrolytic & Synthetic Fuels,5020102013
+Energy,Renewable Energy,Renewable Energy,Renewable Fuels,Biomass & Biogas Fuels,5020102014
+Energy,Renewable Energy,Renewable Energy,Renewable Fuels,Hydrogen Fuel,5020102015
+Energy,Uranium,Uranium,Uranium,Uranium (NEC),5030101010
+Energy,Uranium,Uranium,Uranium,Uranium Mining,5030101011
+Energy,Uranium,Uranium,Uranium,Uranium Processing,5030101012
+Basic Materials,Chemicals,Chemicals,Commodity Chemicals,Commodity Chemicals (NEC),5110101010
+Basic Materials,Chemicals,Chemicals,Commodity Chemicals,Plastics,5110101011
+Basic Materials,Chemicals,Chemicals,Commodity Chemicals,Paints & Coatings,5110101012
+Basic Materials,Chemicals,Chemicals,Commodity Chemicals,Tanning & Softening Agents,5110101013
+Basic Materials,Chemicals,Chemicals,Commodity Chemicals,Explosives,5110101014
+Basic Materials,Chemicals,Chemicals,Commodity Chemicals,Industrial Gases,5110101015
+Basic Materials,Chemicals,Chemicals,Commodity Chemicals,Commodity Chemicals Wholesale,5110101016
+Basic Materials,Chemicals,Chemicals,Commodity Chemicals,Glass,5110101017
+Basic Materials,Chemicals,Chemicals,Agricultural Chemicals,Agricultural Chemicals (NEC),5110102010
+Basic Materials,Chemicals,Chemicals,Agricultural Chemicals,Fertilizers,5110102011
+Basic Materials,Chemicals,Chemicals,Agricultural Chemicals,Pesticides,5110102012
+Basic Materials,Chemicals,Chemicals,Agricultural Chemicals,Organic Fertilizers,5110102013
+Basic Materials,Chemicals,Chemicals,Agricultural Chemicals,Agricultural Chemicals Wholesale,5110102014
+Basic Materials,Chemicals,Chemicals,Specialty Chemicals,Specialty Chemicals (NEC),5110103010
+Basic Materials,Chemicals,Chemicals,Specialty Chemicals,Coloring Agents,5110103011
+Basic Materials,Chemicals,Chemicals,Specialty Chemicals,Synthetic Fibers,5110103012
+Basic Materials,Chemicals,Chemicals,Specialty Chemicals,Advanced Polymers,5110103014
+Basic Materials,Chemicals,Chemicals,Specialty Chemicals,Industrial Biotechnology Chemicals,5110103016
+Basic Materials,Chemicals,Chemicals,Specialty Chemicals,Specialty Chemicals Wholesale,5110103017
+Basic Materials,Chemicals,Chemicals,Specialty Chemicals,Composites,5110103018
+Basic Materials,Chemicals,Chemicals,Specialty Chemicals,Adhesive & Epoxy,5110103019
+Basic Materials,Chemicals,Chemicals,Diversified Chemicals,Diversified Chemicals,5110109010
+Basic Materials,Mineral Resources,Metals & Mining,Non-Gold Precious Metals & Minerals,Non-Gold Precious Metals & Minerals (NEC),5120101010
+Basic Materials,Mineral Resources,Metals & Mining,Non-Gold Precious Metals & Minerals,Silver Mining,5120101011
+Basic Materials,Mineral Resources,Metals & Mining,Non-Gold Precious Metals & Minerals,Platinum Mining,5120101012
+Basic Materials,Mineral Resources,Metals & Mining,Non-Gold Precious Metals & Minerals,Diamond Mining,5120101013
+Basic Materials,Mineral Resources,Metals & Mining,Non-Gold Precious Metals & Minerals,Semiprecious Gem Stones,5120101014
+Basic Materials,Mineral Resources,Metals & Mining,Non-Gold Precious Metals & Minerals,Pearl Cultivation,5120101015
+Basic Materials,Mineral Resources,Metals & Mining,Non-Gold Precious Metals & Minerals,Rare Earth Minerals,5120101016
+Basic Materials,Mineral Resources,Metals & Mining,Iron & Steel,Iron & Steel (NEC),5120102010
+Basic Materials,Mineral Resources,Metals & Mining,Iron & Steel,Iron Ore Mining,5120102011
+Basic Materials,Mineral Resources,Metals & Mining,Iron & Steel,Coke Coal Mining,5120102012
+Basic Materials,Mineral Resources,Metals & Mining,Iron & Steel,"Iron, Steel Mills & Foundries",5120102013
+Basic Materials,Mineral Resources,Metals & Mining,Iron & Steel,Metal Service Centers,5120102014
+Basic Materials,Mineral Resources,Metals & Mining,Iron & Steel,Metallic Rolling & Drawing Products,5120102015
+Basic Materials,Mineral Resources,Metals & Mining,Iron & Steel,Metal Merchant Wholesale,5120102016
+Basic Materials,Mineral Resources,Metals & Mining,Aluminum,Aluminum (NEC),5120103010
+Basic Materials,Mineral Resources,Metals & Mining,Aluminum,Primary Aluminum Production,5120103011
+Basic Materials,Mineral Resources,Metals & Mining,Aluminum,Secondary Smelting & Alloying of Aluminum,5120103012
+Basic Materials,Mineral Resources,Metals & Mining,Aluminum,Aluminum Rolling,5120103013
+Basic Materials,Mineral Resources,Metals & Mining,Aluminum,Aluminum Refining,5120103014
+Basic Materials,Mineral Resources,Metals & Mining,Aluminum,Aluminum Wholesale,5120103015
+Basic Materials,Mineral Resources,Metals & Mining,Aluminum,Bauxite Mining,5120103016
+Basic Materials,Mineral Resources,Metals & Mining,Specialty Mining & Metals,Specialty Mining & Metals (NEC),5120105010
+Basic Materials,Mineral Resources,Metals & Mining,Specialty Mining & Metals,Lead Ore Mining,5120105011
+Basic Materials,Mineral Resources,Metals & Mining,Specialty Mining & Metals,Copper Ore Mining,5120105012
+Basic Materials,Mineral Resources,Metals & Mining,Specialty Mining & Metals,Nickel Ore Mining,5120105013
+Basic Materials,Mineral Resources,Metals & Mining,Specialty Mining & Metals,Zinc Ore Mining,5120105014
+Basic Materials,Mineral Resources,Metals & Mining,Specialty Mining & Metals,Nonferrous Metal Mining,5120105015
+Basic Materials,Mineral Resources,Metals & Mining,Specialty Mining & Metals,Nonferrous Metal Processing,5120105016
+Basic Materials,Mineral Resources,Metals & Mining,Specialty Mining & Metals,Specialty Mining & Metals Wholesale,5120105017
+Basic Materials,Mineral Resources,Metals & Mining,Gold,Gold (NEC),5120106010
+Basic Materials,Mineral Resources,Metals & Mining,Gold,Gold Mining,5120106011
+Basic Materials,Mineral Resources,Metals & Mining,Gold,Gold Refining,5120106012
+Basic Materials,Mineral Resources,Metals & Mining,Mining Support Services & Equipment,Mining Support Services & Equipment (NEC),5120107010
+Basic Materials,Mineral Resources,Metals & Mining,Mining Support Services & Equipment,Geophysical Surveying & Mapping Services,5120107011
+Basic Materials,Mineral Resources,Metals & Mining,Mining Support Services & Equipment,Mining Support Services,5120107012
+Basic Materials,Mineral Resources,Metals & Mining,Mining Support Services & Equipment,Mining Machinery & Equipment Manufacturing,5120107013
+Basic Materials,Mineral Resources,Metals & Mining,Diversified Mining,Diversified Mining,5120108010
+Basic Materials,Mineral Resources,Construction Materials,Construction Materials,Construction Materials (NEC),5120201010
+Basic Materials,Mineral Resources,Construction Materials,Construction Materials,Construction Material Processing,5120201011
+Basic Materials,Mineral Resources,Construction Materials,Construction Materials,Cement & Concrete Manufacturing,5120201012
+Basic Materials,Mineral Resources,Construction Materials,Construction Materials,Tile & Paving Material Manufacturing,5120201013
+Basic Materials,Mineral Resources,Construction Materials,Construction Materials,Rock Mining,5120201014
+Basic Materials,Mineral Resources,Construction Materials,Construction Materials,Construction Material Wholesale,5120201015
+Basic Materials,Applied Resources,Paper & Forest Products,Forest & Wood Products,Forest & Wood Products (NEC),5130101010
+Basic Materials,Applied Resources,Paper & Forest Products,Forest & Wood Products,Timber Tract Operations,5130101011
+Basic Materials,Applied Resources,Paper & Forest Products,Forest & Wood Products,Forest Nurseries & Gathering of Forest Products,5130101012
+Basic Materials,Applied Resources,Paper & Forest Products,Forest & Wood Products,Logging & Sawmills,5130101013
+Basic Materials,Applied Resources,Paper & Forest Products,Forest & Wood Products,Forest Support & Services,5130101014
+Basic Materials,Applied Resources,Paper & Forest Products,Forest & Wood Products,Wood Products,5130101015
+Basic Materials,Applied Resources,Paper & Forest Products,Forest & Wood Products,Wood Product Wholesale,5130101016
+Basic Materials,Applied Resources,Paper & Forest Products,Paper Products,Paper Products (NEC),5130102010
+Basic Materials,Applied Resources,Paper & Forest Products,Paper Products,Paper Mills & Products,5130102011
+Basic Materials,Applied Resources,Paper & Forest Products,Paper Products,Newsprint Mills,5130102012
+Basic Materials,Applied Resources,Paper & Forest Products,Paper Products,Pulp Mills,5130102013
+Basic Materials,Applied Resources,Paper & Forest Products,Paper Products,Paper Product Wholesale,5130102014
+Basic Materials,Applied Resources,Containers & Packaging,Non-Paper Containers & Packaging,Non-Paper Containers & Packaging (NEC),5130201010
+Basic Materials,Applied Resources,Containers & Packaging,Non-Paper Containers & Packaging,Textile Containers & Packaging,5130201011
+Basic Materials,Applied Resources,Containers & Packaging,Non-Paper Containers & Packaging,Glass Containers & Packaging,5130201012
+Basic Materials,Applied Resources,Containers & Packaging,Non-Paper Containers & Packaging,Metal Containers & Packaging,5130201013
+Basic Materials,Applied Resources,Containers & Packaging,Non-Paper Containers & Packaging,Plastic Containers & Packaging,5130201014
+Basic Materials,Applied Resources,Containers & Packaging,Non-Paper Containers & Packaging,Wood Container & Packaging,5130201015
+Basic Materials,Applied Resources,Containers & Packaging,Non-Paper Containers & Packaging,Container & Packaging Material Wholesale,5130201016
+Basic Materials,Applied Resources,Containers & Packaging,Paper Packaging,Paper Packaging (NEC),5130202010
+Basic Materials,Applied Resources,Containers & Packaging,Paper Packaging,Paper Packaging Wholesale,5130202011
+Industrials,Industrial Goods,Aerospace & Defense,Aerospace & Defense,Aerospace & Defense (NEC),5210101010
+Industrials,Industrial Goods,Aerospace & Defense,Aerospace & Defense,Arms & Ammunitions Manufacturing,5210101011
+Industrials,Industrial Goods,Aerospace & Defense,Aerospace & Defense,Commercial Aircraft Manufacturing,5210101012
+Industrials,Industrial Goods,Aerospace & Defense,Aerospace & Defense,Military Aircraft Manufacturing,5210101013
+Industrials,Industrial Goods,Aerospace & Defense,Aerospace & Defense,Aircraft Parts Manufacturing,5210101014
+Industrials,Industrial Goods,Aerospace & Defense,Aerospace & Defense,Military Vehicles Manufacturing,5210101015
+Industrials,Industrial Goods,Aerospace & Defense,Aerospace & Defense,Satellite Design & Manufacture,5210101016
+Industrials,Industrial Goods,Aerospace & Defense,Aerospace & Defense,Spacecraft Manufacturing,5210101017
+Industrials,Industrial Goods,Aerospace & Defense,Aerospace & Defense,Military Clothing & Accessories,5210101018
+Industrials,Industrial Goods,Aerospace & Defense,Aerospace & Defense,Aircraft Equipment Wholesale,5210101019
+Industrials,Industrial Goods,Aerospace & Defense,Aerospace & Defense,Aerospace & Defense Electronics,5210101020
+Industrials,Industrial Goods,Aerospace & Defense,Aerospace & Defense,Drone Manufacturing,5210101021
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Industrial Machinery & Equipment (NEC),5210201010
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Industrial Components,5210201011
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Industrial Machinery,5210201012
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Ball & Roller Bearings,5210201013
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Testing & Measuring Equipment,5210201014
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Pump & Pumping Equipment,5210201015
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Air & Gas Compressors,5210201016
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Welding & Soldering Equipment,5210201017
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Industrial Process Furnace & Ovens,5210201018
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Fluid Power Cylinder & Actuators,5210201019
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Automatic Vending Machines,5210201020
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Industrial Moulds,5210201021
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Machine Tools,5210201022
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Industrial Valve Manufacturing,5210201023
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Industrial Machinery & Equipment Wholesale,5210201024
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Industrial Machinery & Equipment,Commercial Equipment,5210201025
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Machinery & Vehicles,Heavy Machinery & Vehicles (NEC),5210202010
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Machinery & Vehicles,Construction Machinery,5210202011
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Machinery & Vehicles,Heavy Trucks,5210202012
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Machinery & Vehicles,Heavy Buses & Coaches,5210202013
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Machinery & Vehicles,Locomotive Engines & Rolling Stock,5210202014
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Machinery & Vehicles,Agricultural Machinery,5210202015
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Machinery & Vehicles,Commercial Landscaping Equipment,5210202016
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Machinery & Vehicles,Heavy Machinery & Vehicles Wholesale,5210202017
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Electrical Components & Equipment,Electrical Components & Equipment (NEC),5210203010
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Electrical Components & Equipment,Batteries & Uninterruptible Power Supplies,5210203011
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Electrical Components & Equipment,Wires & Cables,5210203012
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Electrical Components & Equipment,Electrical Components,5210203013
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Electrical Components & Equipment,Lighting Equipment,5210203014
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Electrical Components & Equipment,"Heating, Ventilation & Air Conditioning Systems",5210203015
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Electrical Components & Equipment,Electrical Insulators,5210203016
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Electrical Components & Equipment,Switchgear,5210203017
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Electrical Components & Equipment,Portable Motors & Generators,5210203018
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Electrical Components & Equipment,Electrical Measuring & Testing Instruments,5210203019
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Electrical Components & Equipment,Electric Equipment Wholesale,5210203020
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Electrical Equipment,Heavy Electrical Equipment (NEC),5210204010
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Electrical Equipment,Electrical Transmission & Grid Equipment,5210204011
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Electrical Equipment,Elevator & Conveying Equipment,5210204012
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Electrical Equipment,Turbine Manufacturing,5210204013
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Electrical Equipment,Heavy Motors & Generators,5210204014
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Electrical Equipment,Industrial Electrical Switchgear,5210204015
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Heavy Electrical Equipment,Nuclear Generators & Components,5210204016
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Shipbuilding,Shipbuilding (NEC),5210205010
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Shipbuilding,Ship Parts Manufacturers,5210205011
+Industrials,Industrial Goods,"Machinery, Tools, Heavy Vehicles, Trains & Ships",Shipbuilding,Ship Repairing & Maintenance,5210205012
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Construction & Engineering (NEC),5220102010
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Commercial Buildings,5220102011
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Highway & Bridge Construction,5220102012
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Railway Construction,5220102013
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Power & Communications Network Construction,5220102014
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Civil Engineers & Architects,5220102015
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Building Contractors,5220102016
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Industrial Plant Construction,5220102017
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Water & Sewage Construction,5220102018
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Land Division & Subdivision,5220102019
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Gas Infrastructure Construction,5220102020
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Electric Power Plant Construction,5220102021
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Nuclear Power Plant Construction,5220102022
+Industrials,Industrial & Commercial Services,Construction & Engineering,Construction & Engineering,Telecommunication Construction,5220102023
+Industrials,Industrial & Commercial Services,Diversified Industrial Goods Wholesale,Diversified Industrial Goods Wholesale,Diversified Industrial Goods Wholesale,5220201010
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Environmental Services & Equipment,Environmental Services & Equipment (NEC),5220301010
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Environmental Services & Equipment,Purification & Treatment Equipment,5220301011
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Environmental Services & Equipment,"Waste Management, Disposal & Recycling Services",5220301012
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Environmental Services & Equipment,Environmental Consultancy Services,5220301013
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Environmental Services & Equipment,Environmental R&D Services & Biotechnology,5220301014
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Environmental Services & Equipment,Carbon Capture & Storage,5220301015
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Commercial Printing Services,Commercial Printing Services (NEC),5220302010
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Commercial Printing Services,Specialized Printing Services,5220302011
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Commercial Printing Services,Newspaper & Magazine Printing Services,5220302012
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Commercial Printing Services,Book Printing Services,5220302013
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Employment Services,Employment Services (NEC),5220303010
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Employment Services,Human Resources Consulting Services,5220303011
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Employment Services,Outsourcing & Staffing Services,5220303012
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Employment Services,Executive Search Services,5220303013
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Employment Services,Online Job Portals,5220303014
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Business Support Services (NEC),5220304010
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Corporate Accounting Services,5220304011
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Legal Services,5220304012
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Management Consulting Services,5220304013
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Security Services,5220304014
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Cleaning Services,5220304016
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Data Processing Services,5220304017
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Industrial Equipment Rental,5220304018
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Office Equipment & Supplies Rental,5220304019
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Pest Control Services,5220304020
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Maintenance & Repair Services,5220304021
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Industrial Design Services,5220304022
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Translation & Interpretation Services,5220304023
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Testing Laboratories,5220304024
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Call Center Services,5220304025
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Exhibition & Conference Services,5220304026
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Services,Transaction & Payment Services,5220304027
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Supplies,Business Support Supplies (NEC),5220306010
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Supplies,Office Furniture,5220306011
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Supplies,Office Supplies,5220306012
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Supplies,"Health, Safety & Fire Protection Equipment",5220306013
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Business Support Supplies,Office Supplies Wholesale,5220306014
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Professional Information Services,Professional Information Services (NEC),5220307010
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Professional Information Services,Financial Information Providers,5220307011
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Professional Information Services,Compliance & Investor Communication,5220307012
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Professional Information Services,Rating Agencies,5220307013
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Professional Information Services,Trade & Business Publishing,5220307014
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Professional Information Services,Legal & Tax Information Providers,5220307015
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Professional Information Services,Education & Training Information Providers,5220307016
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Professional Information Services,Journals & Scholarly Research,5220307017
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Professional Information Services,News Agencies,5220307018
+Industrials,Industrial & Commercial Services,Professional & Commercial Services,Professional Information Services,Libraries & Archives,5220307019
+Industrials,Transportation,Freight & Logistics Services,"Courier, Postal, Air Freight & Land-based Logistics","Courier, Postal, Air Freight & Land-based Logistics (NEC)",5240501010
+Industrials,Transportation,Freight & Logistics Services,"Courier, Postal, Air Freight & Land-based Logistics",Freight Logistics,5240501011
+Industrials,Transportation,Freight & Logistics Services,"Courier, Postal, Air Freight & Land-based Logistics",Air Freight,5240501012
+Industrials,Transportation,Freight & Logistics Services,"Courier, Postal, Air Freight & Land-based Logistics",Courier Services,5240501013
+Industrials,Transportation,Freight & Logistics Services,"Courier, Postal, Air Freight & Land-based Logistics",Integrated Logistics Operators,5240501014
+Industrials,Transportation,Freight & Logistics Services,Marine Freight & Logistics,Marine Freight & Logistics (NEC),5240502010
+Industrials,Transportation,Freight & Logistics Services,Marine Freight & Logistics,Marine Logistics,5240502011
+Industrials,Transportation,Freight & Logistics Services,Marine Freight & Logistics,Inland Water Freight,5240502012
+Industrials,Transportation,Freight & Logistics Services,Marine Freight & Logistics,Deep Sea Freight,5240502013
+Industrials,Transportation,Freight & Logistics Services,Ground Freight & Logistics,Ground Freight & Logistics (NEC),5240503010
+Industrials,Transportation,Freight & Logistics Services,Ground Freight & Logistics,Railway Freight Operators,5240503011
+Industrials,Transportation,Freight & Logistics Services,Ground Freight & Logistics,Freight Trucking,5240503012
+Industrials,Transportation,Freight & Logistics Services,Ground Freight & Logistics,Warehousing,5240503013
+Industrials,Transportation,Freight & Logistics Services,Ground Freight & Logistics,Truck Rental,5240503014
+Industrials,Transportation,Passenger Transportation Services,Airlines,Airlines (NEC),5240601010
+Industrials,Transportation,Passenger Transportation Services,Airlines,Regional Airlines,5240601011
+Industrials,Transportation,Passenger Transportation Services,Airlines,Charter & Private Air Services,5240601012
+Industrials,Transportation,Passenger Transportation Services,Airlines,Specialized Aviation Services,5240601013
+Industrials,Transportation,Passenger Transportation Services,Airlines,Inter-Modal Passenger Transportation,5240601014
+Industrials,Transportation,Passenger Transportation Services,"Passenger Transportation, Ground & Sea","Passenger Transportation, Ground & Sea (NEC)",5240602010
+Industrials,Transportation,Passenger Transportation Services,"Passenger Transportation, Ground & Sea",Commuting Services,5240602011
+Industrials,Transportation,Passenger Transportation Services,"Passenger Transportation, Ground & Sea",Charter Bus Services,5240602012
+Industrials,Transportation,Passenger Transportation Services,"Passenger Transportation, Ground & Sea",Rail Services,5240602013
+Industrials,Transportation,Passenger Transportation Services,"Passenger Transportation, Ground & Sea",Marine Passenger Transportation,5240602014
+Industrials,Transportation,Passenger Transportation Services,"Passenger Transportation, Ground & Sea",Commuter Ferry Operators,5240602015
+Industrials,Transportation,Passenger Transportation Services,"Passenger Transportation, Ground & Sea",Taxis & Limousines,5240602016
+Industrials,Transportation,Passenger Transportation Services,"Passenger Transportation, Ground & Sea",Passenger Car Rental,5240602017
+Industrials,Transportation,Transport Infrastructure,Airport Operators & Services,Airport Operators & Services (NEC),5240701010
+Industrials,Transportation,Transport Infrastructure,Airport Operators & Services,Airport Operators,5240701011
+Industrials,Transportation,Transport Infrastructure,Airport Operators & Services,Duty Free Shops,5240701012
+Industrials,Transportation,Transport Infrastructure,Airport Operators & Services,Airport Fueling Services,5240701013
+Industrials,Transportation,Transport Infrastructure,Airport Operators & Services,Airline Catering Services,5240701014
+Industrials,Transportation,Transport Infrastructure,Marine Port Services,Marine Port Services (NEC),5240702010
+Industrials,Transportation,Transport Infrastructure,Marine Port Services,Port Warehousing Services,5240702011
+Industrials,Transportation,Transport Infrastructure,Marine Port Services,Port Operators,5240702012
+Industrials,Transportation,Transport Infrastructure,Marine Port Services,Marine Cargo Handling Services,5240702013
+Industrials,Transportation,Transport Infrastructure,Highways & Rail Tracks,Highways & Rail Tracks (NEC),5240703010
+Industrials,Transportation,Transport Infrastructure,Highways & Rail Tracks,Highway Operators,5240703011
+Industrials,Transportation,Transport Infrastructure,Highways & Rail Tracks,Railway Operators,5240703012
+Industrials,Transportation,Transport Infrastructure,Highways & Rail Tracks,Parking Lot Operators,5240703013
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,Auto & Truck Manufacturers,Auto & Truck Manufacturers (NEC),5310101010
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,Auto & Truck Manufacturers,Motorcycles & Scooters,5310101011
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,Auto & Truck Manufacturers,Automobiles & Multi Utility Vehicles,5310101012
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,Auto & Truck Manufacturers,Light Trucks,5310101013
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,Auto & Truck Manufacturers,Electric (Alternative) Vehicles,5310101014
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,Auto & Truck Manufacturers,Luxury Vehicles,5310101015
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,Auto & Truck Manufacturers,Auto & Truck Wholesale,5310101016
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,"Auto, Truck & Motorcycle Parts","Auto, Truck & Motorcycle Parts (NEC)",5310102010
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,"Auto, Truck & Motorcycle Parts",Automotive Body Parts,5310102011
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,"Auto, Truck & Motorcycle Parts",Engine & Powertrain Systems,5310102012
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,"Auto, Truck & Motorcycle Parts",Automotive Batteries,5310102013
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,"Auto, Truck & Motorcycle Parts",Automotive Systems,5310102014
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,"Auto, Truck & Motorcycle Parts",Automotive Accessories,5310102015
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,"Auto, Truck & Motorcycle Parts",Motorcycle Parts & Accessories,5310102016
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,"Auto, Truck & Motorcycle Parts",Auto & Truck Parts Wholesale,5310102017
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,Tires & Rubber Products,Tires & Rubber Products (NEC),5310103010
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,Tires & Rubber Products,Tire & Tube Manufacturers,5310103011
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,Tires & Rubber Products,Tire Retreading,5310103012
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,Tires & Rubber Products,Industrial Rubber Products,5310103013
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,Tires & Rubber Products,Rubber Plantations,5310103014
+Consumer Cyclicals,Automobiles & Auto Parts,Automobiles & Auto Parts,Tires & Rubber Products,Tires & Rubber Products Wholesale,5310103015
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Textiles & Leather Goods,Textiles & Leather Goods (NEC),5320201010
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Textiles & Leather Goods,Synthetic Fabrics,5320201011
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Textiles & Leather Goods,Natural Fabrics,5320201012
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Textiles & Leather Goods,Organic & Ecologically Produced Fabric,5320201013
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Textiles & Leather Goods,Leather Goods,5320201014
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Textiles & Leather Goods,Fur Goods,5320201015
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Textiles & Leather Goods,Fabric Dyeing & Finishing,5320201016
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Textiles & Leather Goods,Yarn Goods,5320201017
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Textiles & Leather Goods,Cotton Farming,5320201018
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Textiles & Leather Goods,Textiles & Leather Goods Wholesale,5320201019
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Apparel & Accessories (NEC),5320202010
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Men's Clothing,5320202011
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Women's Clothing,5320202012
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Children's & Infants' Clothing,5320202013
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Sportswear & Outdoors Clothing,5320202014
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Jeans,5320202015
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Knitwear,5320202016
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Lingerie,5320202017
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Hosiery & Socks,5320202018
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Industrial Clothing & Uniforms,5320202019
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Fair Trade & Ethical Clothing,5320202020
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Luxury Clothing,5320202021
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Theatrical Costumes,5320202022
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Animal & Pet Clothing,5320202023
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Luxury Accessories,5320202024
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Accessories,5320202025
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Jewelry,5320202026
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Watches,5320202027
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Handbags & Luggage,5320202028
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Fashion Eyewear,5320202029
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Apparel & Accessories,Apparel Wholesale,5320202030
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Footwear,Footwear (NEC),5320203010
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Footwear,Men's Footwear,5320203011
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Footwear,Women's Footwear,5320203012
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Footwear,Children's & Infants' Footwear,5320203013
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Footwear,Sports & Outdoor Footwear,5320203014
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Footwear,Luxury Footwear,5320203015
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Footwear,Functional Footwear,5320203016
+Consumer Cyclicals,Cyclical Consumer Products,Textiles & Apparel,Footwear,Footwear Wholesale,5320203017
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Homebuilding,Homebuilding (NEC),5320301010
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Homebuilding,Residential Builders - Single Homes,5320301011
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Homebuilding,Residential Builders - Multifamily Homes,5320301012
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Homebuilding,Prefabricated Homes,5320301013
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Homebuilding,Sustainable & Energy Efficient Home Builders,5320301014
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Homebuilding,Retirement Home Builders,5320301015
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Homebuilding,Residential Architectural & Interior Design Services,5320301016
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Construction Supplies & Fixtures,Construction Supplies & Fixtures (NEC),5320302010
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Construction Supplies & Fixtures,Construction Supplies,5320302011
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Construction Supplies & Fixtures,Luxury Construction Supplies & Fixtures,5320302012
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Construction Supplies & Fixtures,Doors & Window Frames,5320302013
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Construction Supplies & Fixtures,Flooring & Interior Tile Manufacturers,5320302014
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Construction Supplies & Fixtures,Plumbing Fixtures & Fittings,5320302015
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Construction Supplies & Fixtures,Kitchen Cabinets,5320302016
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Construction Supplies & Fixtures,Bathroom Fixtures,5320302017
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Construction Supplies & Fixtures,Roofing Supplies,5320302018
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Construction Supplies & Fixtures,Lighting Fixtures,5320302019
+Consumer Cyclicals,Cyclical Consumer Products,Homebuilding & Construction Supplies,Construction Supplies & Fixtures,Construction Supplies & Fixtures Wholesale,5320302020
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,"Appliances, Tools & Housewares","Appliances, Tools & Housewares (NEC)",5320403010
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,"Appliances, Tools & Housewares",Household Appliances,5320403011
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,"Appliances, Tools & Housewares",Tools & Housewares,5320403012
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,"Appliances, Tools & Housewares",Kitchen Appliances,5320403013
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,"Appliances, Tools & Housewares",Cutlery & Flatware,5320403014
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,"Appliances, Tools & Housewares",Appliance & Houseware Wholesale,5320403015
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,"Appliances, Tools & Housewares",Luxury Appliances,5320403016
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,Home Furnishings,Home Furnishings (NEC),5320404010
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,Home Furnishings,Carpets & Curtains,5320404011
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,Home Furnishings,Wallpaper,5320404012
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,Home Furnishings,Luxury Furnishing,5320404014
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,Home Furnishings,Antiques,5320404015
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,Home Furnishings,Home Furnishings Wholesale,5320404016
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,Home Furnishings,Furniture,5320404017
+Consumer Cyclicals,Cyclical Consumer Products,Household Goods,Home Furnishings,Art & Craftwork,5320404018
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Toys & Children's Products,Toys & Children's Products (NEC),5320501010
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Toys & Children's Products,Dolls & Stuffed Toys,5320501011
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Toys & Children's Products,"Games, Toys & Children's Vehicles",5320501012
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Toys & Children's Products,Children's Safety Products,5320501013
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Toys & Children's Products,Children's Furniture,5320501014
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Toys & Children's Products,Children's Products & Accessories,5320501015
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Toys & Children's Products,Toys & Children's Products Wholesale,5320501016
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Recreational Products,Recreational Products (NEC),5320502010
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Recreational Products,Sailing Yachts & Motorboats,5320502011
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Recreational Products,Bicycle Manufacturing,5320502012
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Recreational Products,Sporting & Outdoor Goods,5320502013
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Recreational Products,Musical Instruments,5320502014
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Recreational Products,Luxury Recreational Products,5320502015
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Recreational Products,Leisure Products Wholesale,5320502016
+Consumer Cyclicals,Cyclical Consumer Products,Leisure Products,Recreational Products,Electric Scooters & Bicycles,5320502017
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,"Hotels, Motels & Cruise Lines","Hotels, Motels & Cruise Lines (NEC)",5330101010
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,"Hotels, Motels & Cruise Lines",Hotels & Motels,5330101011
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,"Hotels, Motels & Cruise Lines",Cruise Lines,5330101012
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,"Hotels, Motels & Cruise Lines",Luxury Hotels,5330101013
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,"Hotels, Motels & Cruise Lines",Resort Operators,5330101014
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,"Hotels, Motels & Cruise Lines",Bed & Breakfast,5330101015
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,"Hotels, Motels & Cruise Lines",Self-Catering Accommodation,5330101016
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,"Hotels, Motels & Cruise Lines",Campsite Operators,5330101017
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Restaurants & Bars,Restaurants & Bars (NEC),5330102010
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Restaurants & Bars,"Pubs, Bars & Night Clubs",5330102011
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Restaurants & Bars,Commercial Food Services,5330102012
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Restaurants & Bars,Quick Service Restaurants,5330102013
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Restaurants & Bars,Mobile Caterers,5330102014
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Restaurants & Bars,Banquet Halls & Catering,5330102015
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Restaurants & Bars,Cafés,5330102016
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Casinos & Gaming,Casinos & Gaming (NEC),5330103010
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Casinos & Gaming,Gambling & Gaming Machine Manufacturers,5330103011
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Casinos & Gaming,Gaming Machine Operators,5330103012
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Casinos & Gaming,Casinos,5330103013
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Casinos & Gaming,Horse & Dog Race Tracks,5330103014
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Casinos & Gaming,Lottery Operators,5330103015
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,Leisure & Recreation (NEC),5330104010
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,Movie Theaters & Movie Products,5330104011
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,Theatres & Performing Arts,5330104012
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,Museums & Historic Places,5330104013
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,Travel Agents,5330104014
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,Amusement Parks and Zoos,5330104015
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,"Gyms, Fitness and Spa Centers",5330104016
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,Adventure Sports Facilities & Ski Resorts,5330104017
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,Public Sport Facilities,5330104018
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,Professional Sports Venues,5330104019
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,Golf Courses,5330104020
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,Hunting & Fishing,5330104021
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,Marinas,5330104022
+Consumer Cyclicals,Cyclical Consumer Services,Hotels & Entertainment Services,Leisure & Recreation,Guided Tour Operators,5330104023
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Advertising & Marketing,Advertising & Marketing (NEC),5330201010
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Advertising & Marketing,Advertising Agency,5330201011
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Advertising & Marketing,Media Buying Agency,5330201012
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Advertising & Marketing,Signs & Advertising Specialty Producers,5330201013
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Advertising & Marketing,Outdoor Advertising,5330201014
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Advertising & Marketing,Direct Marketing,5330201015
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Advertising & Marketing,Sales Promotions & Events Management,5330201016
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Advertising & Marketing,Guerrilla & Sensory Marketing,5330201017
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Advertising & Marketing,Public Relations,5330201018
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Advertising & Marketing,Digital Media Agencies,5330201019
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Advertising & Marketing,Branding & Naming,5330201020
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Advertising & Marketing,Market Research,5330201021
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Advertising & Marketing,Marketing Consulting Services,5330201022
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Broadcasting,Broadcasting (NEC),5330202010
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Broadcasting,Television Broadcasting,5330202011
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Broadcasting,Radio Broadcasting,5330202012
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Broadcasting,Cable Service Providers,5330202013
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Entertainment Production,Entertainment Production (NEC),5330203010
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Entertainment Production,"Movie, TV Production & Distribution",5330203011
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Entertainment Production,"Music, Music Video Production & Distribution",5330203012
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Entertainment Production,Plays & Concert Production,5330203013
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Entertainment Production,Entertainment Production Equipment & Services,5330203014
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Entertainment Production,Copyright Management,5330203015
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Entertainment Production,Adult Entertainment Production & Broadcasting,5330203016
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Consumer Publishing,Consumer Publishing (NEC),5330204010
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Consumer Publishing,Newspaper Publishing,5330204011
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Consumer Publishing,Magazine Publishing,5330204012
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Consumer Publishing,Book Publishing,5330204013
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Consumer Publishing,Directory Publishing,5330204014
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Consumer Publishing,Digital Publishing,5330204015
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Consumer Publishing,Adult Publishing,5330204016
+Consumer Cyclicals,Cyclical Consumer Services,Media & Publishing,Consumer Publishing,"Books, Newspapers & Magazines Wholesale",5330204017
+Consumer Cyclicals,Retailers,Diversified Retail,Department Stores,Department Stores (NEC),5340201010
+Consumer Cyclicals,Retailers,Diversified Retail,Department Stores,General Department Stores,5340201011
+Consumer Cyclicals,Retailers,Diversified Retail,Department Stores,Luxury Department Stores,5340201012
+Consumer Cyclicals,Retailers,Diversified Retail,Department Stores,Internet & Mail Order Department Stores,5340201013
+Consumer Cyclicals,Retailers,Diversified Retail,Discount Stores,Discount Stores (NEC),5340202010
+Consumer Cyclicals,Retailers,Diversified Retail,Discount Stores,Internet & Mail Order Discount Stores,5340202011
+Consumer Cyclicals,Retailers,Diversified Retail,Discount Stores,Discount Stores with Grocery,5340202012
+Consumer Cyclicals,Retailers,Diversified Retail,Discount Stores,Discount Stores without Grocery,5340202013
+Consumer Cyclicals,Retailers,Diversified Retail,Discount Stores,Discount Stores with Gasoline,5340202014
+Consumer Cyclicals,Retailers,Diversified Retail,Discount Stores,Discount Stores without Gasoline,5340202015
+Consumer Cyclicals,Retailers,Specialty Retailers,"Auto Vehicles, Parts & Service Retailers","Auto Vehicles, Parts & Service Retailers (NEC)",5340301010
+Consumer Cyclicals,Retailers,Specialty Retailers,"Auto Vehicles, Parts & Service Retailers",New Car Dealers,5340301011
+Consumer Cyclicals,Retailers,Specialty Retailers,"Auto Vehicles, Parts & Service Retailers",Used Car Dealers,5340301012
+Consumer Cyclicals,Retailers,Specialty Retailers,"Auto Vehicles, Parts & Service Retailers",Motorcycle Dealers,5340301013
+Consumer Cyclicals,Retailers,Specialty Retailers,"Auto Vehicles, Parts & Service Retailers",Automotive Parts & Accessories Retailers,5340301014
+Consumer Cyclicals,Retailers,Specialty Retailers,"Auto Vehicles, Parts & Service Retailers",Tire Dealers,5340301015
+Consumer Cyclicals,Retailers,Specialty Retailers,"Auto Vehicles, Parts & Service Retailers",Luxury Car Dealers,5340301016
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Improvement Products & Services Retailers,Home Improvement Products & Services Retailers (NEC),5340302010
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Improvement Products & Services Retailers,Paint & Wallpaper Retailers,5340302011
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Improvement Products & Services Retailers,Builder Merchants,5340302012
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Improvement Products & Services Retailers,Nursery & Garden Centers,5340302013
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Improvement Products & Services Retailers,Kitchen & Bathroom Retailers,5340302014
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Improvement Products & Services Retailers,Home Décor Retailers,5340302015
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Improvement Products & Services Retailers,Interior Design Services,5340302016
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Improvement Products & Services Retailers,Luxury Home Improvement Product Retailers,5340302017
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Furnishings Retailers,Home Furnishings Retailers (NEC),5340303010
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Furnishings Retailers,Furniture Retailers,5340303011
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Furnishings Retailers,Floor Covering Retailers,5340303012
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Furnishings Retailers,Soft Furnishing Retailers,5340303013
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Furnishings Retailers,Luxury Furnishing Retailers,5340303014
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Furnishings Retailers,Antique Dealers,5340303015
+Consumer Cyclicals,Retailers,Specialty Retailers,Home Furnishings Retailers,Art & Craftwork Retailers,5340303016
+Consumer Cyclicals,Retailers,Specialty Retailers,Apparel & Accessories Retailers,Apparel & Accessories Retailers (NEC),5340304010
+Consumer Cyclicals,Retailers,Specialty Retailers,Apparel & Accessories Retailers,Footwear Retailers,5340304011
+Consumer Cyclicals,Retailers,Specialty Retailers,Apparel & Accessories Retailers,Jewelry & Watch Retailers,5340304012
+Consumer Cyclicals,Retailers,Specialty Retailers,Apparel & Accessories Retailers,Men's Apparel Retailers,5340304013
+Consumer Cyclicals,Retailers,Specialty Retailers,Apparel & Accessories Retailers,Women's Apparel Retailers,5340304014
+Consumer Cyclicals,Retailers,Specialty Retailers,Apparel & Accessories Retailers,Children's & Infants' Clothing Retailers,5340304015
+Consumer Cyclicals,Retailers,Specialty Retailers,Apparel & Accessories Retailers,Teen Fashion Retailers,5340304016
+Consumer Cyclicals,Retailers,Specialty Retailers,Apparel & Accessories Retailers,Handbags & Luggage Retailers,5340304017
+Consumer Cyclicals,Retailers,Specialty Retailers,Apparel & Accessories Retailers,Luxury Apparel Retailers,5340304018
+Consumer Cyclicals,Retailers,Specialty Retailers,Apparel & Accessories Retailers,Sports & Outdoors Retailers,5340304019
+Consumer Cyclicals,Retailers,Specialty Retailers,Computer & Electronics Retailers,Computer & Electronics Retailers (NEC),5340305010
+Consumer Cyclicals,Retailers,Specialty Retailers,Computer & Electronics Retailers,Computer Hardware & Software Retailers,5340305011
+Consumer Cyclicals,Retailers,Specialty Retailers,Computer & Electronics Retailers,Consumer Electronics Retailers,5340305012
+Consumer Cyclicals,Retailers,Specialty Retailers,Computer & Electronics Retailers,Mobile Phone Retailers,5340305013
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Miscellaneous Specialty Retailers (NEC),5340309010
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Luxury Beauty Supply Retailers,5340309011
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Personal Care Products Retailers,5340309012
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Optical Goods Stores,5340309013
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Health Food Stores,5340309014
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Musical Instrument Retailers,5340309015
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Hobby & Craft Product Retailers,5340309016
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Toys & Games Retailers,5340309017
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Book & Magazine Retailers,5340309018
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Florists,5340309019
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Office Supplies & Stationery Stores,5340309020
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,"Gift, Novelty & Souvenir Stores",5340309021
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Used Merchandise Stores,5340309022
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Sporting Goods Stores,5340309023
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Pet & Pet Supplies Retailers,5340309024
+Consumer Cyclicals,Retailers,Specialty Retailers,Miscellaneous Specialty Retailers,Adult Products Retailers,5340309025
+Consumer Non-Cyclicals,Food & Beverages,Beverages,Brewers,Brewers (NEC),5410101010
+Consumer Non-Cyclicals,Food & Beverages,Beverages,Brewers,Craft & Micro Brewers,5410101011
+Consumer Non-Cyclicals,Food & Beverages,Beverages,Distillers & Wineries,Distillers & Wineries (NEC),5410102010
+Consumer Non-Cyclicals,Food & Beverages,Beverages,Distillers & Wineries,Wineries,5410102011
+Consumer Non-Cyclicals,Food & Beverages,Beverages,Distillers & Wineries,Distilleries,5410102012
+Consumer Non-Cyclicals,Food & Beverages,Beverages,Distillers & Wineries,Malt Producers,5410102013
+Consumer Non-Cyclicals,Food & Beverages,Beverages,Non-Alcoholic Beverages,Non-Alcoholic Beverages (NEC),5410103010
+Consumer Non-Cyclicals,Food & Beverages,Beverages,Non-Alcoholic Beverages,Carbonated Soft Drinks,5410103011
+Consumer Non-Cyclicals,Food & Beverages,Beverages,Non-Alcoholic Beverages,Fruit Drinks,5410103012
+Consumer Non-Cyclicals,Food & Beverages,Beverages,Non-Alcoholic Beverages,Energy Drinks,5410103013
+Consumer Non-Cyclicals,Food & Beverages,Beverages,Non-Alcoholic Beverages,Bottled Water & Ice,5410103014
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Fishing & Farming (NEC),5410201010
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Grain (Crop) Production,5410201011
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Poultry Farming,5410201012
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Sheep & Specialty Livestock Farming,5410201013
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,"Vegetable, Fruit & Nut Farming",5410201014
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,"Coffee, Tea & Cocoa Farming",5410201015
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Sugarcane Farming,5410201016
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Commercial Nurseries,5410201017
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Commercial Fishing,5410201018
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Aquaculture,5410201019
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Fur Farming,5410201020
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Animal Breeding,5410201021
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Agriculture Support Services,5410201022
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Organic Farming,5410201023
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Animal Feed,5410201024
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Agricultural Consultancy Services,5410201025
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Fishing & Farming Wholesale,5410201026
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Agricultural Biotechnology,5410201027
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Hog & Pig Farming,5410201028
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Cattle Farming,5410201029
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Fishing & Farming,Fair Trade & Ethical Fishing & Farming,5410201030
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Food Processing (NEC),5410202010
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Flour Milling,5410202011
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Bread & Bakery Product Manufacturing,5410202012
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Breakfast Cereal Manufacturing,5410202013
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,"Cookie, Cracker & Pasta Manufacturing",5410202014
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Fruit & Vegetable Processing,5410202015
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Meat Processing,5410202016
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Halal Meat Processing,5410202017
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Seafood Product Preparation & Packaging,5410202018
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Dairy Products,5410202019
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,"Starch, Vegetable Fat & Oil Manufacturing",5410202020
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Coffee & Tea,5410202021
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Sugar & Artificial Sweeteners,5410202022
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Chocolate & Confectionery,5410202023
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Snack Food & Non-Chocolate Confectionary,5410202024
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Special Foods & Wellbeing Products,5410202025
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Food Ingredients,5410202026
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Baby Food,5410202027
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Ready-Made Meals,5410202028
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Frozen Food Manufacturing,5410202030
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Pet Food Manufacturing,5410202031
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Food Processing,Vegan & Vegetarian Food Manufacturing,5410202032
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Tobacco,Tobacco (NEC),5410203010
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Tobacco,Tobacco Farming,5410203011
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Tobacco,Tobacco Stemming & Redrying,5410203012
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Tobacco,Cigars & Cigarette Manufacturing,5410203013
+Consumer Non-Cyclicals,Food & Beverages,Food & Tobacco,Tobacco,Chewing Tobacco Products,5410203014
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Household Products,Household Products (NEC),5420101010
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Household Products,Laundry Supplies,5420101011
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Household Products,Cleaning Supplies,5420101012
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Household Products,Air Fresheners,5420101013
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Household Products,Pet & Plant Protection Agents,5420101015
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Household Products,Auto Cleaning Products,5420101016
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Products,Personal Products (NEC),5420102010
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Products,Cosmetics & Perfumes,5420102011
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Products,Luxury Cosmetics,5420102012
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Products,Sanitary Products,5420102013
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Products,Hair Accessories,5420102014
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Products,Birth Control Products,5420102015
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Products,Halal Personal Products,5420102016
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Services,Personal Services (NEC),5420103010
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Services,Consumer Goods Rental,5420103011
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Services,Accounting & Tax Preparation,5420103012
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Services,Personal Legal Services,5420103013
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Services,Child Care & Family Services,5420103015
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Services,Consumer Repair Services,5420103016
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Services,Personal Care Services,5420103017
+Consumer Non-Cyclicals,Personal & Household Products & Services,Personal & Household Products & Services,Personal Services,Funeral Services,5420103018
+Consumer Non-Cyclicals,Food & Drug Retailing,Food & Drug Retailing,Drug Retailers,Drug Retailers (NEC),5430101010
+Consumer Non-Cyclicals,Food & Drug Retailing,Food & Drug Retailing,Drug Retailers,Retail - Drugs with Grocery,5430101011
+Consumer Non-Cyclicals,Food & Drug Retailing,Food & Drug Retailing,Drug Retailers,Retail - Drugs without Grocery,5430101012
+Consumer Non-Cyclicals,Food & Drug Retailing,Food & Drug Retailing,Drug Retailers,Cannabis Product Retailers,5430101013
+Consumer Non-Cyclicals,Food & Drug Retailing,Food & Drug Retailing,Drug Retailers,Non-Cannabis Recreational Drug Retailers,5430101014
+Consumer Non-Cyclicals,Food & Drug Retailing,Food & Drug Retailing,Food Retail & Distribution,Food Retail & Distribution (NEC),5430102010
+Consumer Non-Cyclicals,Food & Drug Retailing,Food & Drug Retailing,Food Retail & Distribution,Food Wholesale,5430102011
+Consumer Non-Cyclicals,Food & Drug Retailing,Food & Drug Retailing,Food Retail & Distribution,Supermarkets & Convenience Stores,5430102012
+Consumer Non-Cyclicals,Food & Drug Retailing,Food & Drug Retailing,Food Retail & Distribution,"Beer, Wine & Liquor Stores",5430102013
+Consumer Non-Cyclicals,Food & Drug Retailing,Food & Drug Retailing,Food Retail & Distribution,Vending Machine Providers,5430102014
+Consumer Non-Cyclicals,Food & Drug Retailing,Food & Drug Retailing,Food Retail & Distribution,Tobacco Stores,5430102015
+Consumer Non-Cyclicals,Food & Drug Retailing,Food & Drug Retailing,Food Retail & Distribution,Food Markets,5430102016
+Consumer Non-Cyclicals,Consumer Goods Conglomerates,Consumer Goods Conglomerates,Consumer Goods Conglomerates,Consumer Goods Conglomerates,5440101010
+Financials,Banking & Investment Services,Banking Services,Banks,Banks (NEC),5510101010
+Financials,Banking & Investment Services,Banking Services,Banks,Corporate Banks,5510101011
+Financials,Banking & Investment Services,Banking Services,Banks,Retail & Mortgage Banks,5510101012
+Financials,Banking & Investment Services,Banking Services,Banks,Money Center Banks,5510101013
+Financials,Banking & Investment Services,Banking Services,Banks,Private Banks,5510101014
+Financials,Banking & Investment Services,Banking Services,Banks,Islamic Banks,5510101015
+Financials,Banking & Investment Services,Banking Services,Consumer Lending,Consumer Lending (NEC),5510103010
+Financials,Banking & Investment Services,Banking Services,Consumer Lending,Personal & Car Loans,5510103011
+Financials,Banking & Investment Services,Banking Services,Consumer Lending,Consumer Credit Cards Services,5510103012
+Financials,Banking & Investment Services,Banking Services,Consumer Lending,Consumer Leasing,5510103013
+Financials,Banking & Investment Services,Banking Services,Consumer Lending,Credit Unions,5510103014
+Financials,Banking & Investment Services,Banking Services,Consumer Lending,Microfinancing,5510103015
+Financials,Banking & Investment Services,Banking Services,Corporate Financial Services,Corporate Financial Services (NEC),5510105010
+Financials,Banking & Investment Services,Banking Services,Corporate Financial Services,Commercial Loans,5510105011
+Financials,Banking & Investment Services,Banking Services,Corporate Financial Services,Import-Export Banks,5510105012
+Financials,Banking & Investment Services,Banking Services,Corporate Financial Services,International Trade Financing,5510105013
+Financials,Banking & Investment Services,Banking Services,Corporate Financial Services,Factoring,5510105014
+Financials,Banking & Investment Services,Banking Services,Corporate Financial Services,Commercial Leasing,5510105015
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Banking & Brokerage Services,Investment Banking & Brokerage Services (NEC),5510201010
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Banking & Brokerage Services,Investment Banking,5510201011
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Banking & Brokerage Services,Brokerage Services,5510201012
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Banking & Brokerage Services,Inter-Dealer Broker,5510201013
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Banking & Brokerage Services,Islamic Investment Banking & Brokerage Services,5510201014
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Banking & Brokerage Services,Merchant Banks,5510201015
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Management & Fund Operators,Investment Management & Fund Operators (NEC),5510202010
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Management & Fund Operators,Investment Management,5510202011
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Management & Fund Operators,Hedge Funds,5510202012
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Management & Fund Operators,Collective Investment Fund Operators,5510202013
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Management & Fund Operators,Wealth Management,5510202014
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Management & Fund Operators,Venture Capital,5510202015
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Management & Fund Operators,Private Equity,5510202016
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Investment Management & Fund Operators,Islamic Investment Management & Fund Operators,5510202017
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Diversified Investment Services,Diversified Investment Services,5510203010
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Financial & Commodity Market Operators & Service Providers,Financial & Commodity Market Operators & Service Providers (NEC),5510205010
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Financial & Commodity Market Operators & Service Providers,Securities & Commodity Exchanges,5510205011
+Financials,Banking & Investment Services,Investment Banking & Investment Services,Financial & Commodity Market Operators & Service Providers,"Clearing, Settlement & Custodial Service",5510205012
+Financials,Insurance,Insurance,Multiline Insurance & Brokers,Multiline Insurance & Brokers (NEC),5530101010
+Financials,Insurance,Insurance,Multiline Insurance & Brokers,Islamic Insurance,5530101011
+Financials,Insurance,Insurance,Multiline Insurance & Brokers,Insurance Brokers,5530101012
+Financials,Insurance,Insurance,Property & Casualty Insurance,Property & Casualty Insurance (NEC),5530102010
+Financials,Insurance,Insurance,Property & Casualty Insurance,Property Insurance,5530102011
+Financials,Insurance,Insurance,Property & Casualty Insurance,Insurance - Automobile,5530102012
+Financials,Insurance,Insurance,Property & Casualty Insurance,Travel Insurance,5530102013
+Financials,Insurance,Insurance,Property & Casualty Insurance,Casualty Insurance,5530102014
+Financials,Insurance,Insurance,Life & Health Insurance,Life & Health Insurance (NEC),5530103010
+Financials,Insurance,Insurance,Life & Health Insurance,Life Insurance,5530103011
+Financials,Insurance,Insurance,Life & Health Insurance,Health Insurance,5530103012
+Financials,Insurance,Insurance,Reinsurance,Reinsurance (NEC),5530105010
+Financials,Insurance,Insurance,Reinsurance,Life & Health Reinsurance,5530105011
+Financials,Insurance,Insurance,Reinsurance,Property & Casualty Reinsurance,5530105012
+Financials,Collective Investments,Collective Investments,UK Investment Trusts,UK Investment Trusts,5550101010
+Financials,Collective Investments,Collective Investments,Mutual Funds,Mutual Funds (NEC),5550102010
+Financials,Collective Investments,Collective Investments,Mutual Funds,Islamic Mutual Funds,5550102011
+Financials,Collective Investments,Collective Investments,Closed End Funds,Closed End Funds,5550103010
+Financials,Collective Investments,Collective Investments,Exchange-Traded Funds,Exchange-Traded Funds (NEC),5550104010
+Financials,Collective Investments,Collective Investments,Exchange-Traded Funds,Islamic ETFs,5550104011
+Financials,Collective Investments,Collective Investments,Exchange-Traded Funds,Islamic Commodity ETFs,5550104012
+Financials,Collective Investments,Collective Investments,Pension Funds,Pension Funds,5550105010
+Financials,Collective Investments,Collective Investments,Insurance Funds,Insurance Funds,5550106010
+Financials,Investment Holding Companies,Investment Holding Companies,Investment Holding Companies,Investment Holding Companies (NEC),5560101010
+Financials,Investment Holding Companies,Investment Holding Companies,Investment Holding Companies,Shell Companies,5560101011
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,Advanced Medical Equipment & Technology,Advanced Medical Equipment & Technology (NEC),5610101010
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,Advanced Medical Equipment & Technology,Medical Diagnostic & Testing Equipment,5610101011
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,Advanced Medical Equipment & Technology,Medical Monitoring Systems,5610101012
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,Advanced Medical Equipment & Technology,Laser Equipment,5610101013
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,Advanced Medical Equipment & Technology,Medical Imaging Systems,5610101014
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,Advanced Medical Equipment & Technology,Medical Software & Technology Services,5610101015
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,Advanced Medical Equipment & Technology,Advanced Medical Equipment Wholesale,5610101016
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,"Medical Equipment, Supplies & Distribution","Medical Equipment, Supplies & Distribution (NEC)",5610102010
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,"Medical Equipment, Supplies & Distribution",Medical Supplies,5610102011
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,"Medical Equipment, Supplies & Distribution",Medical Prosthetics,5610102012
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,"Medical Equipment, Supplies & Distribution",Medical Equipment,5610102013
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,"Medical Equipment, Supplies & Distribution",Medical Devices & Implants,5610102014
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,"Medical Equipment, Supplies & Distribution",Medical Equipment Wholesale,5610102015
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,"Medical Equipment, Supplies & Distribution","Glasses, Spectacles & Contact Lenses",5610102016
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,"Medical Equipment, Supplies & Distribution",Laboratory Diagnostic & Testing Substances,5610102017
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,"Medical Equipment, Supplies & Distribution",Veterinary Medical Equipment & Supplies,5610102018
+Healthcare,Healthcare Services & Equipment,Healthcare Equipment & Supplies,"Medical Equipment, Supplies & Distribution",Drug Delivery Systems,5610102019
+Healthcare,Healthcare Services & Equipment,Healthcare Providers & Services,Healthcare Facilities & Services,Healthcare Facilities & Services (NEC),5610201010
+Healthcare,Healthcare Services & Equipment,Healthcare Providers & Services,Healthcare Facilities & Services,"Hospitals, Clinics & Primary Care Services",5610201011
+Healthcare,Healthcare Services & Equipment,Healthcare Providers & Services,Healthcare Facilities & Services,Residential & Long-Term Care,5610201012
+Healthcare,Healthcare Services & Equipment,Healthcare Providers & Services,Healthcare Facilities & Services,Ambulance & Emergency Services,5610201013
+Healthcare,Healthcare Services & Equipment,Healthcare Providers & Services,Healthcare Facilities & Services,Doctor's Office,5610201014
+Healthcare,Healthcare Services & Equipment,Healthcare Providers & Services,Healthcare Facilities & Services,Medical & Diagnostic Laboratories,5610201015
+Healthcare,Healthcare Services & Equipment,Healthcare Providers & Services,Healthcare Facilities & Services,Veterinary Services,5610201016
+Healthcare,Healthcare Services & Equipment,Healthcare Providers & Services,Healthcare Facilities & Services,Telemedicine Services,5610201017
+Healthcare,Healthcare Services & Equipment,Healthcare Providers & Services,Healthcare Facilities & Services,Home Healthcare Services,5610201018
+Healthcare,Healthcare Services & Equipment,Healthcare Providers & Services,Healthcare Facilities & Services,Alternative Medicine Facilities,5610201019
+Healthcare,Healthcare Services & Equipment,Healthcare Providers & Services,Healthcare Facilities & Services,Medical Farming,5610201020
+Healthcare,Healthcare Services & Equipment,Healthcare Providers & Services,Managed Healthcare,Managed Healthcare (NEC),5610202010
+Healthcare,Healthcare Services & Equipment,Healthcare Providers & Services,Managed Healthcare,HMO Medical Centers,5610202011
+Healthcare,Pharmaceuticals & Medical Research,Pharmaceuticals,Pharmaceuticals,Pharmaceuticals (NEC),5620104010
+Healthcare,Pharmaceuticals & Medical Research,Pharmaceuticals,Pharmaceuticals,Proprietary & Advanced Pharmaceuticals,5620104011
+Healthcare,Pharmaceuticals & Medical Research,Pharmaceuticals,Pharmaceuticals,Biopharmaceuticals,5620104012
+Healthcare,Pharmaceuticals & Medical Research,Pharmaceuticals,Pharmaceuticals,In-Vivo Diagnostic & Testing Substances,5620104013
+Healthcare,Pharmaceuticals & Medical Research,Pharmaceuticals,Pharmaceuticals,Veterinary Drugs,5620104014
+Healthcare,Pharmaceuticals & Medical Research,Pharmaceuticals,Pharmaceuticals,Generic Pharmaceuticals,5620104015
+Healthcare,Pharmaceuticals & Medical Research,Pharmaceuticals,Pharmaceuticals,Alternative Medicine,5620104016
+Healthcare,Pharmaceuticals & Medical Research,Pharmaceuticals,Pharmaceuticals,Recreational Pharmaceuticals,5620104017
+Healthcare,Pharmaceuticals & Medical Research,Pharmaceuticals,Pharmaceuticals,Pharmaceuticals Wholesale,5620104018
+Healthcare,Pharmaceuticals & Medical Research,Biotechnology & Medical Research,Biotechnology & Medical Research,Biotechnology & Medical Research (NEC),5620201010
+Healthcare,Pharmaceuticals & Medical Research,Biotechnology & Medical Research,Biotechnology & Medical Research,Bio Therapeutic Drugs,5620201011
+Healthcare,Pharmaceuticals & Medical Research,Biotechnology & Medical Research,Biotechnology & Medical Research,Bio Diagnostics & Testing,5620201012
+Healthcare,Pharmaceuticals & Medical Research,Biotechnology & Medical Research,Biotechnology & Medical Research,Bio Medical Devices,5620201013
+Technology,Technology Equipment,Semiconductors & Semiconductor Equipment,Semiconductors,Semiconductors (NEC),5710101010
+Technology,Technology Equipment,Semiconductors & Semiconductor Equipment,Semiconductors,Integrated Circuits,5710101011
+Technology,Technology Equipment,Semiconductors & Semiconductor Equipment,Semiconductors,Memory Chips (RAM),5710101012
+Technology,Technology Equipment,Semiconductors & Semiconductor Equipment,Semiconductors,Processors,5710101013
+Technology,Technology Equipment,Semiconductors & Semiconductor Equipment,Semiconductors,Semiconductor Wholesale,5710101014
+Technology,Technology Equipment,Semiconductors & Semiconductor Equipment,Semiconductors,NFC & RFID Systems,5710101015
+Technology,Technology Equipment,Semiconductors & Semiconductor Equipment,Semiconductor Equipment & Testing,Semiconductor Equipment & Testing (NEC),5710102010
+Technology,Technology Equipment,Semiconductors & Semiconductor Equipment,Semiconductor Equipment & Testing,Semiconductor Machinery Manufacturing,5710102011
+Technology,Technology Equipment,Semiconductors & Semiconductor Equipment,Semiconductor Equipment & Testing,Semiconductor Testing Equipment & Service,5710102012
+Technology,Technology Equipment,Semiconductors & Semiconductor Equipment,Semiconductor Equipment & Testing,Semiconductor Equipment Wholesale,5710102013
+Technology,Technology Equipment,Communications & Networking,Communications & Networking,Communications & Networking (NEC),5710201010
+Technology,Technology Equipment,Communications & Networking,Communications & Networking,Network Equipment,5710201011
+Technology,Technology Equipment,Communications & Networking,Communications & Networking,Security & Surveillance,5710201012
+Technology,Technology Equipment,Communications & Networking,Communications & Networking,Conferencing Tools & Systems,5710201013
+Technology,Technology Equipment,Communications & Networking,Communications & Networking,VOIP Equipment & Systems,5710201014
+Technology,Technology Equipment,Communications & Networking,Communications & Networking,Broadcasting Equipment,5710201015
+Technology,Technology Equipment,Communications & Networking,Communications & Networking,Satellite Communications Network,5710201016
+Technology,Technology Equipment,Communications & Networking,Communications & Networking,Fiber Optic Cable Manufacturing,5710201017
+Technology,Technology Equipment,Electronic Equipment & Parts,Electronic Equipment & Parts,Electronic Equipment & Parts (NEC),5710401010
+Technology,Technology Equipment,Electronic Equipment & Parts,Electronic Equipment & Parts,Biometric Products,5710401011
+Technology,Technology Equipment,Electronic Equipment & Parts,Electronic Equipment & Parts,Advanced Electronic Equipment,5710401012
+Technology,Technology Equipment,Electronic Equipment & Parts,Electronic Equipment & Parts,Display Screens,5710401013
+Technology,Technology Equipment,Electronic Equipment & Parts,Electronic Equipment & Parts,Electronic Components,5710401014
+Technology,Technology Equipment,Electronic Equipment & Parts,Electronic Equipment & Parts,3D Printers,5710401015
+Technology,Technology Equipment,Office Equipment,Office Equipment,Office Equipment (NEC),5710501010
+Technology,Technology Equipment,Office Equipment,Office Equipment,Commercial Document Management,5710501011
+Technology,Technology Equipment,Office Equipment,Office Equipment,Office Technology Equipment,5710501012
+Technology,Technology Equipment,Office Equipment,Office Equipment,Point of Sale Systems,5710501013
+Technology,Technology Equipment,Office Equipment,Office Equipment,Scientific & Precision Equipment,5710501014
+Technology,Technology Equipment,Office Equipment,Office Equipment,Office Equipment Wholesale,5710501015
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Computer Hardware,Computer Hardware (NEC),5710601010
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Computer Hardware,Scientific & Super Computers,5710601011
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Computer Hardware,Laptop & Desktop Computers,5710601012
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Computer Hardware,Tablet & Netbook Computers,5710601013
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Computer Hardware,Input Devices,5710601014
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Computer Hardware,Output Devices,5710601015
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Computer Hardware,Servers & Systems,5710601016
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Computer Hardware,Storage Devices,5710601017
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Computer Hardware,Computer Hardware Component Assembly,5710601018
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Computer Hardware,Consumer Document Management,5710601019
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Phones & Handheld Devices,Phones & Handheld Devices (NEC),5710602010
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Phones & Handheld Devices,Phones & Smart Phones,5710602011
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Phones & Handheld Devices,Portable Satellite Navigation,5710602012
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Phones & Handheld Devices,Personal Music Players,5710602013
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Phones & Handheld Devices,Electronic Books,5710602014
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Phones & Handheld Devices,Mobile Device Component Assembly,5710602015
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Household Electronics,Household Electronics (NEC),5710603010
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Household Electronics,Photographic Equipment,5710603011
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Household Electronics,TV & Video,5710603012
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Household Electronics,Home Audio,5710603013
+Technology,Technology Equipment,"Computers, Phones & Household Electronics",Household Electronics,Consumer Electronic Wholesale,5710603014
+Technology,Technology Equipment,Integrated Hardware & Software,Integrated Hardware & Software,Integrated Hardware & Software,5710701010
+Technology,Software & IT Services,Software & IT Services,IT Services & Consulting,IT Services & Consulting (NEC),5720101010
+Technology,Software & IT Services,Software & IT Services,IT Services & Consulting,Computer Programming,5720101011
+Technology,Software & IT Services,Software & IT Services,IT Services & Consulting,Computer Training,5720101012
+Technology,Software & IT Services,Software & IT Services,IT Services & Consulting,Technology Consulting & Outsourcing Services,5720101013
+Technology,Software & IT Services,Software & IT Services,IT Services & Consulting,IT Testing Services,5720101014
+Technology,Software & IT Services,Software & IT Services,IT Services & Consulting,Cloud Computing Services,5720101015
+Technology,Software & IT Services,Software & IT Services,IT Services & Consulting,Machine Learning & Artificial Intelligence (AI) Services,5720101016
+Technology,Software & IT Services,Software & IT Services,Software,Software (NEC),5720102010
+Technology,Software & IT Services,Software & IT Services,Software,System Software,5720102011
+Technology,Software & IT Services,Software & IT Services,Software,Application Software,5720102012
+Technology,Software & IT Services,Software & IT Services,Software,Enterprise Software,5720102013
+Technology,Software & IT Services,Software & IT Services,Software,Mobile Application Software,5720102014
+Technology,Software & IT Services,Software & IT Services,Software,Mobile System Software,5720102015
+Technology,Software & IT Services,Software & IT Services,Software,Programming Software & Testing Tools,5720102016
+Technology,Software & IT Services,Software & IT Services,Software,Server & Database Software,5720102017
+Technology,Software & IT Services,Software & IT Services,Software,Security Software,5720102018
+Technology,Software & IT Services,Software & IT Services,Online Services,Online Services (NEC),5720103010
+Technology,Software & IT Services,Software & IT Services,Online Services,Search Engines,5720103011
+Technology,Software & IT Services,Software & IT Services,Online Services,Social Media & Networking,5720103012
+Technology,Software & IT Services,Software & IT Services,Online Services,E-commerce & Auction Services,5720103013
+Technology,Software & IT Services,Software & IT Services,Online Services,Content & Site Management Services,5720103014
+Technology,Software & IT Services,Software & IT Services,Online Services,Internet Security & Transactions Services,5720103015
+Technology,Software & IT Services,Software & IT Services,Online Services,Internet Gaming,5720103016
+Technology,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech),Financial Technology (Fintech) (NEC),5730101010
+Technology,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech),Business to Business,5730101020
+Technology,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech),Business to Consumer,5730101030
+Technology,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech),Consumer to Consumer,5730101040
+Technology,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech) & Infrastructure,Crowd Collaboration,Crowd Collaboration (NEC),5730102010
+Technology,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech) & Infrastructure,Crowd Collaboration,Crowdfinancing & Crowdfunding,5730102020
+Technology,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech) & Infrastructure,Crowd Collaboration,Crowdsourcing Platforms,5730102030
+Technology,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech) & Infrastructure,Blockchain & Cryptocurrency,Blockchain & Cryptocurrency (NEC),5730103010
+Technology,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech) & Infrastructure,Blockchain & Cryptocurrency,Cryptocurrency Trading Platforms (Exchanges),5730103020
+Technology,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech) & Infrastructure,Blockchain & Cryptocurrency,Blockchain Technology (Software),5730103030
+Technology,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech) & Infrastructure,Blockchain & Cryptocurrency,Cryptocurrency Hardware,5730103040
+Technology,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech) & Infrastructure,Blockchain & Cryptocurrency,Cryptocurrency Mining,5730103050
+Technology,Financial Technology (Fintech) & Infrastructure,Financial Technology (Fintech) & Infrastructure,Miscellaneous Fintech Infrastructure,Miscellaneous Fintech Infrastructure,5730109010
+Technology,Telecommunications Services,Telecommunications Services,Integrated Telecommunications Services,Integrated Telecommunications Services (NEC),5740101010
+Technology,Telecommunications Services,Telecommunications Services,Integrated Telecommunications Services,Wired Telecommunications Carriers,5740101020
+Technology,Telecommunications Services,Telecommunications Services,Integrated Telecommunications Services,Telecommunications Resellers,5740101030
+Technology,Telecommunications Services,Telecommunications Services,Integrated Telecommunications Services,Internet Service Providers,5740101040
+Technology,Telecommunications Services,Telecommunications Services,Integrated Telecommunications Services,Telecommunications Network Infrastructure,5740101050
+Technology,Telecommunications Services,Telecommunications Services,Integrated Telecommunications Services,VOIP Services,5740101060
+Technology,Telecommunications Services,Telecommunications Services,Wireless Telecommunications Services,Wireless Telecommunications Services (NEC),5740102010
+Technology,Telecommunications Services,Telecommunications Services,Wireless Telecommunications Services,Alternative Communications Services,5740102020
+Technology,Telecommunications Services,Telecommunications Services,Wireless Telecommunications Services,Satellite Service Operators,5740102030
+Technology,Telecommunications Services,Telecommunications Services,Wireless Telecommunications Services,Wi-Fi & Wi-Max Providers,5740102040
+Technology,Telecommunications Services,Telecommunications Services,Wireless Telecommunications Services,Wireless Telecoms Service Providers,5740102050
+Utilities,Utilities,Electrical Utilities & IPPs,Electric Utilities,Electric Utilities (NEC),5910101010
+Utilities,Utilities,Electrical Utilities & IPPs,Electric Utilities,Fossil Fuel Electric Utilities,5910101012
+Utilities,Utilities,Electrical Utilities & IPPs,Electric Utilities,Nuclear Utilities,5910101013
+Utilities,Utilities,Electrical Utilities & IPPs,Electric Utilities,Power Charging Stations,5910101014
+Utilities,Utilities,Electrical Utilities & IPPs,Electric Utilities,Alternative Electric Utilities,5910101020
+Utilities,Utilities,Electrical Utilities & IPPs,Electric Utilities,Hydroelectric & Tidal Utilities,5910101021
+Utilities,Utilities,Electrical Utilities & IPPs,Electric Utilities,Solar Electric Utilities,5910101022
+Utilities,Utilities,Electrical Utilities & IPPs,Electric Utilities,Wind Electric Utilities,5910101023
+Utilities,Utilities,Electrical Utilities & IPPs,Electric Utilities,Biomass & Waste to Energy Electric Utilities,5910101024
+Utilities,Utilities,Electrical Utilities & IPPs,Electric Utilities,Geothermal Electric Utilities,5910101025
+Utilities,Utilities,Electrical Utilities & IPPs,Independent Power Producers,Independent Power Producers (NEC),5910102010
+Utilities,Utilities,Electrical Utilities & IPPs,Independent Power Producers,Fossil Fuel IPPs,5910102011
+Utilities,Utilities,Electrical Utilities & IPPs,Independent Power Producers,Renewable IPPs,5910102012
+Utilities,Utilities,Electrical Utilities & IPPs,Independent Power Producers,Nuclear IPPs,5910102013
+Utilities,Utilities,Natural Gas Utilities,Natural Gas Utilities,Natural Gas Utilities (NEC),5910201010
+Utilities,Utilities,Natural Gas Utilities,Natural Gas Utilities,Natural Gas Distribution,5910201011
+Utilities,Utilities,Water & Related Utilities,Water & Related Utilities,Water & Related Utilities (NEC),5910301010
+Utilities,Utilities,Water & Related Utilities,Water & Related Utilities,Water Supply & Irrigation Systems,5910301011
+Utilities,Utilities,Water & Related Utilities,Water & Related Utilities,Sewage Treatment Facilities,5910301012
+Utilities,Utilities,Water & Related Utilities,Water & Related Utilities,Heating & Air-Conditioning Supply,5910301013
+Utilities,Utilities,Multiline Utilities,Multiline Utilities,Multiline Utilities,5910401010
+Real Estate,Real Estate,Real Estate Operations,"Real Estate Rental, Development & Operations","Real Estate Rental, Development & Operations (NEC)",6010101010
+Real Estate,Real Estate,Real Estate Operations,"Real Estate Rental, Development & Operations",Office Real Estate Rental & Development,6010101020
+Real Estate,Real Estate,Real Estate Operations,"Real Estate Rental, Development & Operations",Retail Real Estate Rental & Development,6010101030
+Real Estate,Real Estate,Real Estate Operations,"Real Estate Rental, Development & Operations",Industrial Real Estate Rental & Development,6010101040
+Real Estate,Real Estate,Real Estate Operations,"Real Estate Rental, Development & Operations",Residential Real Estate Rental & Development,6010101050
+Real Estate,Real Estate,Real Estate Operations,Real Estate Services,Real Estate Services (NEC),6010102010
+Real Estate,Real Estate,Real Estate Operations,Real Estate Services,Office Real Estate Services,6010102020
+Real Estate,Real Estate,Real Estate Operations,Real Estate Services,Retail Real Estate Services,6010102030
+Real Estate,Real Estate,Real Estate Operations,Real Estate Services,Industrial Real Estate Services,6010102040
+Real Estate,Real Estate,Real Estate Operations,Real Estate Services,Residential Real Estate Services,6010102050
+Real Estate,Real Estate,Residential & Commercial REITs,Diversified REITs,Diversified REITs,6010201010
+Real Estate,Real Estate,Residential & Commercial REITs,Commercial REITs,Commercial REITs (NEC),6010202010
+Real Estate,Real Estate,Residential & Commercial REITs,Commercial REITs,Office REITs,6010202020
+Real Estate,Real Estate,Residential & Commercial REITs,Commercial REITs,Retail REITs,6010202030
+Real Estate,Real Estate,Residential & Commercial REITs,Commercial REITs,Industrial REITs,6010202040
+Real Estate,Real Estate,Residential & Commercial REITs,Residential REITs,Residential REITs,6010203010
+Real Estate,Real Estate,Residential & Commercial REITs,Specialized REITs,Specialized REITs (NEC),6010204010
+Real Estate,Real Estate,Residential & Commercial REITs,Specialized REITs,Healthcare REITs,6010204020
+Real Estate,Real Estate,Residential & Commercial REITs,Specialized REITs,Hospitality REITs,6010204030
+Real Estate,Real Estate,Residential & Commercial REITs,Specialized REITs,Self-Storage REITs,6010204040
+Real Estate,Real Estate,Residential & Commercial REITs,Specialized REITs,Timber REITs,6010204050
+Real Estate,Real Estate,Residential & Commercial REITs,Specialized REITs,Mortgage REITs,6010204060
+Real Estate,Real Estate,Residential & Commercial REITs,Specialized REITs,Islamic REITs,6010204070
+"Institutions, Associations & Organizations","Institutions, Associations & Organizations","Institutions, Associations & Organizations",Religious Organizations,Religious Organizations,6110101010
+"Institutions, Associations & Organizations","Institutions, Associations & Organizations","Institutions, Associations & Organizations",Civic & Social Organizations,Civic & Social Organizations,6110102010
+"Institutions, Associations & Organizations","Institutions, Associations & Organizations","Institutions, Associations & Organizations",Environmental Organizations,Environmental Organizations,6110103010
+"Institutions, Associations & Organizations","Institutions, Associations & Organizations","Institutions, Associations & Organizations",Charity Organizations,Charity Organizations,6110104010
+"Institutions, Associations & Organizations","Institutions, Associations & Organizations","Institutions, Associations & Organizations",Professional Organizations,Professional Organizations (NEC),6110105010
+"Institutions, Associations & Organizations","Institutions, Associations & Organizations","Institutions, Associations & Organizations",Professional Organizations,"Business, Professional & Labor Organizations",6110105020
+"Institutions, Associations & Organizations","Institutions, Associations & Organizations","Institutions, Associations & Organizations",Professional Organizations,Political Organizations,6110105030
+"Institutions, Associations & Organizations","Institutions, Associations & Organizations","Institutions, Associations & Organizations",Professional Organizations,Non-Governmental Organizations (NGOs),6110105040
+Government Activity,Government Activity,Government Activity,Government & Government Finance,Government & Government Finance (NEC),6210101010
+Government Activity,Government Activity,Government Activity,Government & Government Finance,Public Finance Activities,6210101020
+Government Activity,Government Activity,Government Activity,Legal & Safety Public Services,Legal & Safety Public Services (NEC),6210102010
+Government Activity,Government Activity,Government Activity,Legal & Safety Public Services,"Police, Justice & Legal Counsel",6210102020
+Government Activity,Government Activity,Government Activity,Legal & Safety Public Services,Fire,6210102030
+Government Activity,Government Activity,Government Activity,Government Administration Activities,Government Administration Activities,6210103010
+Government Activity,Government Activity,Government Activity,National Security & International Affairs,National Security & International Affairs,6210104010
+Academic & Educational Services,Academic & Educational Services,Miscellaneous Educational Service Providers,Miscellaneous Educational Service Providers,Miscellaneous Educational Service Providers,6310101010
+Academic & Educational Services,Academic & Educational Services,"School, College & University","School, College & University","School, College & University (NEC)",6310201010
+Academic & Educational Services,Academic & Educational Services,"School, College & University","School, College & University",Nursery & Pre-Schools,6310201020
+Academic & Educational Services,Academic & Educational Services,"School, College & University","School, College & University",Elementary & Primary Schools,6310201030
+Academic & Educational Services,Academic & Educational Services,"School, College & University","School, College & University",Colleges & Secondary Schools,6310201040
+Academic & Educational Services,Academic & Educational Services,"School, College & University","School, College & University",Universities,6310201050
+Academic & Educational Services,Academic & Educational Services,"School, College & University","School, College & University",School Districts,6310201060
+Academic & Educational Services,Academic & Educational Services,Professional & Business Education,Professional & Business Education,Professional & Business Education,6310301010

@@ -409,7 +409,7 @@ class TwelveDataHistoricalData(BaseHistoricalData):
 
 
 class IBHistoricalData(BaseHistoricalData):
-    def __init__(self, host='127.0.0.1', port=7496, client_id=13):
+    def __init__(self, host='127.0.0.1', port=7496, client_id=1):
         self.ib = None
         self.host = host
         self.port = port
@@ -541,6 +541,9 @@ class IBHistoricalData(BaseHistoricalData):
                 # print(f"delta: {delta}, duration: {duration}")
                 # print(f"Fetching data for {start} to {end} ({duration})")
                 # print(f"End date: {end_date}")
+
+                # rth  = False if intraday
+                rth = False if delta.days < 1 else True
                 
                 bars = self.ib.reqHistoricalData(
                     contract,
@@ -548,7 +551,7 @@ class IBHistoricalData(BaseHistoricalData):
                     barSizeSetting=lowest_interval,
                     durationStr=duration,
                     whatToShow='TRADES',
-                    useRTH=False,
+                    useRTH=rth,
                     formatDate=1
                 )
                 
@@ -751,7 +754,7 @@ def save_data(data, symbol, interval):
     
     # Save with date format that excludes time information if it exists
     interval = interval.lower().replace(' ', '_')
-    df.to_csv(f"historical_data/{symbol}_{interval}.csv")
+    df.to_csv(f"data/historical_data_store/{symbol}_{interval}.csv")
 
 
 def load_data(symbol, interval):
@@ -766,7 +769,7 @@ def load_data(symbol, interval):
     pd.DataFrame or None: Loaded data or None if file doesn't exist
     """
     interval = interval.lower().replace(' ', '_')
-    file_path = f"historical_data/{symbol}_{interval}.csv"
+    file_path = f"data/historical_data_store/{symbol}_{interval}.csv"
     print(f"Loading data from {file_path}")
     if not os.path.exists(file_path):
         print(f"File not found : {file_path}")

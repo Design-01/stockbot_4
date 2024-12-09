@@ -23,7 +23,6 @@ class Frame:
         if self.data.empty:
             self.data = ohlcv
         else:
-            print(ohlcv)
             combined_data = pd.concat([self.data, ohlcv])
             # Drop duplicate indexes, keeping the last occurrence
             self.data = combined_data[~combined_data.index.duplicated(keep='last')].sort_index()
