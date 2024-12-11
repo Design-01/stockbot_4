@@ -5,6 +5,11 @@ import pandas as pd
 from ib_insync import IB, Stock
 import xml.etree.ElementTree as ET
 
+from data import historical_data as hd
+from frame.frame import Frame
+from strategies import ta
+from industry_classifications.sector import get_etf_from_sector_code
+
 
 def parse_xml_value(ratio_element) -> Union[float, str, datetime]:
     """Extract value from a Ratio XML element, handling different data types"""
@@ -61,6 +66,7 @@ class StockIndustries:
     order: int = 0
     code: str = ''
     description: str = ''
+    sector_etf: str = ''
 
 @dataclass
 class StockFundamentals:
@@ -150,6 +156,36 @@ def extract_trading_hours(trading_hours_str):
             dtime = day.split('-')
             return (dtime[0].split(':')[1], dtime[1].split(':')[1])
 
+def summarize_sector_etfs(df):
+    """
+    Summarizes sector ETFs with weighted scores based on the `order` column.
+    
+    Parameters:
+        df (pd.DataFrame): DataFrame with columns ['type', 'order', 'code', 'description', 'sector_etf'].
+        
+    Returns:
+        dict: Dictionary with unique ETF tickers as keys and aggregated weighted scores as values.
+    """
+    # Calculate weights as 1/order
+    df['weight'] = 1 / df['order']
+    
+    # Normalize weights within each `type`
+    df['normalized_weight'] = df.groupby('type')['weight'].transform(lambda x: x / x.sum())
+    
+    # Aggregate normalized weights by `sector_etf`
+    aggregated_weights = df.groupby('sector_etf')['normalized_weight'].sum()
+    
+    # Normalize aggregated weights to percentages (sum to 1)
+    total_weight = aggregated_weights.sum()
+    percentages = (aggregated_weights / total_weight).to_dict()
+    
+    # Round percentages to 2 decimal places
+    rounded_percentages = {k: round(v, 2) for k, v in percentages.items()}
+    
+    # Convert to list of tuples and sort by percentage in descending order
+    sorted_percentages = sorted(rounded_percentages.items(), key=lambda x: x[1], reverse=True)
+    
+    return sorted_percentages
 
 
 def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0) -> StockFundamentals:
@@ -195,17 +231,20 @@ def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0) -> StockF
     industries = []
     
     for industry in root.findall('.//Industry'):
-        industry_type = industry.get('type', '')
+        industry_code_type = industry.get('type', '')
         industry_order = int(industry.get('order', '0'))
         industry_code = industry.get('code', '')
         industry_description = industry.text.strip() if industry.text else ''
         
         industries.append(StockIndustries(
-            type=industry_type,
-            order=industry_order,
-            code=industry_code,
-            description=industry_description
+            type = industry_code_type,
+            order = industry_order,
+            code = industry_code,
+            description = industry_description,
+            sector_etf = get_etf_from_sector_code(industry_code_type, industry_code)
         ))
+
+    list_of_etfs = summarize_sector_etfs(pd.DataFrame([i.__dict__ for i in industries]))
     
     stock_info = StockFundamentals(
         # Industry Classification
@@ -214,8 +253,8 @@ def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0) -> StockF
         subcategory = details[0].subcategory,
 
         # etf
-        # primary_etf = details[0].primaryExchange,
-        # secondary_etf = details[0].secondaryExchange,
+        primary_etf = list_of_etfs[0] if len(list_of_etfs) > 0 else None,
+        secondary_etf = list_of_etfs[1] if len(list_of_etfs) > 1 else None,
         
         # Stock static information
         currency= details[0].contract.currency,
@@ -276,10 +315,6 @@ def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0) -> StockF
     return stock_info
 
 
-from data import historical_data as hd
-from frame.frame import Frame
-from strategies import ta
-from industry_classifications.sector import get_etf_from_sector_code
 
 class StockX:
     def __init__(self, ib:IB, symbol):
