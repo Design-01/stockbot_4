@@ -54,60 +54,74 @@ class ForecastMetrics:
     projected_profit: float         # ProjProfit
     projected_operating_margin: float  # ProjOPS
 
+
+@dataclass
+class StockIndustries:
+    type: str = '' # eg 'GICS', 'NAICS', 'SIC', 'TRBC
+    order: int = 0
+    code: str = ''
+    description: str = ''
+
 @dataclass
 class StockFundamentals:
     # Sector and industry fields
-    sector: str 
-    industry: str
-    sub_industry: str
+    industry: str = ""
+    category: str = ""
+    subcategory: str = ""
+    primary_etf: str = ""
+    secondary_etf: str = ""
 
-    # Timestamp and Metadata
-    latest_available_date: str
-    price_currency: str
-    reporting_currency: str
-    exchange_rate: float
+    # Stock static information
+    currency: str = ''
+    longName: str = ''
+    timeZoneId: str = ''
+    tradingHours: tuple = ('', '') # start and end time eg ('0400', '2000')
+    liquidHours: tuple = ('', '') # start and end time eg ('0400', '2000')
     
     # Price and Volume Metrics
-    current_price: float
-    high_52week: float
-    low_52week: float
-    pricing_date: str
-    volume_10day_avg: float
-    enterprise_value: float
+    current_price: float = 0.0
+    high_52week: float = 0.0
+    low_52week: float = 0.0
+    pricing_date: str = ""
+    volume_10day_avg: float = 0.0
+    enterprise_value: float = 0.0
     
     # Income Statement Metrics
-    market_cap: float
-    revenue_ttm: float
-    ebitda: float
-    net_income_ttm: float
+    market_cap: float = 0.0
+    revenue_ttm: float = 0.0
+    ebitda: float = 0.0
+    net_income_ttm: float = 0.0
     
     # Per Share Metrics
-    eps_ttm: float
-    revenue_per_share: float
-    book_value_per_share: float
-    cash_per_share: float
-    cash_flow_per_share: float
-    dividend_per_share: float
+    eps_ttm: float = 0.0
+    revenue_per_share: float = 0.0
+    book_value_per_share: float = 0.0
+    cash_per_share: float = 0.0
+    cash_flow_per_share: float = 0.0
+    dividend_per_share: float = 0.0
     
     # Margin Metrics
-    gross_margin: float
-    operating_margin: float
-    net_profit_margin: float
+    gross_margin: float = 0.0
+    operating_margin: float = 0.0
+    net_profit_margin: float = 0.0
     
     # Growth Metrics
-    revenue_growth_rate: float
-    eps_growth_rate: float
+    revenue_growth_rate: float = 0.0
+    eps_growth_rate: float = 0.0
     
     # Valuation Metrics
-    pe_ratio: float
-    price_to_book: float
-    price_to_sales: float
+    pe_ratio: float = 0.0
+    price_to_book: float = 0.0
+    price_to_sales: float = 0.0
     
     # Company Information
-    employee_count: int
+    employee_count: int = 0
     
     # Forecast Data
     forecast: Optional[ForecastMetrics] = None
+
+    # industry classifications
+    industrys: Optional[List[StockIndustries]] = None
     
     # Computed Metrics
     price_to_10day_avg: float = 0.0
@@ -126,39 +140,17 @@ class StockFundamentals:
         if current_volume and self.volume_10day_avg:
             self.volume_vs_10day_avg_pct = ((current_volume - self.volume_10day_avg) / self.volume_10day_avg) * 100
 
-def extract_industry_info(details) -> tuple:
+
+def extract_trading_hours(trading_hours_str):
+    """Exmaple of trading_hours_str: '20241211:0400-20241211:2000;20241212:0400-20241212:2000;20241213:0400-20241213:2000;20241214:CLOSED;20241215:CLOSED;20241216:0400-20241216:2000',
+    return ('0400', '2000')
     """
-    Extract sector, industry, and sub-industry information from contract details.
-    Returns default values if information is not available.
-    """
-    if not details:
-        return "Unclassified", "Unclassified", "Unclassified"
-    
-    detail = details[0]
-    
-    # Try to get industry category info from contract details
-    sector = getattr(detail.contract, 'industry', '') or ''
-    industry = getattr(detail.contract, 'category', '') or ''
-    sub_industry = getattr(detail.contract, 'subcategory', '') or ''
-    
-    # If any field is empty, try to parse from industry string
-    if not all([sector, industry, sub_industry]):
-        industry_str = getattr(detail, 'industryName', '') or ''
-        if industry_str:
-            parts = industry_str.split(' - ')
-            if len(parts) >= 1:
-                sector = sector or parts[0]
-            if len(parts) >= 2:
-                industry = industry or parts[1]
-            if len(parts) >= 3:
-                sub_industry = sub_industry or parts[2]
-    
-    # Provide default values if still empty
-    return (
-        sector or "Unclassified",
-        industry or "Unclassified",
-        sub_industry or "Unclassified"
-    )
+    for day in trading_hours_str.split(';'):
+        if 'CLOSED' not in day:
+            dtime = day.split('-')
+            return (dtime[0].split(':')[1], dtime[1].split(':')[1])
+
+
 
 def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0) -> StockFundamentals:
     """Retrieve comprehensive stock information including all available ratios."""
@@ -167,19 +159,9 @@ def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0) -> StockF
     if not details:
         raise ValueError(f"No contract details found for {ticker}")
     
-    # Extract sector, industry, and sub-industry information
-    sector, industry, sub_industry = extract_industry_info(details)
-    
     fundamental_data = ib.reqFundamentalData(contract, 'ReportSnapshot')
     root = ET.fromstring(fundamental_data)
-    
-    # Get root level attributes
-    ratios = root.find('.//Ratios')
-    price_currency = ratios.get('PriceCurrency', 'USD')
-    reporting_currency = ratios.get('ReportingCurrency', 'USD')
-    exchange_rate = float(ratios.get('ExchangeRate', '1.0'))
-    latest_date = ratios.get('LatestAvailableDate', '')
-    
+
     # Initialize data dictionary
     data = {}
     
@@ -209,18 +191,38 @@ def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0) -> StockF
         except Exception as e:
             print(f"Warning: Could not parse forecast data: {e}")
             forecast = None
+
+    industries = []
+    
+    for industry in root.findall('.//Industry'):
+        industry_type = industry.get('type', '')
+        industry_order = int(industry.get('order', '0'))
+        industry_code = industry.get('code', '')
+        industry_description = industry.text.strip() if industry.text else ''
+        
+        industries.append(StockIndustries(
+            type=industry_type,
+            order=industry_order,
+            code=industry_code,
+            description=industry_description
+        ))
     
     stock_info = StockFundamentals(
         # Industry Classification
-        sector=sector,
-        industry=industry,
-        sub_industry=sub_industry,
+        industry = details[0].industry,
+        category = details[0].category,
+        subcategory = details[0].subcategory,
+
+        # etf
+        # primary_etf = details[0].primaryExchange,
+        # secondary_etf = details[0].secondaryExchange,
         
-        # Metadata
-        latest_available_date=latest_date,
-        price_currency=price_currency,
-        reporting_currency=reporting_currency,
-        exchange_rate=exchange_rate,
+        # Stock static information
+        currency= details[0].contract.currency,
+        longName = details[0].longName,
+        timeZoneId = details[0].timeZoneId,
+        tradingHours = extract_trading_hours(details[0].tradingHours),
+        liquidHours = extract_trading_hours(details[0].liquidHours),
         
         # Price and Volume
         current_price=get_ratio_value(data, 'NPRICE'),
@@ -262,7 +264,10 @@ def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0) -> StockF
         employee_count=int(get_ratio_value(data, 'Employees')),
         
         # Forecast
-        forecast=forecast
+        forecast=forecast,
+
+        # industry classifications
+        industrys = industries
     )
     
     # Compute additional metrics
@@ -274,6 +279,7 @@ def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0) -> StockF
 from data import historical_data as hd
 from frame.frame import Frame
 from strategies import ta
+from industry_classifications.sector import get_etf_from_sector_code
 
 class StockX:
     def __init__(self, ib:IB, symbol):
@@ -345,6 +351,11 @@ class StockX:
 
         return self.dayscores
     
+    def get_market_sector_etf(self):
+        
+        return get_etf_from_sector_code('GICS', 45102010)
+
+
 from data import historical_data as hd
 import compare
 from typing import Union, Tuple
