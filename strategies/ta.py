@@ -59,12 +59,13 @@ class MA(TA):
     period: int = 20
 
     def __post_init__(self):
+        self.name = f"MA_{self.column[:2]}_{self.period}"
         self.names = f"MA_{self.column[:2]}_{self.period}"
         self.rowsToUpdate = self.period 
 
     @preprocess_data
     def run(self, data: pd.DataFrame) -> pd.Series:
-        return data[self.column].rolling(window=self.period).mean().rename(self.names)
+        return data[self.column].rolling(window=self.period).mean().rename(self.name)
 
 @dataclass
 class MACD(TA):
@@ -545,21 +546,22 @@ class AboveBelow:
     """Checks if price is above/below a metric"""
     value: str | float
     metric_column: str
-    check_above: bool  # True to check if above, False to check if below
+    direction: str  # 'above' or 'below'
 
     def __post_init__(self):
-        prefix = 'ABV' if self.check_above else 'BLW'
-        self.name = f"{prefix}_{self.value}_{self.metric_column}"
+        self.name = f"{self.direction[:2]}_{self.value}_{self.metric_column}"
         self.names = [self.name]
 
     def run(self, df: pd.DataFrame) -> pd.DataFrame:
         
         
         value =  df[self.value] if isinstance(self.value, str) else self.value
-        if self.check_above:
+        if self.direction == 'above':
             df[self.name] = value > df[self.metric_column]
-        else:
+        elif self.direction == 'below':
             df[self.name] = value < df[self.metric_column]
+        else:
+            raise ValueError("Direction must be 'ABV' or 'BLW'")
             
         return df
 

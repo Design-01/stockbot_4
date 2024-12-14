@@ -4,6 +4,8 @@ from datetime import datetime
 import pandas as pd
 from ib_insync import IB, Stock
 import xml.etree.ElementTree as ET
+import pickle
+import os
 
 from data import historical_data as hd
 from frame.frame import Frame
@@ -70,6 +72,7 @@ class StockIndustries:
 
 @dataclass
 class StockFundamentals:
+    request_date: str = "" # Date of the request
     # Sector and industry fields
     industry: str = ""
     category: str = ""
@@ -187,13 +190,55 @@ def summarize_sector_etfs(df):
     
     return sorted_percentages
 
+def get_fundamentals_from_file(symbol: str, max_days_old: int = 1) -> Optional[StockFundamentals]:
+    """
+    Retrieve fundamental data for a stock symbol if it exists and is not too old.
+    If max_days_old is 0, returns the data regardless of age.
+    
+    Args:
+        symbol: Stock symbol
+        max_days_old: Maximum age of data in days. Use 0 to ignore age check.
+    
+    Returns:
+        StockFundamentals if valid data exists, None otherwise
+    """
+    filename = f"data//fundamental_data_store//{symbol.upper()}_fundamentals.pkl"
+    
+    # Check if file exists
+    if not os.path.exists(filename):
+        return None
+    
+    try:
+        # Load the data
+        with open(filename, 'rb') as f:
+            data: StockFundamentals = pickle.load(f)
+        
+            
+        # Convert stored string date to datetime for comparison
+        stored_date = datetime.strptime(data.request_date, '%Y-%m-%d %H:%M:%S')
+        days_old = (datetime.now() - stored_date).days
+        if days_old > max_days_old:
+            return None
+            
+        return data
+        
+    except (pickle.UnpicklingError, EOFError, AttributeError):
+        # Handle corrupted file or incompatible data structure
+        return None
 
-def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0) -> StockFundamentals:
+def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0, max_days_old=0) -> StockFundamentals:
     """Retrieve comprehensive stock information including all available ratios."""
     contract = Stock(ticker, 'SMART', 'USD')
     details = ib.reqContractDetails(contract)
     if not details:
         raise ValueError(f"No contract details found for {ticker}")
+    
+    # try from file first if within max_days_old
+    if max_days_old != 0:
+        file_data = get_fundamentals_from_file(ticker, max_days_old)
+        if file_data:
+            print(f"Using cached data for {ticker} (age: {file_data.request_date})")
+            return file_data
     
     fundamental_data = ib.reqFundamentalData(contract, 'ReportSnapshot')
     root = ET.fromstring(fundamental_data)
@@ -247,6 +292,7 @@ def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0) -> StockF
     list_of_etfs = summarize_sector_etfs(pd.DataFrame([i.__dict__ for i in industries]))
     
     stock_info = StockFundamentals(
+        request_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         # Industry Classification
         industry = details[0].industry,
         category = details[0].category,
@@ -311,29 +357,272 @@ def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0) -> StockF
     
     # Compute additional metrics
     stock_info.compute_derived_metrics(current_volume)
+
+    # Save data to file
+    save_fundamentals(ticker, stock_info)
     
     return stock_info
 
+def save_fundamentals(symbol: str, data: StockFundamentals) -> None:
+    """
+    Save fundamental data for a stock symbol to a file.
+    
+    Args:
+        symbol: Stock symbol
+        data: StockFundamentals data class instance
+    """
+    filename = f"data//fundamental_data_store//{symbol.upper()}_fundamentals.pkl"
+    
+    # Save data using pickle
+    with open(filename, 'wb') as f:
+        pickle.dump(data, f)
 
 
-class StockX:
+class StockXDaily:
     def __init__(self, ib:IB, symbol):
         self.ib = ib
         self.symbol = symbol
         self.fundamentals: StockFundamentals = None
-        self.daydata: pd.DataFrame = None
+        self.fundamentals_validation_results = {}
         self.frame = Frame(self.symbol)
+        self.frame_validation_results = {}
         self.dayscores = None
 
-    def get_fundamentals(self):
+    def req_fundamentals(self, max_days_old=0):
         if not self.fundamentals:
-            self.fundamentals = get_stock_fundamentals(self.ib, self.symbol)
+            self.fundamentals = get_stock_fundamentals(self.ib, self.symbol, max_days_old=max_days_old)
         return self.fundamentals
     
-    def get_daily_data(self, start_date:str="52 weeksAgo", end_date:str='now'):
-        if not self.daydata:
-            self.daydata =  hd.get_hist_data(self.symbol, start_date, end_date, '1 day')
-        return self.daydata
+    def validate_fundamental(self, key: str, validation_type: str, value: Union[float, int, str, List, Tuple]) -> bool:
+        """
+        Validates a fundamental value against a specified condition.
+        
+        Args:
+            key (str): The fundamental metric to validate (e.g., 'pe_ratio', 'primary_etf')
+            validation_type (str): Type of validation ('isin', '>', '<', '>=', '<=', '==', '!=', 'rng')
+            value: Value to compare against. For 'rng', provide tuple of (min, max)
+            
+        Returns:
+            bool: True if validation passes, False otherwise
+        """
+        if self.fundamentals is None:
+            raise ValueError("Fundamentals data not initialized")
+            
+        # Check if the fundamental exists
+        if not hasattr(self.fundamentals, key):
+            raise KeyError(f"Fundamental '{key}' not found")
+            
+        # Get the fundamental value
+        fundamental_value = getattr(self.fundamentals, key)
+        
+        # Handle None/null values
+        if fundamental_value is None:
+            result = False
+        else:
+            try:
+                # Handle special case for ETF tuples
+                if key in ['primary_etf', 'secondary_etf']:
+                    if validation_type == 'isin':
+                        result = fundamental_value[0] in value
+                    else:
+                        # For numeric comparisons, use the weight value
+                        try:
+                            fval = float(fundamental_value[1])
+                            compare_value = float(value)
+                        except (ValueError, TypeError):
+                            raise ValueError("Cannot compare ETF weight with non-numeric value")
+                        
+                        if validation_type == '>':
+                            result = fval > compare_value
+                        elif validation_type == '<':
+                            result = fval < compare_value
+                        elif validation_type == '>=':
+                            result = fval >= compare_value
+                        elif validation_type == '<=':
+                            result = fval <= compare_value
+                        elif validation_type == '==':
+                            result = fval == compare_value
+                        elif validation_type == '!=':
+                            result = fval != compare_value
+                        elif validation_type == 'rng':
+                            min_val, max_val = float(value[0]), float(value[1])
+                            result = min_val <= fval <= max_val
+                        else:
+                            raise ValueError(f"Invalid validation type: {validation_type}")
+                
+                # Handle other cases
+                elif validation_type == 'isin':
+                    if not isinstance(value, (list, tuple)):
+                        raise ValueError("Value must be a list or tuple for 'isin' validation")
+                    result = fundamental_value in value
+                
+                elif validation_type == 'rng':
+                    if not isinstance(value, (list, tuple)) or len(value) != 2:
+                        raise ValueError("Value must be a tuple/list of (min, max) for range validation")
+                    try:
+                        fval = float(fundamental_value)
+                        min_val, max_val = float(value[0]), float(value[1])
+                        result = min_val <= fval <= max_val
+                    except (ValueError, TypeError):
+                        raise ValueError("Value and range bounds must be numeric")
+                
+                else:  # Numeric comparisons
+                    try:
+                        fval = float(fundamental_value)
+                        compare_value = float(value)
+                    except (ValueError, TypeError):
+                        raise ValueError("Both fundamental value and comparison value must be numeric")
+                    
+                    if validation_type == '>':
+                        result = fval > compare_value
+                    elif validation_type == '<':
+                        result = fval < compare_value
+                    elif validation_type == '>=':
+                        result = fval >= compare_value
+                    elif validation_type == '<=':
+                        result = fval <= compare_value
+                    elif validation_type == '==':
+                        result = fval == compare_value
+                    elif validation_type == '!=':
+                        result = fval != compare_value
+                    else:
+                        raise ValueError(f"Invalid validation type: {validation_type}")
+            
+            except Exception as e:
+                result = False
+                print(f"Validation error for {key}: {str(e)}")
+        
+        # Store the validation result
+        validation_id = f"{key}_{validation_type}_{str(value)}"
+        self.fundamentals_validation_results[validation_id] = {
+            'key': key,
+            'validation_type': validation_type,
+            'comparison_value': value,
+            'actual_value': fundamental_value,
+            'passed': result
+        }
+        
+        return result
+    
+    def validation_fundamentals_report(self, asDF: bool = True) -> Union[pd.DataFrame, Dict]:
+        """
+        Returns a report of all validations performed.
+        
+        Args:
+            asDF (bool): If True, returns pandas DataFrame, otherwise returns dictionary
+            
+        Returns:
+            Union[pd.DataFrame, Dict]: Validation results
+        """
+        if asDF:
+            return pd.DataFrame.from_dict(self.fundamentals_validation_results, orient='index')
+        return self.fundamentals_validation_results
+    
+    def validation_TA_report(self, asDF: bool = True) -> Union[pd.DataFrame, Dict]:
+        """
+        Returns a report of all validations performed.
+        
+        Args:
+            asDF (bool): If True, returns pandas DataFrame, otherwise returns dictionary
+            
+        Returns:
+            Union[pd.DataFrame, Dict]: Validation results
+        """
+        if asDF:
+            return pd.DataFrame.from_dict(self.frame_validation_results, orient='index')
+        return self.frame_validation_results
+    
+    def validation_fundamentals_has_passed(self, maxFails: int = 0) -> bool:
+        """
+        Checks if validations have passed within the maximum failure threshold.
+        
+        Args:
+            maxFails (int): Maximum number of allowed failures
+            
+        Returns:
+            bool: True if number of failures is <= maxFails
+        """
+        if not self.fundamentals_validation_results:
+            return False
+            
+        failures = sum(1 for result in self.fundamentals_validation_results.values() if not result['passed'])
+        return failures <= maxFails
+
+    def validation_TA_has_passed(self, maxFails: int = 0) -> bool:
+        """
+        Checks if validations have passed within the maximum failure threshold.
+        
+        Args:
+            maxFails (int): Maximum number of allowed failures
+            
+        Returns:
+            bool: True if number of failures is <= maxFails
+        """
+        if not self.frame_validation_results:
+            return False
+            
+        failures = sum(1 for result in self.frame_validation_results.values() if not result['passed'])
+        return failures <= maxFails
+
+
+    def req_ohlcv(self, start_date:str="52 weeksAgo", end_date:str='now'):
+        if self.frame.data.empty:
+             self.frame.load_ohlcv(hd.get_hist_data(self.symbol, start_date, end_date, '1 day'))
+        return self.frame.data
+    
+    def validate_TA(self, ta_indicator, ta_validator, style=None):
+        """
+        Validates technical analysis indicators against specified validation criteria.
+        
+        Args:
+            ta_indicator: The technical indicator to be added (e.g., MA, VolDev)
+            ta_validator: The validation method to test the indicator (e.g., Breaks, AboveBelow)
+            style (dict, optional): Plotting style parameters. If None, uses default style.
+        
+        Returns:
+            bool: Result of the technical analysis validation
+        """
+        # Default style if none provided
+        default_style = {
+            'dash': 'solid',
+            'color': 'cyan',
+            'width': 1
+        }
+        
+        # Use provided style or default
+        plot_style = style if style is not None else default_style
+        
+        # Add the technical indicator to the frame
+        self.frame.add_ta(ta_indicator, plot_style)
+        
+        # Load and update the data
+        self.frame.update_ta_data()
+        
+        # Add the validator
+        self.frame.add_ta(ta_validator)
+        
+        # Update data again to include validator results
+        self.frame.load_ohlcv(self.frame.data)
+        self.frame.update_ta_data()
+        
+        # Create a unique identifier for this validation
+        validation_id = f"{ta_indicator.name}_{ta_validator.name}"
+        
+        # Initialize technical validation results dictionary if it doesn't exist
+        if not hasattr(self, 'technical_validation_results'):
+            self.technical_validation_results = {}
+        
+        # Store the validation result
+        self.frame_validation_results[validation_id] = {
+            'indicator': ta_indicator.name,
+            'validator': ta_validator.name,
+            'validation_type': type(ta_validator).__name__,  # e.g., 'Breaks' or 'AboveBelow'
+            'indicator_value': self.frame.data[ta_indicator.name].iloc[-1],
+            'passed': self.frame.data[ta_validator.name].iloc[-1],
+            'timestamp': self.frame.data.index[-1]  # Store the timestamp of the validation
+        }
+        
+        return self.frame_validation_results[validation_id]
     
     def set_default_daily_ta(self):
         # TA may add many several columns of data to the dataframe 
