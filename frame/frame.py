@@ -29,7 +29,7 @@ class Frame:
 
     #£ Working
     def setup_chart(self):  
-        self.chart = Chart(title=self.symbol, rowHeights=[0.1, 0.1, 0.1, 0.8], height=800, width=800)
+        self.chart = Chart(title=self.symbol, rowHeights=[0.1, 0.2, 0.2, 0.6], height=800, width=800)
         self.chart.add_candles_and_volume(self.data)
         # self.chart.add_trading_hours(self.data, self.trading_hours)
 
@@ -124,16 +124,17 @@ class Frame:
         
 
 
-    def plot(self, width: int = 1400, height: int = 800, trading_hours: bool = False):
+    def plot(self, width: int = 1400, height: int = 800, trading_hours: bool = False, show: bool = True):   
         self.chart.refesh(self.data)
         for indicator, style, chart_type, row in self.ta:
             if style == {}: pass
             indicator_data = self.data[indicator.names] # get the data for the indicator which should be updated first 
             self.chart.add_ta(indicator_data, style, chart_type, row)
         for signals, style, chart_type, row in self.sigs:
+            if style == {}: pass
             sig_data = self.data[[f'SigL_{signals.name}', f'SigS_{signals.name}']]
             self.chart.add_signals(sig_data, style, chart_type, row)
         if trading_hours: self.chart.add_trading_hours(self.data, self.trading_hours)
-        self.chart.show(width=width, height=height)
+        if show: self.chart.show(width=width, height=height)
 
 

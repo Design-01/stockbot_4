@@ -5,6 +5,7 @@ from typing import List, Tuple, Dict, Any
 import datetime
 from plotly.colors import hex_to_rgb
 import numpy as np
+import plotly.io as pio
 
 
 
@@ -27,7 +28,119 @@ class Chart:
             vertical_spacing=0.02,
             row_width=self.rowHeights)
         
+    def save_chart(self, filename, format='png'):
+        """
+        Save a Plotly figure as an image file
+        
+        Parameters:
+        fig: plotly figure object
+        filename: str, path where to save the file (without extension)
+        format: str, either 'png' or 'pdf'
+        """
+        if format.lower() not in ['png', 'pdf']:
+            raise ValueError("Format must be either 'png' or 'pdf'")
+            
+        # Add file extension if not present
+        if not filename.lower().endswith(f'.{format}'):
+            filename = f"{filename}.{format}"
+        
+        # Save the figure
+        if format.lower() == 'png':
+            pio.write_image(self.fig, filename)
+        else:
+            pio.write_image(self.fig, filename, format='pdf')
+        
+        print(f"Chart saved as {filename}")
 
+    def save_chart_region(self, x_start, x_end, y_min=None, y_max=None, filename='zoomed_chart.png',
+                        x_padding='1D', y_padding_pct=1.0, plot:bool = False):
+        """
+        Saves a zoomed region of a plotly chart as an image with proper padding.
+        
+        Parameters:
+        x_start: start point for x-axis zoom (can be datetime or index)
+        x_end: end point for x-axis zoom (can be datetime or index)
+        y_min: minimum y value (optional - will auto-calculate if None)
+        y_max: maximum y value (optional - will auto-calculate if None)
+        filename: output filename for the image
+        x_padding: string for time padding (e.g., '1D' for 1 day, '12H' for 12 hours)
+        y_padding_pct: percentage padding for y-axis (1.0 = 1%)
+        """
+        from datetime import datetime
+        import pandas as pd
+        
+        # Create a copy of the figure to avoid modifying original
+        zoomed_fig = go.Figure(self.fig)
+        
+        # Handle datetime types
+        try:
+            # Convert to pandas datetime if string
+            if isinstance(x_start, str):
+                x_start = pd.to_datetime(x_start)
+                x_end = pd.to_datetime(x_end)
+            
+            # Check if datetime or Timestamp
+            if isinstance(x_start, (pd.Timestamp, datetime)):
+                padding_td = pd.Timedelta(x_padding)
+                x_start_padded = x_start - padding_td
+                x_end_padded = x_end + padding_td
+            else:
+                # For numeric indices, use integer padding
+                x_start_padded = x_start - 1
+                x_end_padded = x_end + 1
+                
+        except Exception as e:
+            print(f"Error handling dates: {e}. Falling back to integer padding.")
+            x_start_padded = x_start - 1
+            x_end_padded = x_end + 1
+        
+        # For candlestick charts, extract OHLC data within the range
+        highs = []
+        lows = []
+        
+        for trace in self.fig.data:
+            if isinstance(trace, go.Candlestick):
+                # Get indices within the date range (including padding)
+                mask = [(x >= x_start_padded) and (x <= x_end_padded) for x in trace.x]
+                
+                # Extract high and low values within range
+                range_highs = [h for h, m in zip(trace.high, mask) if m]
+                range_lows = [l for l, m in zip(trace.low, mask) if m]
+                
+                if range_highs and range_lows:
+                    highs.extend(range_highs)
+                    lows.extend(range_lows)
+        
+        # Calculate y-axis range if not provided
+        if y_min is None or y_max is None:
+            if highs and lows:
+                price_range = max(highs) - min(lows)
+                padding = price_range * (y_padding_pct / 100)
+                y_min = min(lows) - padding if y_min is None else y_min
+                y_max = max(highs) + padding if y_max is None else y_max
+            else:
+                raise ValueError("No data found in the specified date range")
+        else:
+            # Apply padding to provided y values
+            price_range = y_max - y_min
+            padding = price_range * (y_padding_pct / 100)
+            y_min = y_min - padding
+            y_max = y_max + padding
+        
+        # Update the layout with new ranges
+        zoomed_fig.update_layout(
+            xaxis_range=[x_start_padded, x_end_padded],
+            yaxis_range=[y_min, y_max],
+            yaxis_autorange=False,
+            xaxis_autorange=False
+        )
+        
+        # Save the zoomed figure
+        zoomed_fig.write_image(filename)
+        print(f"Zoomed chart saved as {filename}")
+        if plot:
+            zoomed_fig.show()
+        return zoomed_fig
 
     def get_volume_colours(self, df: pd.DataFrame):
         clrred = 'rgba(255, 59, 59, 0.8)'
@@ -299,6 +412,8 @@ class Chart:
         chart_type: str: The type of chart to be added
         """
 
+        if style == {}: return
+
         # make styles consistent
         style = [style] if not isinstance(style, list) else style
 
@@ -348,6 +463,7 @@ class Chart:
         data (pd.DataFrame): DataFrame containing support and resistance levels with bounds
         style (List[Dict[str, Any]]): List of style dictionaries for support and resistance
         """
+        if style == {}: return
         support_style, resistance_style = style
 
         def create_traces(level_col, upper_col, lower_col, style):
@@ -413,6 +529,7 @@ class Chart:
         chart_type: str: The type of chart to be added
         """
         # make styles consistent
+        if style  == {}: return
         style = [style] if not isinstance(style, list) else style
 
     
@@ -426,5 +543,7 @@ class Chart:
         data: pd.Series: The data to be added to the chart
         style: Dict[str, Any]: The style of the data
         """
+
+        if style == {}: return
         self.fig.add_trace(go.Scatter(x=data.index, y=data, name=data.name, line=style), row=row, col=1)
 

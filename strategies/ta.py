@@ -454,6 +454,19 @@ class DIR(TA):
 
 
 @dataclass
+class ColVal:
+    """Checks if a column value is above/below a threshold"""
+    column: str
+
+    def __post_init__(self):
+        self.name = f"CV_{self.column}"
+        self.names = [self.name]
+    
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        data[self.name] = data[self.column] #! Redundancy but just did this to get it working quickly
+        return data[self.name]
+
+@dataclass
 class VolAcc(TA):
     """
     Acceleration Indicator
@@ -518,12 +531,11 @@ class ACC(TA):
 class Breaks:
     """Checks if price crosses above/below a metric"""
     price_column: str
+    direction: str  # 'above' or 'below'
     metric_column: str
-    cross_above: bool  # True for cross above, False for cross below
 
     def __post_init__(self):
-        direction = 'UP' if self.cross_above else 'DN'
-        self.name = f"BRK_{direction}_{self.metric_column[:2]}"
+        self.name = f"BRK_{self.price_column}_{self.direction[:2]}_{self.metric_column}"
         self.names = [self.name]
 
     def run(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -534,35 +546,57 @@ class Breaks:
         curr_metric = df[self.metric_column]
         prev_metric = curr_metric.shift(1)
 
-        if self.cross_above:
+        if self.direction == 'above':
             df[self.name] = (prev_price <= prev_metric) & (curr_price > curr_metric)
-        else:
+            return df
+        elif self.direction == 'below':
             df[self.name] = (prev_price >= prev_metric) & (curr_price < curr_metric)
-            
-        return df
+            return df
+        
+        raise ValueError("Direction must be 'above' or 'below'")
+
+        
 
 @dataclass
 class AboveBelow:
     """Checks if price is above/below a metric"""
     value: str | float
-    metric_column: str
     direction: str  # 'above' or 'below'
+    metric_column: str
 
     def __post_init__(self):
-        self.name = f"{self.direction[:2]}_{self.value}_{self.metric_column}"
+        self.name = f"AB_{self.value}_{self.direction[:2]}_{self.metric_column}"
         self.names = [self.name]
 
     def run(self, df: pd.DataFrame) -> pd.DataFrame:
-        
-        
         value =  df[self.value] if isinstance(self.value, str) else self.value
+        metric = df[self.metric_column] if isinstance(self.metric_column, str) else self.metric_column
+
         if self.direction == 'above':
-            df[self.name] = value > df[self.metric_column]
+            df[self.name] = value > metric
         elif self.direction == 'below':
-            df[self.name] = value < df[self.metric_column]
+            df[self.name] = value < metric
         else:
-            raise ValueError("Direction must be 'ABV' or 'BLW'")
+            raise ValueError("Direction must be 'above' or 'below'")
             
+        return df
+
+
+@dataclass
+class PctChange:
+    """Calculates percentage change of a column"""
+    metric_column: str = 'close'
+    period: int = 1
+
+    def __post_init__(self):
+        self.name = f"PCT_{self.metric_column}_{self.period}"
+        self.names = [self.name]
+        self.rowsToUpdate = self.period + 1
+
+    def run(self, df: pd.DataFrame) -> pd.DataFrame:
+        if self.metric_column not in df.columns:
+            raise KeyError(f"Column '{self.metric_column}' not found in DataFrame.")
+        df[self.name] = df[self.metric_column].pct_change(periods=self.period) * 100
         return df
 
 

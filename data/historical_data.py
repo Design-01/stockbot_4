@@ -12,6 +12,9 @@ from ib_insync import IB, Stock, util
 import pandas as pd
 import re
 
+from project_paths import get_project_path
+
+
 def map_to_storage_interval(interval: str, source: str = 'ib') -> str:
     """
     Maps intervals from various data sources to standardized storage intervals.
@@ -754,7 +757,8 @@ def save_data(data, symbol, interval):
     
     # Save with date format that excludes time information if it exists
     interval = interval.lower().replace(' ', '_')
-    df.to_csv(f"data/historical_data_store/{symbol}_{interval}.csv")
+    filename = get_project_path('data', 'historical_data_store', f'{symbol}_{interval}.csv')
+    df.to_csv(filename)
 
 
 def load_data(symbol, interval):
@@ -769,7 +773,7 @@ def load_data(symbol, interval):
     pd.DataFrame or None: Loaded data or None if file doesn't exist
     """
     interval = interval.lower().replace(' ', '_')
-    file_path = f"data/historical_data_store/{symbol}_{interval}.csv"
+    file_path = get_project_path('data', 'historical_data_store', f'{symbol}_{interval}.csv')
     print(f"Loading data from {file_path}")
     if not os.path.exists(file_path):
         print(f"File not found : {file_path}")
@@ -969,11 +973,11 @@ def get_hist_data(symbol, start_date, end_date, interval):
     file_interval = map_to_storage_interval(interval, 'ib') # eg coverts 5 mins to 1_min
     stored_data   = load_data(symbol, file_interval)
     missing_dates = get_missing_batch_dates(stored_data, start_date, end_date, batch_interval='weekly')
-    if stored_data is not None:
-        print(f"Stored data: {len(stored_data)} rows of data")
+    # if stored_data is not None:
+        # print(f"Stored data: {len(stored_data)} rows of data")
 
     if missing_dates:
-        print(f"Processing Missing data: {len(missing_dates)} intervals")
+        # print(f"Processing Missing data: {len(missing_dates)} intervals")
         ibkr = IBHistoricalData()
         missing_data, lowest_barsize   = ibkr.get_batch_historical_data(symbol, missing_dates, barsize=interval, minHourDay_only=True) # will convert bar size down to the lowest common denominator
         new_data = combine_dataframes([stored_data, missing_data])

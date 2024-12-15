@@ -19,11 +19,12 @@ class IBMarketAnalyzer:
         
         self.sector_etfs = {
             'Technology': Stock('XLK', 'SMART', 'USD'),
-            'Healthcare': Stock('XLV', 'SMART', 'USD'),
             'Financials': Stock('XLF', 'SMART', 'USD'),
-            'Energy': Stock('XLE', 'SMART', 'USD'), # Energy ETF
-            'Consumer_Discretionary': Stock('XLY', 'SMART', 'USD'),
+            'Communication Services': Stock('XLC', 'SMART', 'USD'),
+            'Healthcare': Stock('XLV', 'SMART', 'USD'),
             'Consumer_Staples': Stock('XLP', 'SMART', 'USD'),
+            'Consumer_Discretionary': Stock('XLY', 'SMART', 'USD'),
+            'Energy': Stock('XLE', 'SMART', 'USD'), # Energy ETF
             'Industrials': Stock('XLI', 'SMART', 'USD'), # Industrials ETF
             'Materials': Stock('XLB', 'SMART', 'USD'), # Materials ETF
             'Utilities': Stock('XLU', 'SMART', 'USD'),
@@ -428,6 +429,7 @@ class IBMarketAnalyzer:
         for sector, metrics in self.sector_signals['ranked_performance'].items():
             sector_data.append({
                 'Sector': sector,
+                'ETF': self.sector_etfs[sector].symbol,
                 'Return (%)': round(metrics['period_return'], 2),
                 'Relative Strength': round(metrics['relative_strength'], 2),
                 'Momentum (ROC)': round(metrics['momentum'], 2),
@@ -519,7 +521,7 @@ class IBMarketAnalyzer:
             filtered_df = filtered_df[filtered_df['Overall Score'] >= kwargs['min_score']]
 
         if as_list_of_sectors:
-            return filtered_df['Sector'].tolist()
+            return filtered_df['Sector'].tolist(), filtered_df['ETF'].tolist()
 
-        return filtered_df
+        return filtered_df.sort_values('Overall Score', ascending=False)
     

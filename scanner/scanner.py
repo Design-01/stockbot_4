@@ -1,11 +1,13 @@
 import pandas as pd
 from ib_insync import IB, ScannerSubscription, TagValue 
-
+import stock
+from strategies import ta
 
 class StockbotScanner:
     def __init__(self, ib):
         self.ib = ib
         self.scan_results_df = None
+        self.daily_stockx = []
 
     def scan(self, 
             scan_code:str ='TOP_PERC_GAIN',
@@ -80,6 +82,74 @@ class StockbotScanner:
         # Store DataFrame in instance variable and return it
         self.scan_results_df = df
         return df
+    
+    def update_scan_results(self, scan_results_df, allowed_etfs, ib, send_email_if_any=True, send_email_if_all=True):
+            for s in scan_results_df['symbol']:
+                sx = stock.StockXDaily(ib, s)
+                self.daily_stockx.append(sx)
+                sx.req_fundamentals(max_days_old=1)
+                sx.req_ohlcv()
+                fund_results = sx.get_funadmentals_validation_results(allowed_etfs)
+                ta_results = sx.get_TA_validation_results()
+
+                fundametals_passed = fund_results['Fundamentals Passed']
+                ta_passed = ta_results['TA Passed']
+
+                # Find the index of the row with the symbol
+                index = scan_results_df[scan_results_df['symbol'] == s].index[0]
+
+                # Update the row with the validation results
+                for key, value in fund_results.items():
+                    scan_results_df.loc[index, key] = value
+                
+                for key, value in ta_results.items():
+                    scan_results_df.loc[index, key] = value
+
+                def format_section(section_dict, section_name):
+                    lines = [f"\n{section_name}:"]
+                    # Get all items except the "Passed" summary
+                    regular_items = {k: v for k, v in section_dict.items() 
+                                if not k.endswith('Passed')}
+                    
+                    # Format regular items
+                    if regular_items:
+                        # First item gets extra indentation
+                        first_key = list(regular_items.keys())[0]
+                        lines.append(f"        {first_key}: {regular_items[first_key]}")
+                        
+                        # Rest of the items
+                        for key in list(regular_items.keys())[1:]:
+                            lines.append(f"    {key}: {regular_items[key]}")
+                    
+                    # Add the "Passed" status at the end with extra indentation
+                    passed_key = next((k for k in section_dict.keys() if k.endswith('Passed')), None)
+                    if passed_key:
+                        lines.append(f"        {passed_key}: {section_dict[passed_key]}")
+                    
+                    return "\n".join(lines)
+
+                # Create the email body
+                if send_email_if_any and any([fundametals_passed, ta_passed]):
+                    sx.validation_fundamentals_report(asDF=True, save_image=True)
+                    sx.frame.setup_chart()
+                    sx.frame.plot(show=False)
+                    sx.save_chart()
+                    sx.save_zoomed_chart(show=False)
+                    
+                    body = f"{s} passed one or more validation tests"
+                    body += format_section(fund_results, "Fundamentals")
+                    body += format_section(ta_results, "Technical Analysis")
+                    
+                    sx.email_report(body=body)
+
+                elif send_email_if_all and all([fundametals_passed, ta_passed]):
+                    body = f"{s} passed all validation tests"
+                    body += format_section(fund_results, "Fundamentals")
+                    body += format_section(ta_results, "Technical Analysis")
+                    
+                    sx.email_report(body=body)
+
+            return scan_results_df
 
 # Usage
 # stockbot = StockbotScanner(ib)

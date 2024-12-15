@@ -6,11 +6,17 @@ from ib_insync import IB, Stock
 import xml.etree.ElementTree as ET
 import pickle
 import os
+from pathlib import Path
+from dataframe_image import export
+import plotly.graph_objects as go
 
 from data import historical_data as hd
 from frame.frame import Frame
 from strategies import ta
 from industry_classifications.sector import get_etf_from_sector_code
+import emails.email_client as email_client
+from project_paths import get_project_path
+
 
 
 def parse_xml_value(ratio_element) -> Union[float, str, datetime]:
@@ -194,36 +200,28 @@ def get_fundamentals_from_file(symbol: str, max_days_old: int = 1) -> Optional[S
     """
     Retrieve fundamental data for a stock symbol if it exists and is not too old.
     If max_days_old is 0, returns the data regardless of age.
-    
-    Args:
-        symbol: Stock symbol
-        max_days_old: Maximum age of data in days. Use 0 to ignore age check.
-    
-    Returns:
-        StockFundamentals if valid data exists, None otherwise
     """
-    filename = f"data//fundamental_data_store//{symbol.upper()}_fundamentals.pkl"
+    filename = get_project_path('data', 'fundamental_data_store', f'{symbol.upper()}_fundamentals.pkl')
     
-    # Check if file exists
     if not os.path.exists(filename):
         return None
     
     try:
-        # Load the data
         with open(filename, 'rb') as f:
             data: StockFundamentals = pickle.load(f)
         
+        # Skip age check if max_days_old is 0
+        if max_days_old > 0:
+            stored_date = datetime.strptime(data.request_date, '%Y-%m-%d %H:%M:%S')
+            days_old = (datetime.now() - stored_date).days
             
-        # Convert stored string date to datetime for comparison
-        stored_date = datetime.strptime(data.request_date, '%Y-%m-%d %H:%M:%S')
-        days_old = (datetime.now() - stored_date).days
-        if days_old > max_days_old:
-            return None
-            
+            if days_old > max_days_old:
+                return None
+                
         return data
         
-    except (pickle.UnpicklingError, EOFError, AttributeError):
-        # Handle corrupted file or incompatible data structure
+    except Exception as e:
+        print(f"Error loading fundamentals for {symbol}: {str(e)}")
         return None
 
 def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0, max_days_old=0) -> StockFundamentals:
@@ -363,6 +361,8 @@ def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0, max_days_
     
     return stock_info
 
+
+
 def save_fundamentals(symbol: str, data: StockFundamentals) -> None:
     """
     Save fundamental data for a stock symbol to a file.
@@ -371,11 +371,16 @@ def save_fundamentals(symbol: str, data: StockFundamentals) -> None:
         symbol: Stock symbol
         data: StockFundamentals data class instance
     """
-    filename = f"data//fundamental_data_store//{symbol.upper()}_fundamentals.pkl"
+    file_path = get_project_path('data', 'fundamental_data_store', f'{symbol.upper()}_fundamentals.pkl')
     
-    # Save data using pickle
-    with open(filename, 'wb') as f:
-        pickle.dump(data, f)
+    try:
+        with open(file_path, 'wb') as f:
+            pickle.dump(data, f)
+    except Exception as e:
+        print(f"Error saving fundamentals for {symbol} at {file_path}: {str(e)}")
+        print(f"File exists: {file_path.exists()}")
+        print(f"Directory exists: {file_path.parent.exists()}")
+        raise
 
 
 class StockXDaily:
@@ -387,13 +392,26 @@ class StockXDaily:
         self.frame = Frame(self.symbol)
         self.frame_validation_results = {}
         self.dayscores = None
+        
+        # self.image_path = {
+        #     'valid_fundamentals_df': f'{self.symbol}_fundamentals.png',
+        #     'valid_ta_df': f'{self.symbol}_ta.png',
+        #     'chart': f'{self.symbol}.png',
+        #     'zoomed_chart': f'{self.symbol}_zoomed.png',
+        # }
+        self.image_path = {
+            'valid_fundamentals_df': get_project_path('data', 'fundamental_data_store', f'{self.symbol}_fundamentals.png'),
+            'valid_ta_df':           get_project_path('data', 'fundamental_data_store', f'{self.symbol}_ta.png'),
+            'chart':                 get_project_path('data', 'fundamental_data_store', f'{self.symbol}.png'),
+            'zoomed_chart':          get_project_path('data', 'fundamental_data_store', f'{self.symbol}_zoomed.png'),
+        }
 
     def req_fundamentals(self, max_days_old=0):
         if not self.fundamentals:
             self.fundamentals = get_stock_fundamentals(self.ib, self.symbol, max_days_old=max_days_old)
         return self.fundamentals
     
-    def validate_fundamental(self, key: str, validation_type: str, value: Union[float, int, str, List, Tuple]) -> bool:
+    def validate_fundamental(self, key: str, validation_type: str, value: Union[float, int, str, List, Tuple], description:str='') -> bool:
         """
         Validates a fundamental value against a specified condition.
         
@@ -496,6 +514,7 @@ class StockXDaily:
         validation_id = f"{key}_{validation_type}_{str(value)}"
         self.fundamentals_validation_results[validation_id] = {
             'key': key,
+            'description': description,
             'validation_type': validation_type,
             'comparison_value': value,
             'actual_value': fundamental_value,
@@ -504,7 +523,7 @@ class StockXDaily:
         
         return result
     
-    def validation_fundamentals_report(self, asDF: bool = True) -> Union[pd.DataFrame, Dict]:
+    def validation_fundamentals_report(self, asDF: bool = True, save_image:bool = False) -> Union[pd.DataFrame, Dict]:
         """
         Returns a report of all validations performed.
         
@@ -515,10 +534,37 @@ class StockXDaily:
             Union[pd.DataFrame, Dict]: Validation results
         """
         if asDF:
-            return pd.DataFrame.from_dict(self.fundamentals_validation_results, orient='index')
+            df = pd.DataFrame.from_dict(self.fundamentals_validation_results, orient='index')
+            if save_image:
+                self.save_df_as_image(df, self.image_path['valid_fundamentals_df'])
+            return df
         return self.fundamentals_validation_results
     
-    def validation_TA_report(self, asDF: bool = True) -> Union[pd.DataFrame, Dict]:
+    def get_funadmentals_validation_results(self, allowed_etfs: List[str]) -> Dict: 
+        return {
+            'Sector1 Valid': self.validate_fundamental('primary_etf', 'isin', allowed_etfs, description='Stocks primary sector ETF is allowed'),
+            'Sector2 Valid': self.validate_fundamental('secondary_etf', 'isin', allowed_etfs, description='Stocks primary sector ETF is allowed'),
+            'Market Cap > 300M': self.validate_fundamental('market_cap', '>=', 300, description='Market cap is greater than 300M'),
+            'Vol 10DayMA > 300K': self.validate_fundamental('volume_10day_avg', '>=', 0.3, description='Volume is greater than 300k'),
+            'Fundamentals Passed': self.validation_fundamentals_has_passed(maxFails=0)
+        }
+    
+    def get_TA_validation_results(self) -> Dict:
+        """Returns a dictionary of technical analysis validation results. Each key represents a validation check and its value is a boolean result."""
+        return {
+            'Close > $1'       : self.validate_TA(ta.ColVal('close'),          ta.AboveBelow('CV_close', 'above', 1),         description='close price is above 1'),
+            'Above 200MA'      : self.validate_TA(ta.MA('close', 200),         ta.AboveBelow('close', 'above', 'MA_cl_200'),  description='close price is above 200 MA',      style={'dash': 'solid', 'color': 'cyan', 'width': 3}, row=1),
+            'Above 150MA'      : self.validate_TA(ta.MA('close', 150),         ta.AboveBelow('close', 'above', 'MA_cl_150'),  description='close price is above 150 MA',      style={'dash': 'solid', 'color': 'pink', 'width': 2}, row=1),
+            'Breaks Above 50MA': self.validate_TA(ta.MA('close', 50),          ta.Breaks('close', 'above', 'MA_cl_50'),       description='close price breaks above 50 MA',   style={'dash': 'solid', 'color': 'purple', 'width': 2}, row=1),
+            '50MA Slope > 0'   : self.validate_TA(ta.PctChange('MA_cl_50', 1), ta.AboveBelow('PCT_MA_cl_50_1', 'above', 0),   description='pct change of 50 MA is above 0'),
+            'Gap Up > 4%'      : self.validate_TA(ta.PctChange('close', 1),    ta.AboveBelow('PCT_close_1', 'above', 4),      description='pct change of close is above 4 (4% Gap)'),
+            'Volume > 50K'     : self.validate_TA(ta.ColVal('volume'),         ta.AboveBelow('CV_volume', 'above', 50_000),   description='volume is above 50k'),
+            'Volume Above 10MA': self.validate_TA(ta.MA('volume', 10),         ta.Breaks('volume', 'above', 'MA_vo_10'),      description='volume breaks above 10 MA',              style={'dash': 'solid', 'color': 'pink', 'width': 1}, row=2),
+            'Volume Dev > 80%' : self.validate_TA(ta.VolDev('volume', 10),     ta.AboveBelow('VDEV_10', 'above', 80),         description='volume is above 80% of 10 MA Deviation', style={'dash': 'solid', 'color': 'pink', 'width': 1}, row=3, ),
+            'TA Passed'        : self.validation_TA_has_passed()
+        }
+    
+    def validation_TA_report(self, asDF: bool = True, save_image:bool = False) -> Union[pd.DataFrame, Dict]:
         """
         Returns a report of all validations performed.
         
@@ -529,7 +575,10 @@ class StockXDaily:
             Union[pd.DataFrame, Dict]: Validation results
         """
         if asDF:
-            return pd.DataFrame.from_dict(self.frame_validation_results, orient='index')
+            df = pd.DataFrame.from_dict(self.frame_validation_results, orient='index')
+            if save_image:
+                self.save_df_as_image(df, self.image_path['valid_ta_df'])
+            return df
         return self.frame_validation_results
     
     def validation_fundamentals_has_passed(self, maxFails: int = 0) -> bool:
@@ -570,7 +619,7 @@ class StockXDaily:
              self.frame.load_ohlcv(hd.get_hist_data(self.symbol, start_date, end_date, '1 day'))
         return self.frame.data
     
-    def validate_TA(self, ta_indicator, ta_validator, style=None):
+    def validate_TA(self, ta_indicator, ta_validator, style={}, row=None, description=None):
         """
         Validates technical analysis indicators against specified validation criteria.
         
@@ -583,17 +632,11 @@ class StockXDaily:
             bool: Result of the technical analysis validation
         """
         # Default style if none provided
-        default_style = {
-            'dash': 'solid',
-            'color': 'cyan',
-            'width': 1
-        }
-        
-        # Use provided style or default
-        plot_style = style if style is not None else default_style
+
+        default_row = 2 if row is None else row 
         
         # Add the technical indicator to the frame
-        self.frame.add_ta(ta_indicator, plot_style)
+        self.frame.add_ta(ta_indicator, style, row=default_row)
         
         # Load and update the data
         self.frame.update_ta_data()
@@ -614,71 +657,89 @@ class StockXDaily:
         
         # Store the validation result
         self.frame_validation_results[validation_id] = {
+            'description': description,
             'indicator': ta_indicator.name,
             'validator': ta_validator.name,
             'validation_type': type(ta_validator).__name__,  # e.g., 'Breaks' or 'AboveBelow'
             'indicator_value': self.frame.data[ta_indicator.name].iloc[-1],
             'passed': self.frame.data[ta_validator.name].iloc[-1],
-            'timestamp': self.frame.data.index[-1]  # Store the timestamp of the validation
+            'timestamp': self.frame.data.index[-1],  # Store the timestamp of the validation
         }
         
-        return self.frame_validation_results[validation_id]
+        return self.frame_validation_results[validation_id]['passed']
     
-    def set_default_daily_ta(self):
-        # TA may add many several columns of data to the dataframe 
-        self.frame.add_ta(ta.MA('close', 200), {'dash': 'solid', 'color': 'cyan', 'width': 2})
-        self.frame.add_ta(ta.MA('close', 50), {'dash': 'solid', 'color': 'purple', 'width': 2})
-        self.frame.add_ta(ta.MA('volume', 10), {'dash': 'solid', 'color': 'cyan', 'width': 1}, row=2)
-        self.frame.add_ta(ta.ACC('close', 5, 10, 10), {'dash': 'solid', 'color': 'grey', 'width': 1}, row=3)
-        self.frame.add_ta(ta.VolDev('volume', 10), {'dash': 'solid', 'color': 'pink', 'width': 1}, row=3)
-        self.frame.add_ta(ta.TrendDuration('MA_cl_50'), {'dash': 'solid', 'color': 'green', 'width': 1}, row=4)
+    def save_chart(self, width=1400, height=800):
+        self.frame.chart.save_chart(self.image_path['chart']) # saves the chart to a file
+
+    def save_zoomed_chart(self, width=1400, height=800, path=None, show:bool = False):
+        path = self.image_path['zoomed_chart'] if path is None else path
+        start_date = self.frame.data.index[-50]  # 50 bars from the end
+        end_date = self.frame.data.index[-1]     # to the latest bar
+        self.frame.chart.save_chart_region( start_date, end_date, x_padding='1D', y_padding_pct=0.1, filename=path, plot=show) # saves the chart to a file
+
+    def save_df_as_image(self, df, image_path=None):
+        """
+        Format DataFrame for display and save as image with dark theme and subtle grid
         
-        # Load and update the data in the frame
-        self.frame.load_ohlcv(self.daydata)
-        self.frame.update_ta_data()
-        return self.frame.data
-
-    def compute_daily_filters_with_scores(self):
-
-        # add additional TA data that requires the first set of data to be loaded
-        ta_filters = [
-            ta.Breaks('close', 'MA_cl_200', True), # BreaksMA = 200
-            ta.Breaks('close', 'MA_cl_50', True), # BreaksMA = 50
-            ta.AboveBelow('close', 'MA_cl_50', True), # > MA50
-            ta.AboveBelow('close', 'MA_cl_200', True), # > MA200
-            ta.AboveBelow(3, 'TDUR_MA_cl_50', True), # MA50isRisingNthDays
-            ta.AboveBelow(80, 'VDEV_10', True) # > 80% above MA10
-        ]
-
-        # add the additional TA data to the frame
-        for t in ta_filters:
-            self.frame.add_ta(t)
-
-        self.frame.load_ohlcv(self.frame.data)
-        self.frame.update_ta_data()
-
-
-        # Get the names of all filters
-        ta_filter_names = [ta.name for ta in ta_filters]
-
+        Parameters:
+        df: pandas DataFrame
+        image_path: path to save the image
+        """
+        # Create a copy to avoid modifying the original
+        display_df = df.copy()
         
-        # Calculate the sum of true values for each row
-        self.frame.data['filter_score'] = self.frame.data[ta_filter_names].sum(axis=1)
+        # Format numeric values
+        for col in display_df.columns:
+            if col == 'indicator_value':
+                display_df[col] = display_df[col].apply(lambda x: f"{float(x):.2f}" if isinstance(x, (int, float)) else x)
+            elif col == 'timestamp':
+                display_df[col] = pd.to_datetime(display_df[col]).dt.strftime('%Y-%m-%d %H:%M:%S')
         
-        # Add column to indicate if all filters are true
-        self.frame.data['all_true'] = self.frame.data[ta_filter_names].all(axis=1)
+        fig = go.Figure(data=[go.Table(
+            header=dict(
+                values=list(display_df.columns),
+                align='left',
+                font=dict(size=12, color='#A9A9A9'),
+                height=40,
+                fill=dict(color='#2F2F2F'),
+                line=dict(color='#1A1A1A', width=1)  # Very dark grey lines
+            ),
+            cells=dict(
+                values=[display_df[col] for col in display_df.columns],
+                align='left',
+                font=dict(size=11, color='#A9A9A9'),
+                height=35,
+                fill=dict(color='#000000'),
+                line=dict(color='#1A1A1A', width=1)  # Very dark grey lines
+            )
+        )])
 
-        self.frame.load_ohlcv(self.frame.data)
-        self.frame.update_ta_data()
-
-        self.dayscores = self.frame.data[ta_filter_names + ['filter_score', 'all_true']]
-
-        return self.dayscores
+        fig.update_layout(
+            width=1200,
+            height=len(display_df) * 35 + 100,
+            margin=dict(l=20, r=20, t=20, b=20),
+            paper_bgcolor='black',
+            plot_bgcolor='black'
+        )
+        fig.write_image(image_path)
+        return image_path
     
-    def get_market_sector_etf(self):
-        
-        return get_etf_from_sector_code('GICS', 45102010)
+    def email_report(self, subject:str = None, body:str = None ):
+        """
+        Send an email report with optional attachments.
+        """        
+        # Send email with attachments
+        subject = subject if subject else f'STOCKBOT Alert: {self.symbol} Daily Analysis'
+        body    = body if body else f"Attached is the daily analysis for {self.symbol}"
 
+        email_client.send_outlook_email(
+            subject = subject,
+            body = body,
+            recipients = ['pary888@gmail.com'],
+            image_paths = [path for path in self.image_path.values()],
+            is_html = False)
+        
+        print(f"Email sent to for {self.symbol}")
 
 from data import historical_data as hd
 import compare
