@@ -8,6 +8,8 @@ class StockbotScanner:
         self.ib = ib
         self.scan_results_df = None
         self.daily_stockx = []
+        self.fund_reults_df = None
+        self.ta_results_df = None
 
     def scan(self, 
             scan_code:str ='TOP_PERC_GAIN',
@@ -91,6 +93,9 @@ class StockbotScanner:
                 sx.req_ohlcv()
                 fund_results = sx.get_funadmentals_validation_results(allowed_etfs)
                 ta_results = sx.get_TA_validation_results()
+
+                self.fund_results_df = fund_results
+                self.ta_results_df = ta_results
 
                 fundametals_passed = fund_results['Fundamentals Passed']
                 ta_passed = ta_results['TA Passed']

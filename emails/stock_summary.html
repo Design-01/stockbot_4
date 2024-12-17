@@ -1,0 +1,319 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            
+        <style>
+            /* Base Container */
+            .container {
+                font-family: Arial, Helvetica, sans-serif;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #ffffff;
+            }
+
+            /* Header Title */
+            h1 {
+                font-size: 24px;
+                font-weight: bold;
+                margin: 0 0 20px 0;
+                padding: 0;
+                color: #000000;
+            }
+
+            /* Status Steps Section */
+            .steps-table {
+                width: 100%;
+                margin: 30px 0;
+                border-collapse: separate;
+                border-spacing: 10px 0;
+            }
+
+            .step-circle {
+                background-color: #4CAF50;
+                color: #ffffff;
+                width: 40px;
+                height: 40px;
+                line-height: 40px;
+                border-radius: 50%;
+                margin: 0 auto 12px auto;
+                text-align: center;
+                font-size: 16px;
+                font-weight: normal;
+            }
+
+            .step-label {
+                font-weight: bold;
+                margin-bottom: 4px;
+                line-height: 1.4;
+                font-size: 14px;
+                color: #000000;
+            }
+
+            .step-count {
+                font-size: 16px;
+                line-height: 1.4;
+                color: #000000;
+            }
+
+
+            /* Section Titles */
+            .section-title {
+                color: #1a73e8;
+                font-size: 18px;
+                font-weight: bold;
+                margin: 30px 0 15px 0;
+                padding: 0 0 5px 0;
+                border-bottom: 2px solid #e41e31;
+                line-height: 1.4;
+            }
+
+            /* Common Table Styles */
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+                background-color: #ffffff;
+            }
+
+            th {
+                background-color: #f8f9fa;
+                font-weight: bold;
+                padding: 12px;
+                text-align: left;
+                border: 1px solid #dddddd;
+                white-space: nowrap;
+                color: #000000;
+            }
+
+            td {
+                padding: 12px;
+                text-align: left;
+                border: 1px solid #dddddd;
+                color: #000000;
+            }
+
+            /* Validation Section */
+            .validation-section {
+                margin: 0 0 30px 0;
+                padding: 15px;
+                background-color: #f8f9fa;
+                border: 1px solid #dddddd;
+                border-radius: 5px;
+            }
+
+            .validation-title {
+                font-size: 16px;
+                font-weight: bold;
+                margin: 0 0 10px 0;
+                padding: 0;
+                color: #000000;
+            }
+
+            .passed-column {
+                border-right: 2px solid #666666 !important;
+                background-color: #f8f9fa;
+                font-weight: bold;
+            }
+
+            /* Scan Settings Styles */
+            .scan-settings-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+            }
+
+            .scan-settings-table tr:nth-child(odd) {
+                background-color: #f8f9fa;
+            }
+
+            .scan-settings-table td {
+                padding: 12px;
+                border: 1px solid #dddddd;
+            }
+
+            .scan-settings-table td:first-child {
+                font-weight: 600;
+                width: 33%;
+            }
+
+            .scan-settings-total {
+                background-color: #e8f4ff;
+                padding: 12px;
+                text-align: center;
+                font-weight: 600;
+                border-radius: 4px;
+                margin-top: 10px;
+                border: 1px solid #dddddd;
+            }
+
+            .scan-timestamp {
+                color: #666666;
+                font-size: 14px;
+                margin: 0 0 10px 0;
+                padding: 0;
+            }
+
+            /* Status Styling */
+            .positive {
+                color: #28a745 !important;
+            }
+
+            .negative {
+                color: #dc3545 !important;
+            }
+
+            .pending-row {
+                background-color: #fff3cd;
+            }
+
+            .completed-row {
+                background-color: #f8f9fa;
+            }
+
+            .in-trade-row {
+                background-color: #d4edda;
+            }
+
+            .true-cell {
+                background-color: #d4edda;
+            }
+
+            .false-cell {
+                background-color: #f8d7da;
+            }
+
+            /* Additional email-specific resets */
+            * {
+                -webkit-text-size-adjust: 100%;
+                -ms-text-size-adjust: 100%;
+            }
+
+            table, td {
+                mso-table-lspace: 0pt;
+                mso-table-rspace: 0pt;
+            }
+
+            img {
+                -ms-interpolation-mode: bicubic;
+            }
+        </style>
+        
+        </head>
+        <body>
+            <div class="container">
+                <h1>Daily Stockbot Summary</h1>
+                
+        <table class="steps-table" cellpadding="0" cellspacing="0">
+            <tr>
+        
+                <td align="center" style="vertical-align: top;">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Sector Analysis</div>
+                    <div class="step-count">11</div>
+                </td>
+            
+                <td align="center" style="vertical-align: top;">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Stocks Scanned</div>
+                    <div class="step-count">100</div>
+                </td>
+            
+                <td align="center" style="vertical-align: top;">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Stocks Validated</div>
+                    <div class="step-count">12</div>
+                </td>
+            
+                <td align="center" style="vertical-align: top;">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">Stocks Scored</div>
+                    <div class="step-count">12</div>
+                </td>
+            
+            </tr>
+        </table>
+        
+                <h2>Activity</h2>
+                <table>
+        <tr>
+            <th>Stock Name</th>
+            <th>Symbol</th>
+            <th>TA Score</th>
+            <th>Status</th>
+            <th>Daily P&L</th>
+            <th>Daily P&L %</th>
+        </tr>
+        
+            <tr class="pending-row">
+                <td>Palantir</td>
+                <td>PLTR</td>
+                <td>80</td>
+                <td>Pending</td>
+                <td class="negative">-</td>
+                <td class="negative">-%</td>
+            </tr>
+            
+            <tr class="in trade-row">
+                <td>Tesla</td>
+                <td>TSLA</td>
+                <td>72</td>
+                <td>IN TRADE</td>
+                <td class="positive">+200.00</td>
+                <td class="positive">+2.30%</td>
+            </tr>
+            
+            <tr class="completed-row">
+                <td>Roku</td>
+                <td>ROKU</td>
+                <td>65</td>
+                <td>Completed</td>
+                <td class="negative">-124.00</td>
+                <td class="negative">-1.20%</td>
+            </tr>
+            
+        <tr>
+            <td colspan="4"><strong>Totals</strong></td>
+            <td class="positive"><strong>+76.00</strong></td>
+            <td class="positive"><strong>+1.10%</strong></td>
+        </tr>
+        </table>
+                
+        <div class="section-title">Stock Scanned</div>
+        <div class="scan-timestamp">(2024-12-16 09:00:00)</div>
+        <table class="scan-settings-table">
+            <tbody>
+                <tr>
+                    <td>Scan Code</td>
+                    <td>TOP_PERC_GAIN</td>
+                </tr>
+                <tr>
+                    <td>Price Range</td>
+                    <td>$1.00 - $100.00</td>
+                </tr>
+                <tr>
+                    <td>Volume</td>
+                    <td>100K</td>
+                </tr>
+                <tr>
+                    <td>Market Cap</td>
+                    <td>100M</td>
+                </tr>
+                <tr>
+                    <td>Change %</td>
+                    <td>0.04</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="scan-settings-total">
+            Total Stocks Scanned: 100
+        </div>
+        
+                <div class="section-title">Sector ETFs</div><div class="filters">Active Filters: Outperforming SPY = "Yes", Overall Score > 5</div><table><tr><th>Sector</th><th>ETF</th><th>Return (%)</th><th>Relative Strength</th><th>Momentum (ROC)</th><th>Volume Trend</th><th>Outperforming SPY</th><th>Momentum Direction</th><th>RS Rank</th><th>Return Rank</th><th>Mom Rank</th><th>Overall Score</th></tr><tr><td class="">Energy</td><td class="">XLE</td><td class="negative">-5.82</td><td class="negative">-8.97</td><td class="negative">-4.61</td><td class="negative">Decreasing</td><td class="">No</td><td class="negative">Negative</td><td class="positive">11</td><td class="positive">11</td><td class="positive">11</td><td class="negative">-1.0</td></tr><tr><td class="">Materials</td><td class="">XLB</td><td class="negative">-2.25</td><td class="negative">-5.4</td><td class="negative">-5.86</td><td class="negative">Decreasing</td><td class="">No</td><td class="negative">Negative</td><td class="positive">10</td><td class="positive">10</td><td class="positive">9</td><td class="positive">0.33</td></tr><tr><td class="">Utilities</td><td class="">XLU</td><td class="negative">-2.03</td><td class="negative">-4.18</td><td class="negative">-4.38</td><td class="negative">Decreasing</td><td class="">No</td><td class="negative">Negative</td><td class="positive">9</td><td class="positive">9</td><td class="positive">10</td><td class="positive">0.67</td></tr><tr><td class="">Industrials</td><td class="">XLI</td><td class="negative">-1.21</td><td class="negative">-4.36</td><td class="negative">-4.56</td><td class="negative">Decreasing</td><td class="">No</td><td class="negative">Negative</td><td class="positive">8</td><td class="positive">8</td><td class="positive">7</td><td class="positive">2.33</td></tr><tr><td class="">Financials</td><td class="">XLF</td><td class="negative">-0.66</td><td class="negative">-3.81</td><td class="negative">-3.51</td><td class="negative">Decreasing</td><td class="">No</td><td class="negative">Negative</td><td class="positive">7</td><td class="positive">7</td><td class="positive">5</td><td class="positive">3.67</td></tr><tr><td class="">Real Estate</td><td class="">XLRE</td><td class="negative">-0.35</td><td class="negative">-3.5</td><td class="negative">-4.82</td><td class="negative">Decreasing</td><td class="">No</td><td class="negative">Negative</td><td class="positive">5</td><td class="positive">5</td><td class="positive">8</td><td class="positive">4.0</td></tr><tr><td class="">Healthcare</td><td class="">XLV</td><td class="negative">-0.6</td><td class="negative">-3.75</td><td class="negative">-4.36</td><td class="negative">Increasing</td><td class="">No</td><td class="negative">Negative</td><td class="positive">6</td><td class="positive">6</td><td class="positive">6</td><td class="positive">4.0</td></tr><tr><td class="">Consumer Staples</td><td class="">XLP</td><td class="positive">2.6</td><td class="negative">-0.55</td><td class="negative">-1.42</td><td class="negative">Decreasing</td><td class="">No</td><td class="negative">Negative</td><td class="positive">4</td><td class="positive">4</td><td class="positive">4</td><td class="positive">6.0</td></tr><tr><td class="">Technology</td><td class="">XLK</td><td class="positive">4.52</td><td class="positive">1.37</td><td class="positive">2.28</td><td class="negative">Increasing</td><td class="">Yes</td><td class="positive">Positive</td><td class="positive">3</td><td class="positive">3</td><td class="positive">3</td><td class="positive">7.0</td></tr><tr><td class="">Communication Services</td><td class="">XLC</td><td class="positive">6.09</td><td class="positive">2.93</td><td class="positive">2.58</td><td class="negative">Decreasing</td><td class="">Yes</td><td class="positive">Positive</td><td class="positive">2</td><td class="positive">2</td><td class="positive">2</td><td class="positive">8.0</td></tr><tr><td class="">Consumer Discretionary</td><td class="">XLY</td><td class="positive">10.33</td><td class="positive">7.18</td><td class="positive">5.93</td><td class="negative">Decreasing</td><td class="">Yes</td><td class="positive">Positive</td><td class="positive">1</td><td class="positive">1</td><td class="positive">1</td><td class="positive">9.0</td></tr></table>
+                <div class="section-title">Stocks Validated</div><div class="validation-section"><div class="validation-title">Validated Fundamentals</div><table><tr><th class="">Rank</th><th class="">Symbol</th><th class="passed-column">Fundamentals Passed</th><th class="">Sector1 Valid</th><th class="">Sector2 Valid</th><th class="">Market Cap > 300M</th><th class="">Vol 10DayMA > 300K</th><th class="">Close > $1</th></tr><tr><td class="">1</td><td class="">TSLA</td><td class="passed-column true-cell">✓</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td></tr><tr><td class="">2</td><td class="">AAPL</td><td class="passed-column true-cell">✓</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td></tr><tr><td class="">3</td><td class="">MSFT</td><td class="passed-column false-cell">✗</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td></tr></table><div class="validation-title">Validated TA</div><table><tr><th class="">Rank</th><th class="">Symbol</th><th class="passed-column">TA Passed</th><th class="">Above 200MA</th><th class="">Above 150MA</th><th class="">Breaks Above 50MA</th><th class="">50MA Slope > 0</th><th class="">Gap Up > 4%</th><th class="">Volume > 50K</th><th class="">Volume Above 10MA</th><th class="">Volume Dev > 80%</th></tr><tr><td class="">1</td><td class="">TSLA</td><td class="passed-column false-cell">✗</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" false-cell">✗</td></tr><tr><td class="">2</td><td class="">AAPL</td><td class="passed-column false-cell">✗</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" false-cell">✗</td></tr><tr><td class="">3</td><td class="">MSFT</td><td class="passed-column false-cell">✗</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" false-cell">✗</td></tr></table></div>
+                <div class="section-title">Stock Scores</div><div class="validation-title">Daily TA Scores</div><table><tr><th class="">Rank</th><th class="">Symbol</th><th class="passed-column">TA Passed</th><th class="">Above 200MA</th><th class="">Above 150MA</th><th class="">Breaks Above 50MA</th><th class="">50MA Slope > 0</th><th class="">Gap Up > 4%</th><th class="">Volume > 50K</th><th class="">Volume Above 10MA</th><th class="">Volume Dev > 80%</th></tr><tr><td class="">1</td><td class="">TSLA</td><td class="passed-column false-cell">✗</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" false-cell">✗</td></tr><tr><td class="">2</td><td class="">AAPL</td><td class="passed-column false-cell">✗</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" false-cell">✗</td></tr><tr><td class="">3</td><td class="">MSFT</td><td class="passed-column false-cell">✗</td><td class=" true-cell">✓</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" true-cell">✓</td><td class=" false-cell">✗</td><td class=" false-cell">✗</td></tr></table>
+            </div>
+        </body>
+        </html>
+        

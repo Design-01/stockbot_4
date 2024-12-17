@@ -3,7 +3,6 @@ from typing import List, Dict, Union, Tuple, Optional
 from datetime import datetime
 import pandas as pd
 from ib_insync import IB, Stock
-from fundamentals import get_stock_info, StockInfo, ForecastMetrics
 
 def parse_xml_value(ratio_element) -> Union[float, str, datetime]:
     """Extract value from a Ratio XML element, handling different data types"""
