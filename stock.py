@@ -239,6 +239,9 @@ def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0, max_days_
             return file_data
     
     fundamental_data = ib.reqFundamentalData(contract, 'ReportSnapshot')
+    if not fundamental_data:
+        return None
+    
     root = ET.fromstring(fundamental_data)
 
     # Initialize data dictionary

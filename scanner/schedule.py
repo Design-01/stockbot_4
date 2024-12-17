@@ -3,12 +3,13 @@ import pytz
 import time
 
 class MarketSchedule:
-    def __init__(self, scan_time="08:00"):
+    def __init__(self, scan_time="08:00", sleep_time=300):
         """
         Initialize with scan time in 24-hour format (ET)
         scan_time: str format "HH:MM" in Eastern Time
         """
         self.scan_time = scan_time
+        self.sleep_time = sleep_time
         self.market_holidays_2024 = {
             date(2024, 1, 1): "New Year's Day",
             date(2024, 1, 15): "Martin Luther King Jr. Day",
@@ -72,7 +73,7 @@ class MarketSchedule:
                 hours = int(time_until_scan // 3600)
                 minutes = int((time_until_scan % 3600) // 60)
                 print(f"Today is a trading day. Waiting {hours} hours and {minutes} minutes until scan time ({self.scan_time} ET)...")
-                time.sleep(min(300, time_until_scan))  # Sleep for 5 minutes or until scan time, whichever is shorter
+                time.sleep(min(self.sleep_time, time_until_scan))  # Sleep for 5 minutes or until scan time, whichever is shorter
 
 # Example usage
 # if __name__ == "__main__":
