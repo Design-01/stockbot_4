@@ -65,11 +65,8 @@ class StockbotScanner:
                 contract = data.contractDetails.contract
                 row = {
                     'Rank': data.rank,
-                    'Market Cap Range': cap,
                     'Symbol': contract.symbol,
-                    'Exchange': contract.exchange,
-                    'Currency': contract.currency,
-                    'Primary Exchange': contract.primaryExchange,
+                    'Market Cap Range': cap,
                 }
                 rows.append(row)
 
@@ -83,46 +80,50 @@ class StockbotScanner:
         df = pd.DataFrame(rows)
         
         # Define column order with rank and market_cap_range first
-        columns = ['Rank', 'Market Cap Range', 'Symbol', 'Exchange', 'Currency', 'Primary Exchange']
+        columns = ['Rank', 'Symbol', 'Market Cap Range' ]
         
         # Store DataFrame in instance variable and return it
         self.scan_results_df = df[columns].sort_values('Rank')
         return df
     
     def update_scan_results(self, allowed_etfs, ib, limit=100):
-            
-            # copy the scan results to fund results so it has the correct first set of columns 
-            self.fund_results_df = self.scan_results_df.copy() 
-            self.ta_results_df = self.scan_results_df.copy()
+        
+        # copy the scan results to fund results so it has the correct first set of columns 
+        self.fund_results_df = self.scan_results_df.copy() 
+        self.ta_results_df = self.scan_results_df.copy()
 
-            for s in self.scan_results_df['Symbol']:
-                sx = stock.StockXDaily(ib, s)
-                self.daily_stockx.append(sx)
+        for s in self.scan_results_df['Symbol']:
+            print(f"Processing symbol: {s}")
+            sx = stock.StockXDaily(ib, s)
+            self.daily_stockx.append(sx)
 
-                # Find the index of the row with the symbol
-                index = self.scan_results_df[self.scan_results_df['Symbol'] == s].index[0]
+            # Find the index of the row with the symbol
+            index = self.scan_results_df[self.scan_results_df['Symbol'] == s].index[0]
 
-                sx.req_fundamentals(max_days_old=1)
-                if sx.fundamentals is not  None:
-                    results_df = sx.get_funadmentals_validation_results(allowed_etfs)
-                    # Update the row with the validation results
-                    for key, value in results_df.items():
-                        self.scan_results_df.loc[index, key] = value
-                        self.fund_results_df.loc[index, key] = value
+            print("Requesting fundamentals...")
+            sx.req_fundamentals(max_days_old=1)
+            if sx.fundamentals is not None:
+                results_df = sx.get_funadmentals_validation_results(allowed_etfs)
+                # Update the row with the validation results
+                for key, value in results_df.items():
+                    self.scan_results_df.loc[index, key] = value
+                    self.fund_results_df.loc[index, key] = value
 
-                sx.req_ohlcv()
-                if not sx.frame.data.empty:
-                    results_df = sx.get_TA_validation_results()
-                    # Update the row with the validation results
-                    for key, value in results_df.items():
-                        self.scan_results_df.loc[index, key] = value
-                        self.ta_results_df.loc[index, key] = value
+            print("Requesting OHLCV data...")
+            sx.req_ohlcv()
+            if not sx.frame.data.empty:
+                results_df = sx.get_TA_validation_results()
+                # Update the row with the validation results
+                for key, value in results_df.items():
+                    self.scan_results_df.loc[index, key] = value
+                    self.ta_results_df.loc[index, key] = value
 
-                limit -= 1
-                if limit == 0:
-                    break
+            limit -= 1
+            print(f"Remaining limit: {limit}")
+            if limit == 0:
+                break
 
-            return self.scan_results_df
+        return self.scan_results_df
 
 # Usage
 # stockbot = StockbotScanner(ib)

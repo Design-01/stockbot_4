@@ -15,7 +15,6 @@ class Frame:
         self.traders = []
         self.data = pd.DataFrame()
         self.ta = []
-        self.sigs = []
         self.chart = None
 
     #£ Working
@@ -94,35 +93,14 @@ class Frame:
                 return
         
         # No duplicates found, add the new TA
+        self.update_data(ta.run(self.data))
         self.ta.append((ta, style, chart_type, row))
-
-    def add_signals(self, signals: Signals, style: Dict[str, Any] | List[Dict[str, Any]], chart_type: str = "line", row: int = 1):
-        # Check for duplicates
-        for existing_signals, existing_style, existing_chart_type, existing_row in self.sigs:
-            if (existing_signals == signals and 
-                existing_style == style and 
-                existing_chart_type == chart_type and 
-                existing_row == row):
-                # Duplicate found, do not add
-                return
-        self.sigs.append((signals, style, chart_type, row))
-
 
     def update_ta_data(self):
         """Updates the data for all the technical indicators in the frame"""
         for ta, style, chart_type, row in self.ta:
             self.data = self.update_data(ta.run(self.data))
-
-    def update_signals_data(self):
-        """Updates the data for all the signals in the frame"""
-        sig_dict = {}
-        for signals, style, chart_type, row in self.sigs:
-            sig_dict[f'SigL_{signals.name}'] = signals.run('LONG', self.data)
-            sig_dict[f'SigS_{signals.name}'] = signals.run('SHORT', self.data)
-
-        self.data = self.update_data(pd.DataFrame(sig_dict, index=[self.data.index[-1]]))
         
-
 
     def plot(self, width: int = 1400, height: int = 800, trading_hours: bool = False, show: bool = True):   
         self.chart.refesh(self.data)
@@ -130,10 +108,6 @@ class Frame:
             if style == {}: pass
             indicator_data = self.data[indicator.names] # get the data for the indicator which should be updated first 
             self.chart.add_ta(indicator_data, style, chart_type, row)
-        for signals, style, chart_type, row in self.sigs:
-            if style == {}: pass
-            sig_data = self.data[[f'SigL_{signals.name}', f'SigS_{signals.name}']]
-            self.chart.add_signals(sig_data, style, chart_type, row)
         if trading_hours: self.chart.add_trading_hours(self.data, self.trading_hours)
         if show: self.chart.show(width=width, height=height)
 

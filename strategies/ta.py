@@ -9,6 +9,7 @@ def preprocess_data(func):
         return func(self, data, *args, **kwargs)
     return wrapper
 
+
 @dataclass
 class TA(ABC):
     column: str = None
@@ -54,6 +55,7 @@ class TA(ABC):
         """Efficient normalization to -100 to 100 range"""
         return (series / max_value).clip(-1, 1) * 100
 
+
 @dataclass
 class MA(TA):
     period: int = 20
@@ -66,6 +68,7 @@ class MA(TA):
     @preprocess_data
     def run(self, data: pd.DataFrame) -> pd.Series:
         return data[self.column].rolling(window=self.period).mean().rename(self.name)
+
 
 @dataclass
 class MACD(TA):
@@ -97,7 +100,8 @@ class MACD(TA):
             self.signal_name: signal_line,
             self.histogram_name: histogram
         })
-    
+
+
 @dataclass
 class HPLP(TA):
     hi_col: str = 'high'
@@ -157,7 +161,7 @@ class ATR(TA):
         df.drop(columns=['TR'], inplace=True)
 
         return df[[self.name_atr]]
-    
+
 import pandas as pd
 import numpy as np
 from dataclasses import dataclass
@@ -391,7 +395,6 @@ class SupRes(TA):
         return levels
     
 
-
 @dataclass
 class MansfieldRSI(TA):
     close_col: str = 'close'  # Column name for stock close price
@@ -466,6 +469,7 @@ class ColVal:
         data[self.name] = data[self.column] #! Redundancy but just did this to get it working quickly
         return data[self.name]
 
+
 @dataclass
 class VolAcc(TA):
     """
@@ -493,6 +497,7 @@ class VolAcc(TA):
         prev_slope = d.shift(1).diff() / d.shift(2)
         acceleration = current_slope - prev_slope
         return self.normalize(acceleration, self.max_accel).rename(self.name)
+
 
 @dataclass
 class ACC(TA):
@@ -555,7 +560,6 @@ class Breaks:
         
         raise ValueError("Direction must be 'above' or 'below'")
 
-        
 
 @dataclass
 class AboveBelow:
@@ -683,6 +687,7 @@ class TrendDuration(TA):
         df.loc[trend < 0, self.name] = -df.loc[trend < 0, self.name]
         
         return df
+    
     
 def process_ta_filters(df, ta_list, min_score=None):
     """

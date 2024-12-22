@@ -424,6 +424,15 @@ class Chart:
                 for column, stl in zip(data.columns, style):
                     self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, line=stl), row=row, col=1)
 
+        if chart_type == 'lines+markers':
+            if isinstance(data, pd.Series):
+                self.fig.add_trace(go.Scatter(x=data.index, y=data, name=data.name, line=style[0], mode=chart_type), row=row, col=1)
+            elif isinstance(data, pd.DataFrame):
+                for column, stl in zip(data.columns, style):
+                    self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, line=stl, mode=chart_type), row=row, col=1)
+
+
+
         # Add MACD subplot if provided
         if chart_type == 'macd' and isinstance(data, pd.DataFrame):
             macd_col = [col for col in data.columns if col.endswith('MACD')][0]
@@ -519,23 +528,7 @@ class Chart:
         for i in range(0, len(resistance_cols), 3):
             for trace in create_traces(resistance_cols[i], resistance_cols[i+1], resistance_cols[i+2], resistance_style):
                 self.fig.add_trace(trace, row=1, col=1)
-
-    def add_signals(self, data: pd.DataFrame, style: Dict[str, Any] | list[Dict[str, Any]], chart_type: str, row:int=1) -> None:
-        """Adds signals to the chart
-
-        args:
-        data: pd.DataFrame: The data to be added to the chart
-        style: Dict[str, Any]: The style of the data
-        chart_type: str: The type of chart to be added
-        """
-        # make styles consistent
-        if style  == {}: return
-        style = [style] if not isinstance(style, list) else style
-
-    
-        for column, stl in zip(data.columns, style):
-            self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, mode=chart_type, line=stl),  row=row, col=1)
-    
+   
     def add_line(self, data: pd.Series, style: Dict[str, Any], row:int=1) -> None:
         """Adds a line to the chart
 

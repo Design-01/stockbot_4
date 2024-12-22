@@ -6,6 +6,7 @@ from ib_insync import IB, Stock
 import xml.etree.ElementTree as ET
 import pickle
 import os
+from my_ib_utils import IBRateLimiter
 from pathlib import Path
 from dataframe_image import export
 import plotly.graph_objects as go
@@ -226,7 +227,9 @@ def get_fundamentals_from_file(symbol: str, max_days_old: int = 1) -> Optional[S
 
 def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0, max_days_old=0) -> StockFundamentals:
     """Retrieve comprehensive stock information including all available ratios."""
+    rate_limiter = IBRateLimiter(ib)
     contract = Stock(ticker, 'SMART', 'USD')
+    rate_limiter.wait()
     details = ib.reqContractDetails(contract)
     if not details:
         raise ValueError(f"No contract details found for {ticker}")
@@ -238,6 +241,7 @@ def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0, max_days_
             print(f"Using cached data for {ticker} (age: {file_data.request_date})")
             return file_data
     
+    rate_limiter.wait()
     fundamental_data = ib.reqFundamentalData(contract, 'ReportSnapshot')
     if not fundamental_data:
         return None
@@ -394,6 +398,7 @@ class StockXDaily:
         self.fundamentals_validation_results = {}
         self.frame = Frame(self.symbol)
         self.frame_validation_results = {}
+        self.frame_score_results = {}
         self.dayscores = None
         
         # self.image_path = {
@@ -442,7 +447,8 @@ class StockXDaily:
         else:
             try:
                 # Handle special case for ETF tuples
-                if key in ['primary_etf', 'secondary_etf']:
+                # if key in ['primary_etf', 'secondary_etf']:
+                if key in ['primary_etf']:
                     if validation_type == 'isin':
                         result = fundamental_value[0] in value
                     else:
@@ -546,10 +552,10 @@ class StockXDaily:
     def get_funadmentals_validation_results(self, allowed_etfs: List[str]) -> Dict: 
         return {
             'Sector1 Valid': self.validate_fundamental('primary_etf', 'isin', allowed_etfs, description='Stocks primary sector ETF is allowed'),
-            'Sector2 Valid': self.validate_fundamental('secondary_etf', 'isin', allowed_etfs, description='Stocks primary sector ETF is allowed'),
+            # 'Sector2 Valid': self.validate_fundamental('secondary_etf', 'isin', allowed_etfs, description='Stocks primary sector ETF is allowed'),
             'Market Cap > 300M': self.validate_fundamental('market_cap', '>=', 300, description='Market cap is greater than 300M'),
             'Vol 10DayMA > 300K': self.validate_fundamental('volume_10day_avg', '>=', 0.3, description='Volume is greater than 300k'),
-            'Fundamentals Passed': self.validation_fundamentals_has_passed(maxFails=0)
+            'Fundamentals Passed': self.validation_fundamentals_has_passed()
         }
     
     def get_TA_validation_results(self) -> Dict:
@@ -584,37 +590,40 @@ class StockXDaily:
             return df
         return self.frame_validation_results
     
-    def validation_fundamentals_has_passed(self, maxFails: int = 0) -> bool:
+    def validation_fundamentals_has_passed(self) -> float:
         """
-        Checks if validations have passed within the maximum failure threshold.
+        Calculates the ratio of passed validations.
         
-        Args:
-            maxFails (int): Maximum number of allowed failures
-            
         Returns:
-            bool: True if number of failures is <= maxFails
+            float: Ratio of passed validations to total validations
         """
         if not self.fundamentals_validation_results:
-            return False
-            
-        failures = sum(1 for result in self.fundamentals_validation_results.values() if not result['passed'])
-        return failures <= maxFails
+            return 0.0
+        
+        total_validations = len(self.fundamentals_validation_results)
+        passed_validations = sum(1 for result in self.fundamentals_validation_results.values() if result['passed'])
+        
+        result = passed_validations / total_validations if total_validations > 0 else 0.0
+        return round(result, 2)
 
-    def validation_TA_has_passed(self, maxFails: int = 0) -> bool:
+    def validation_TA_has_passed(self) -> float:
         """
-        Checks if validations have passed within the maximum failure threshold.
+        Calculates the ratio of passed validations.
         
         Args:
-            maxFails (int): Maximum number of allowed failures
+            maxFails (int): Maximum number of allowed failures (not used in ratio calculation)
             
         Returns:
-            bool: True if number of failures is <= maxFails
+            float: Ratio of passed validations to total validations, rounded to two decimal places
         """
         if not self.frame_validation_results:
-            return False
-            
-        failures = sum(1 for result in self.frame_validation_results.values() if not result['passed'])
-        return failures <= maxFails
+            return 0.0
+        
+        total_validations = len(self.frame_validation_results)
+        passed_validations = sum(1 for result in self.frame_validation_results.values() if result['passed'])
+        
+        ratio = passed_validations / total_validations if total_validations > 0 else 0.0
+        return round(ratio, 2)
 
 
     def req_ohlcv(self, start_date:str="52 weeksAgo", end_date:str='now'):
@@ -622,6 +631,12 @@ class StockXDaily:
              self.frame.load_ohlcv(hd.get_hist_data(self.symbol, start_date, end_date, '1 day'))
         return self.frame.data
     
+    def add_TA(self, ta_indicator, style={}, row=None):
+        default_row = 2 if row is None else row 
+        self.frame.add_ta(ta_indicator, style, row=default_row)
+        self.frame.update_ta_data()
+        return self.frame.data
+
     def validate_TA(self, ta_indicator, ta_validator, style={}, row=None, description=None):
         """
         Validates technical analysis indicators against specified validation criteria.
@@ -635,21 +650,11 @@ class StockXDaily:
             bool: Result of the technical analysis validation
         """
         # Default style if none provided
-
         default_row = 2 if row is None else row 
         
         # Add the technical indicator to the frame
         self.frame.add_ta(ta_indicator, style, row=default_row)
-        
-        # Load and update the data
-        self.frame.update_ta_data()
-        
-        # Add the validator
         self.frame.add_ta(ta_validator)
-        
-        # Update data again to include validator results
-        self.frame.load_ohlcv(self.frame.data)
-        self.frame.update_ta_data()
         
         # Create a unique identifier for this validation
         validation_id = f"{ta_indicator.name}_{ta_validator.name}"
@@ -670,6 +675,60 @@ class StockXDaily:
         }
         
         return self.frame_validation_results[validation_id]['passed']
+    
+    def score_TA(self, signal, scorer, style={}, row=None, description=None):
+        """
+        Scores technical analysis indicators against specified criteria.
+        
+        Args:
+            ta_indicator: The technical indicator to be added (e.g., MA, VolDev)
+            ta_validator: The validation method to test the indicator (e.g., Breaks, AboveBelow)
+            style (dict, optional): Plotting style parameters. If None, uses default style.
+        
+        Returns:
+            float: Score of the technical analysis
+        """
+        # Default style if none provided
+        default_row = 2 if row is None else row 
+        
+        # Add the technical indicator to the frame
+        self.frame.add_signals(signal, style, row=default_row)
+        
+        # Load and update the data
+        self.frame.update_signals_data()
+        
+        # Add the validator
+        self.frame.add_signals(scorer, style, row=default_row)
+        
+        # # Update data again to include validator results
+        # self.frame.load_ohlcv(self.frame.data)
+
+        
+        # Create a unique identifier for this validation
+        validation_id = f"{signal.name}_{scorer.name}"
+        
+        # Initialize technical validation results dictionary if it doesn't exist
+        if not hasattr(self, 'technical_validation_results'):
+            self.technical_validation_results = {}
+        
+        # Calculate the score (example: difference between indicator value and validator value)
+        signal_value = self.frame.data[signal.name].iloc[-1]
+        score_value = self.frame.data[scorer.name].iloc[-1]
+        score = abs(signal_value - score_value)  # Example scoring logic
+        
+        # Store the score result
+        self.frame_score_results[validation_id] = {
+            'description': description,
+            'signal': signal.name,
+            'scorer': scorer.name,
+            'validation_type': type(scorer).__name__,  # e.g., 'Breaks' or 'AboveBelow'
+            'signal_value': signal_value,
+            'score_value': score_value,
+            'score': score,
+            'timestamp': self.frame.data.index[-1],  # Store the timestamp of the validation
+        }
+        
+        return self.frame_score_results[validation_id]['score']
     
     def save_chart(self, width=1400, height=800):
         self.frame.chart.save_chart(self.image_path['chart']) # saves the chart to a file
@@ -817,5 +876,3 @@ def analyze_sector(self,
             today_metrics['ma_roc_ratio'],
             today_metrics['combined_score']
         )
-
-
