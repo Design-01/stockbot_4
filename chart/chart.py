@@ -464,6 +464,9 @@ class Chart:
         if chart_type == 'support_resistance':
             self.add_support_resistance(data, style)
 
+        if chart_type == 'rect':
+            self.add_rectangle(data, style)
+
     def add_support_resistance(self, data: pd.DataFrame, style: List[Dict[str, Any]]) -> None:
         """
         Adds support and resistance levels to the chart with upper and lower bounds.
@@ -528,6 +531,76 @@ class Chart:
         for i in range(0, len(resistance_cols), 3):
             for trace in create_traces(resistance_cols[i], resistance_cols[i+1], resistance_cols[i+2], resistance_style):
                 self.fig.add_trace(trace, row=1, col=1)
+   
+    def add_rectangle(self, data: pd.DataFrame, style: List[Dict[str, Any]]) -> None:
+        """
+        Adds support and resistance levels to the chart with upper and lower bounds.
+
+        Args:
+        data (pd.DataFrame): DataFrame containing support and resistance levels with bounds
+        style (List[Dict[str, Any]]): List of style dictionaries for support and resistance
+        """
+        if not style:
+            return
+            
+        support_style, resistance_style = style
+
+        def create_traces(upper_col, lower_col, style):
+            color = style.get('color', 'blue')
+            dash = style.get('dash', 'solid')
+            width = style.get('width', 2)
+            fillcolour = style.get('fillcolour', 'rgba(0, 0, 255, 0.1)')
+            
+            # Upper bound (dashed)
+            yield go.Scatter(
+                x=data.index, 
+                y=data[upper_col], 
+                name=f"Rectangle {upper_col.split('_')[-1]} Upper",
+                line=dict(color=color, width=width-1, dash='dash')
+            )
+            
+            # Lower bound (dashed)
+            yield go.Scatter(
+                x=data.index, 
+                y=data[lower_col], 
+                name=f"Rectangle {lower_col.split('_')[-1]} Lower",
+                line=dict(color=color, width=width-1, dash='dash')
+            )
+            
+            # Filter out NaN values for the fill to work correctly
+            mask = data[upper_col].notna() & data[lower_col].notna()
+            x_data = data.index[mask]
+            upper_data = data[upper_col][mask]
+            lower_data = data[lower_col][mask]
+            
+            # Shaded area between upper and lower bounds
+            yield go.Scatter(
+                x=x_data.tolist() + x_data.tolist()[::-1],
+                y=upper_data.tolist() + lower_data.tolist()[::-1],
+                fill='toself',
+                fillcolor=fillcolour,
+                line=dict(color='rgba(255,255,255,0)'),
+                showlegend=False,
+                name=f"Rectangle {upper_col.split('_')[-1]} Zone"
+            )
+
+        # Get all rectangle columns
+        rect_cols = [col for col in data.columns if col.startswith('RECT')]
+        rect_pairs = []
+        
+        # Group upper and lower bounds
+        for i in range(1, len(rect_cols)//2 + 1):
+            upper = f"RECT_UPPER_{i}"
+            lower = f"RECT_LOWER_{i}"
+            if upper in rect_cols and lower in rect_cols:
+                rect_pairs.append((upper, lower))
+        
+        # Add traces for each rectangle
+        for upper_col, lower_col in rect_pairs:
+            for trace in create_traces(upper_col, lower_col, support_style):
+                self.fig.add_trace(trace, row=1, col=1)
+
+
    
     def add_line(self, data: pd.Series, style: Dict[str, Any], row:int=1) -> None:
         """Adds a line to the chart

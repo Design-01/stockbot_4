@@ -48,21 +48,85 @@ def normalize_int(val:float, minVal:float, maxVal:float):
     """normalizes the value between the min and max."""    
     return int(normalize(val, minVal, maxVal))
 
+def is_gap_pivot_crossover(df: pd.DataFrame, pivot_col: str, ls: str) -> bool:
+    """
+    Check if there is a gap over the most recent pivot at the last bar.
+    This function handles finding the most recent pivot and checking if it's been gapped over.
+    
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        DataFrame containing price data and pivot points
+    pivot_col : str
+        Name of the column containing pivot points
+    ls : str
+        'LONG' or 'SHORT' to indicate direction
+        
+    Returns:
+    --------
+    bool
+        True if the most recent pivot has been gapped over, False otherwise
+    """
+    if ls not in ['LONG', 'SHORT']:
+        raise ValueError("ls parameter must be either 'LONG' or 'SHORT'")
+        
+    try:
+        # Need at least 2 bars
+        if len(df) < 2:
+            return False
+            
+        # Get current bar's open and previous bar's close
+        current_open = df['open'].iloc[-1]
+        prev_close = df['close'].iloc[-2]
+        
+        # Get data up to but not including current bar
+        prior_data = df.iloc[:-1]
+        
+        # Find the most recent pivot
+        prior_pivots = prior_data[pivot_col].dropna()
+        if len(prior_pivots) == 0:
+            return False
+            
+        most_recent_pivot = prior_pivots.iloc[-1]
+        
+        if ls == 'LONG':
+            # For longs: prev_close < pivot < current_open (gapped up over pivot)
+            return (current_open > prev_close and              # Must be a gap up
+                   most_recent_pivot > prev_close and          # Pivot must be above prev close
+                   most_recent_pivot < current_open)           # Pivot must be below current open
+        elif ls == 'SHORT':
+            # For shorts: current_open < pivot < prev_close (gapped down over pivot)
+            return (current_open < prev_close and              # Must be a gap down
+                   most_recent_pivot < prev_close and          # Pivot must be below prev close
+                   most_recent_pivot > current_open)           # Pivot must be above current open
+                   
+    except (KeyError, IndexError):
+        return False
+
+
+
 
 #£ Done
 @dataclass
 class Signals(ABC):
     name: str = ''
-    maxCol: str = 'high'
-    minCol: str = 'low'
     normRange: Tuple[int, int] = (0, 100)
+    ls: str = 'LONG'
+    lookBack: int = 20
 
+    def __post_init__(self):
+        self.name = f"Sig{self.ls[0]}_{self.name}"
+        self.names = [self.name]
 
-
-    def get_score(self, val:float):
-        # test for NaN and set to 0 if so
-        if val == 0: return 0
-        return normalize(val, self.normRange[0], self.normRange[1])
+    def get_score(self, val):
+        if isinstance(val, pd.Series):
+            # Apply the function to each element in the series
+            return val.apply(lambda x: 0 if x == 0 else normalize(x, self.normRange[0], self.normRange[1]))
+        else:
+            # Handle single value
+            if val == 0:
+                return 0
+            return normalize(val, self.normRange[0], self.normRange[1])
 
     def get_window(self, df, ls, w=1):
         if len(df) <= 2:
@@ -91,62 +155,183 @@ class Signals(ABC):
         return None
     
     def return_series(self, index:pd.DatetimeIndex, val:float):
+        if isinstance(val, pd.Series):
+            val.name = self.name
+            return val
         return pd.Series(index=[index], data=val, name=self.name)
-                        
+    
     @abstractmethod
-    def run(self, longshort:str='', df:pd.DataFrame=pd.DataFrame()):
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """This method is to compute each row in the lookback period."""
         pass
+                        
+    # @abstractmethod
+    def run(self, df: pd.DataFrame = pd.DataFrame()) -> pd.Series:
+        """Generate signal scores for the lookback period."""
+        if len(df) <= self.lookBack:
+            return self.return_series(df.index[-1], self.get_score(0))
+
+        # this then gets populated with the results of the computation
+        result_series = pd.Series(0.0, index=df.index[-self.lookBack:])
+        
+        for i in range(self.lookBack):
+            current_idx = -(self.lookBack - i)
+            if abs(current_idx) >= len(df) :
+                continue
+            
+            #! This is where the computation is done. 
+            #! Each sub class must have a _compute_row method that does the computation
+            current_window = df.iloc[:current_idx+1]
+            if current_window.empty:
+                continue
+            val = self._compute_row(current_window)
+            result_series.iloc[i] = float(val)
+
+        return self.return_series(df.index[-self.lookBack:], self.get_score(result_series))
 
 
 @dataclass
 class Score(Signals):
-    name: str = ''
     cols: List[str] = field(default_factory=list)
     weight: float = 1.0
     scoreType:str = 'mean' # 'mean', 'sum', 'max', 'min'
     
-    def __post_init__(self):
-        self.name = f"Sc_{self.name}"
-        self.names = [self.name]
-
-    def run(self, df:pd.DataFrame=pd.DataFrame()):
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """This method is to compute each row in the lookback period."""
         if len(self.cols) == 0:
-            return self.return_series(df.index[-1], 0.0)
+            return 0.0
+        
+        val = 0.0
+
+        last_row = df[self.cols].iloc[-1]
 
         if self.scoreType == 'mean':
-            val = df[self.cols].mean(axis=1)
+            val = last_row.mean()
         elif self.scoreType == 'sum':
-            val = df[self.cols].sum(axis=1)
+            val = last_row.sum()
         elif self.scoreType == 'max':
-            val = df[self.cols].max(axis=1)
+            val = last_row.max()
         elif self.scoreType == 'min':
-            val = df[self.cols].min(axis=1)
+            val = last_row.min()
         else:
-            val = df[self.cols].mean(axis=1)
+            val = 0.0
 
-        return self.return_series(df.index[-1], val)
+        score = self.get_score(val) * self.weight
+        return score
+
       
-    
+import random
+
+#£ Done
+@dataclass
+class ExampleClass(Signals):
+    """
+    Example class to show how to create a new signal class.
+    """
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """This method is to compute each row in the lookback period."""
+        return random.randint(0, 100)
 
 
+@dataclass
+class GetSignalAtPoint(Signals):
+    name: str = 'SaP'
+    pointCol: str = ''
+    sigCol: str = ''
+    pointsAgo: int = 1
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """
+        Gets a Signal at a high Point or a low Point by looking back 
+        to the nth most recent point and getting the corresponding signal.
+        """
+        points = df[self.pointCol].dropna()
+        if len(points) < self.pointsAgo:
+            return 0.0
+        
+        index = points.index[-self.pointsAgo]
+        
+        return df[self.sigCol].loc[index]
+
+@dataclass
+class GetMaxSignalSincePoint(Signals):
+    name: str = 'MaxSig'
+    pointCol: str = ''
+    sigCol: str = ''
+    pointsAgo: int = 1
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """
+        Gets a Signal at a high Point or a low Point by looking back 
+        to the nth most recent point and getting the corresponding signal.
+        """
+        points = df[self.pointCol].dropna()
+        if len(points) < self.pointsAgo:
+            return 0.0
+        
+        index = points.index[-self.pointsAgo]
+        
+        return df[self.sigCol].loc[index:].max()
+
+@dataclass
+class PullbackBounce(Signals):
+    name: str = 'PBB'
+    pointCol: str = ''
+    supResCol: str = ''
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """
+        Gets a Signal at a high Point or a low Point by looking back 
+        to the nth most recent point and getting the corresponding signal.
+        """
+        points = df[self.pointCol].dropna()
+        if len(points) < 1:
+            return 0.0
+        
+        pnt_idx = points.index[-1]
+
+        if self.ls == 'LONG':
+            # recent hp low > current support (proves hp clears current support levels)
+            recent_hp_low = df['low'].loc[pnt_idx]
+            sup = df[self.supResCol].iloc[-1]
+            hp_bar_cleard_sup = recent_hp_low > sup
+
+            # since recent HP the lowest point < current support
+            lowest = df['low'].loc[pnt_idx:].min()
+            hp_lowest_below_sup = lowest < sup
+
+            # close > support (price bounced off support)
+            close = df['close'].iloc[-1]
+            close_above_sup = close > sup
+
+            return hp_bar_cleard_sup and hp_lowest_below_sup and close_above_sup
+        
+        elif self.ls == 'SHORT':
+            # recent lp high < current resistance (proves lp clears current resistance levels)
+            recent_lp_high = df['high'].loc[pnt_idx]
+            res = df[self.supResCol].iloc[-1]
+            lp_bar_cleard_res = recent_lp_high < res
+
+            # since recent LP the highest point > current resistance
+            highest = df['high'].loc[pnt_idx:].max()
+            lp_highest_above_res = highest > res
+
+            # close < resistance (price bounced off resistance)
+            close = df['close'].iloc[-1]
+            close_below_res = close < res
+
+            return lp_bar_cleard_res and lp_highest_above_res and close_below_res
+        
+        return False
 
 #£ Done
 @dataclass
 class Tail(Signals):
     name: str = 'Tail'    
     tailExceedsNthBarsAgo: int = 0
-    ls: str = 'LONG'
 
-    def __post_init__(self):
-        self.x = None
-        if self.tailExceedsNthBarsAgo < 2 :
-            self.tailExceedsNthBarsAgo = 3
-        self.name = f"Sig{self.ls[0]}_{self.name}_{self.tailExceedsNthBarsAgo}"
-        self.names = [self.name]
-
-
-    #$ **kwargs is used to allow any signal arguments to be passed to any run method. This so that the same run method can be used when looping through signals.
-    def run(self, df:pd.DataFrame=pd.DataFrame()):
+    def _compute_row(self, df:pd.DataFrame):
         """Top Tail / Bottom Tail is the ratio of the top and the bottom. 
         The top is low of the body to the high.
         The bottom is the high of the body to the low. 
@@ -163,22 +348,22 @@ class Tail(Signals):
         if len(df) < self.tailExceedsNthBarsAgo+2:
             return 0
     
-        self.x = df.iloc[-1] # get the last bar 
+        x = df.iloc[-1] # get the last bar 
 
         # top of body is the max of open and close
-        top = max(self.x.open, self.x.close)
+        top = max(x.open, x.close)
 
         # bottom of body is the min of open and close
-        bottom = min(self.x.open, self.x.close)
+        bottom = min(x.open, x.close)
 
         # body length is the difference between open and close
-        body_len = abs(self.x.open - self.x.close)
+        body_len = abs(x.open - x.close)
 
         # get the length of the top of body to low and bottom of body to high
         # 0.05 is 5% of body length. This is to avoid div by zero and to give a 
         # min value to keep extream values in check as this is used to divide by.
-        top_len    = max(self.x.high - bottom, body_len * 0.05) 
-        bottom_len = max(top - self.x.low, body_len * 0.05)
+        top_len    = max(x.high - bottom, body_len * 0.05) 
+        bottom_len = max(top - x.low, body_len * 0.05)
 
         # ratio of top to bottom
         # 25 is to help scale the value to be between 0 and 100
@@ -189,17 +374,15 @@ class Tail(Signals):
             # get the lowest low of the last n bars
             lowest  = min(df.low.iloc[-self.tailExceedsNthBarsAgo-1:-2])
             if top_len > 0 and df.low.iat[-1] <= lowest: 
-                val = round(bottom_len / top_len *25, 2) # gives higher number the longer the bottom is (signals a bullish reversal)
-                self.return_series(df.index[-1], val)
-
+                return  round(bottom_len / top_len *25, 2) # gives higher number the longer the bottom is (signals a bullish reversal)
+  
         else: 
             # get the highest high of the last n bars
             highest = max(df.high.iloc[-self.tailExceedsNthBarsAgo-1:-2])
             if bottom_len > 0 and df.high.iat[-1] >= highest:
-                val = round(top_len / bottom_len *25, 2) # gives higher number the longer the top is (signals a bearish reversal)
-                self.return_series(df.index[-1], val)
-        
-        return self.return_series(df.index[-1], 0.0)
+                return round(top_len / bottom_len *25, 2) # gives higher number the longer the top is (signals a bearish reversal)
+
+        return 0
 
 
 #£ Done
@@ -207,64 +390,56 @@ class Tail(Signals):
 class PullbackNear(Signals):
     name: str = 'PBN'
     pullbackCol     : str = '' # col which the price pullback is near to
-    ls: str = 'LONG'
-
-    def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}_{self.pullbackCol}"
-        self.names = [self.name]
+    maxCol          : str = '' # col which the price is near to : used for get window
+    minCol          : str = '' # col which the price is near to : used for get window
+    optimalRetracement: float = 99
 
 
-    def get_score(self, retracement):
-        """Calculate score based on retracement. Optimal retracement is 95%.
+    def pb_score(self, retracement):
+        """Calculate score based on retracement back to a value eg MA21. Optimal retracement is 95%.
         Score decreases by 10 for every 1% away from optimal retracement above 95%.
         eg 91% retracement will have a score of 85. 92% retracement will have a score of 80.
         eg 80% retracement will have a score of 80. 70% retracement will have a score of 70.
         eg 50% retracement will have a score of 50. 0% retracement will have a score of 0.
         """
-        optimal_retracement = 99 # Was 95% but changed to 99%
+        optimal_retracement = self.optimalRetracement
         if retracement <= optimal_retracement:
             return max(retracement, 0)
         
         score = optimal_retracement - (retracement - optimal_retracement) * 10
         return max(score, 0)
 
-
-    #$ **kwargs is used to allow any signal arguments to be passed to any run method. This so that the same run method can be used when looping through signals.
-    def run(self, df:pd.DataFrame=pd.DataFrame()):
+    def _compute_row(self, df:pd.DataFrame):
         """How near is the priceNow to the MA from the pullback high at start (bull case) to the low at the end """
-
         #! even though the lower of two recent bars is chosen as the low point the MA is always the current bar. so the distance will change evethough it may be compared to the same low point.
-        
         if len(df) < 3:
-            return self.return_series(df.index[-1], 0.0)
+            return 0
         
         w0 = self.get_window(df, self.ls, 0)
         if w0.empty or len(w0) < 2:
-            return self.return_series(df.index[-1], 0.0)
+            return 0
         
         priceNow = df.close.iat[-1]
 
         if self.ls == 'LONG':
-            score =  self.get_score(trace(w0.high.iat[0], df[self.pullbackCol].iat[-1], priceNow))
-            return self.return_series(df.index[-1], score)
-                   
+            val = trace(w0.high.iat[0], df[self.pullbackCol].iat[-1], priceNow)
+            return self.pb_score(val)
+
         elif self.ls == 'SHORT':
-            score = self.get_score(trace(w0.low.iat[0], df[self.pullbackCol].iat[-1], priceNow))
-            return self.return_series(df.index[-1], score)
+            val = trace(w0.low.iat[0], df[self.pullbackCol].iat[-1], priceNow)
+            return self.pb_score(val)
+
+        return 0
 
 
 #£ Done
 @dataclass
 class Overlap(Signals):
-    name: str = 'Olap'
-    ls: str = 'LONG'
+    name  : str = 'Olap'
+    maxCol: str = '' # col which the price is near to : used for get window
+    minCol: str = '' # col which the price is near to : used for get window
 
-    def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}"
-        self.names = [self.name]
-
-    #$ **kwargs is used to allow any signal arguments to be passed to any run method. This so that the same run method can be used when looping through signals.
-    def run(self, df:pd.DataFrame=pd.DataFrame()):
+    def _compute_row(self, df:pd.DataFrame):
         """Computes the overlap as % from this high to prev low (BULL, so pullback is down) as ratio to prev bar range .
             Then gets the mean % of all overlaps. Works very well to give a good guide for a smooth pullback
             if the mean % is 50%. so the nearer to 50% the better """
@@ -273,13 +448,13 @@ class Overlap(Signals):
         w0 = self.get_window(df, self.ls, 0)
         
         if  len(w0) <= 2:
-            return self.return_series(df.index[-1], 0.0)
+            return 0
         
         # check if in downward pullback the high of the current bar is lower than the low of the prior bar etc
         if self.ls == 'LONG' and not w0.high.iat[-3] > w0.high.iat[-1]: 
-            return self.return_series(df.index[-1], 0.0)
+            return 0
         if self.ls == 'SHORT'and not w0.low.iat[-3]  < w0.low.iat[-1]:
-            return self.return_series(df.index[-1], 0.0)
+            return 0
             
         prev = w0.shift(1).copy()
         olap          = w0.high - prev.low if self.ls == 'LONG' else prev.high - w0.low
@@ -287,13 +462,12 @@ class Overlap(Signals):
         olap_pct      = olap / prev_rng 
         olap_pct_mean = olap_pct.mean()
 
-
         # 150 is to scale the score to be between 0 and 100. playing around with this number will change the sensitivity of the score
         # 100 is the best score as it means the olap_pct is 50% which is the best
         # calculate score based on olap_pct
         optimal_olap_pct = 0.5
         score = 100 - abs(olap_pct_mean - optimal_olap_pct) * 150 
-        return self.return_series(df.index[-1], max(score, 0))
+        return max(score, 0)
 
 
 
@@ -352,11 +526,11 @@ class Trace(Signals):
             
             # avoid div by zero
             if fromPrice != toPrice:
-                trace = sbu.trace(fromPrice, toPrice, priceNow)
+                t = trace(fromPrice, toPrice, priceNow)
                 if self.optimalRtc:
-                    self.val = self.compute_from_mid_trace(trace, self.optimalRtc)
+                    self.val = self.compute_from_mid_trace(t, self.optimalRtc)
                 else: 
-                    self.val = trace
+                    self.val = t
             # display((f'{longshort} {df.index[-1]}-- fromPrice: {fromPrice}, toPrice: {toPrice}, priceNow: {priceNow}, trace: {self.val}'))
         else:
             self.val = 0
@@ -475,15 +649,6 @@ class TrendlinneRightDirection:
         return self.val
 
 
-
-  
-            
-
-
-
-
-
-
 @dataclass
 class AllSameColour(Signals):
     """Retruns the ration of how many bars are of the same colour as the longshort direction. 
@@ -599,243 +764,204 @@ class RelativeStrengthWeakness(Signals):
             self.val = df[self.rsiCol].iat[-1] *-1
 
 #$ ------- Gaps ---------------
+# Used for checking if this works correctly. 
+@dataclass
+class IsGappedOverPivot(Signals):
+    """
+    Simple signal class to verify gap-over-pivot conditions.
+    Returns 1.0 when a pivot is gapped over, 0.0 otherwise.
+    """
+    pointCol: str = 'pivot'
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        # Get data up to current bar
+        return is_gap_pivot_crossover(df, self.pointCol, self.ls)
+
+    
+
 #£ Done
 @dataclass
 class GappedPivots(Signals):
-    """Computes the number of pivots that have been gapped over as a ratio to the total number of pivots.
-    This means that as the candels progress the ratio will decrease as more pivots appear on the chart over. 
-    This gives more potency to earlier gapped pivots."""
-    name : str = 'GPIV'
-    pointCol   : str = ''
-    mustGap : bool = False 
-    runType : str = 'pct' 
-    span    : int = 20 
-    ls      : str = 'LONG'  
-
-    """Args:
-        colname (str) : The name of the column to store the signal values in.
-        hpCol (str)   : The name of the column containing the high pivots.
-        lpCol (str)   : The name of the column containing the low pivots.
-        mustGap (bool): If True, only count pivots if there is a gap between the current bar and the previous bar. If False, count pivots from prev close to current close.
-        runType (str) : If 'pct', return the ratio of pivots gapped over to total pivots. If 'count', return the number of pivots gapped over.
-        span (int)    : How many bars to look back to find pivots.
     """
-
+    Computes the ratio or count of pivots that fall within the gap between
+    previous close and current open.
+    
+    Parameters:
+    -----------
+    pointCol : str : Column name containing pivot points
+    span : int: How far back to look for pivots
+    ls : str 'LONG' or 'SHORT' to indicate direction
+    lookBack : int Number of recent bars to analyze
+    """
+    name: str = 'GPiv'
+    pointCol: str = ''
+    runType: str = 'pct'
+    span: int = 20
 
     def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}_{self.span}"
+        self.name = f"Sig{self.ls[0]}_{self.name}"
         self.names = [self.name]
-        self.pivots = object
-        self.min_val = 0
-        self.max_val = 0
-        self.piv = object
-        self.piv_no_nans = object
 
-    def run(self, df:pd.DataFrame=pd.DataFrame()):
+    def _compute_row(self, df: pd.DataFrame) -> tuple[int, int]:
+        """Count pivots that fall within the gap range."""
+
+        if not is_gap_pivot_crossover(df, self.pointCol, self.ls):
+            return 0
         
-        if len(df) > 3:
+        pivots = df[self.pointCol].iloc[:-2].dropna()
+        
+        if len(pivots) == 0:
+            return 0
 
-            if self.ls == 'LONG':
-                #! cut last row so do not count last HP. This is incase Point is added to very last bar
-                self.pivots = df[self.pointCol][self.span:-2].dropna()  
-                if self.mustGap:
-                    self.max_val = df.low.iat[-1]
-                    self.min_val = df.high.iat[-2]
-                else:
-                    self.max_val = df.open.iat[-1]
-                    self.min_val = df.high.iat[-2]
-               
-            if self.ls == 'SHORT':
-                #! cut last row so do not count last HP. This is incase Point is added to very last bar
-                self.pivots = df[self.pointCol][self.span:-2].dropna() 
-                if self.mustGap:
-                    self.min_val = df.high.iat[-1]
-                    self.max_val = df.low.iat[-2]
-                else:
-                    self.min_val = df.open.iat[-1]
-                    self.max_val = df.low.iat[-2]
-            
-            if self.max_val > self.min_val:
-                is_greater_than_min = self.pivots >= self.min_val # if the pivot is greater than the current bar close then it has been gapped over
-                is_less_than_max    = self.pivots <= self.max_val # if the pivot is less than the prior bar close then it has been gapped over
+        current_open = df['open'].iloc[-1]
+        prev_close = df['close'].iloc[-2]
+        
+        # Only count pivots that fall within the gap range
+        if self.ls == 'LONG' and current_open > prev_close:
+            return sum((pivot > prev_close) & (pivot < current_open) for pivot in pivots)
+        elif self.ls == 'SHORT' and current_open < prev_close:
+            return sum((pivot < prev_close) & (pivot > current_open) for pivot in pivots)
 
-                # drop nan values from piv
-                self.piv = np.where( is_greater_than_min & is_less_than_max, self.pivots, np.nan)
-                self.piv_no_nans = self.piv[~np.isnan(self.piv)]
-                self.val    = len(self.piv_no_nans)
+        return 0
 
-                if self.runType == 'pct':
-                    # ratio of pivots gapped over to total pivots
-                    # 100 is the best value as it means all pivots have been gapped over
-                    #$ this will give a high score at the start of the trade as there will be less pivots to gap over meaning the ratio will be higher.
-                    #$ this seems to be ok as earlier trades are more important than later trades. 
-                    if len(self.pivots) > 0:
-                        self.val = self.val / len(self.pivots) * 100
-
-                elif self.runType == 'count':
-                    self.val = len(self.piv_no_nans)
-                
-            else:
-                self.val = 0
-
-        else:
-            self.val = 0
-
-        score = self.get_score(self.val)
-
-        return self.return_series(df.index[-1], score)
-
-    def reset(self):
-        self.val = 0
-        self.pivots = object
-        self.min_val = 0
-        self.max_val = 0
-        self.piv = object
-        self.piv_no_nans = object
 
 
 #£ Done
 @dataclass
-class GappedBarQuality(Signals):
-    """Assess the quality of the gap by assessing the previous bar that has been gapped over.
-    If this is a long trade then gaping over a wide range red bar is good but gaping over a 
-    wide range green bar is bad, a narrow range bar has less impact, so return the points based upon this assessment"""
-    name        : str = 'GBQ'
-    atrMultiple : int = 2
-    atrCol      : str = ''
-    ls    : str = 'LONG'
+class GappedRetracement(Signals):
+    name: str = 'GRtc'
+    atrCol: str = ''
+    pointCol: str = ''
 
-    def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}_{self.atrMultiple}"
-        self.names = [self.name]
-        self.val = 0.0
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """
+        Measures the shock value of a gap pivot crossover by calculating the retracement 
+        relative to ATR. A larger retracement indicates a more significant gap move.
+        """
+        # First check if we have a valid gap pivot crossover
+        has_crossover = is_gap_pivot_crossover(df, self.pointCol, self.ls)
+        if not has_crossover:
+            return 0.0
 
-    def run(self, df:pd.DataFrame=pd.DataFrame()):
-        if len(df) > 1: 
-
-            atr = df[self.atrCol].iat[-1]
-
+        try:
+            # Get previous close and most recent pivot
+            prev_close = df['close'].iloc[-2]
+            prior_pivots = df.iloc[:-1][self.pointCol].dropna()
+            
+            if len(prior_pivots) == 0:
+                return 0.0
+                
+            pivot_value = prior_pivots.iloc[-1]
+            atr = df[self.atrCol].iloc[-1]
+            
+            # Calculate retracement size relative to ATR
             if self.ls == 'LONG':
-                has_upper_gap = df.low.iat[-1] > df.high.iat[-2]
-                prev_is_red   = df.close.iat[-2] < df.open.iat[-2]
+                # For longs: distance from pivot to previous close
+                retracement = pivot_value - prev_close
+            else:
+                # For shorts: distance from previous close to pivot
+                retracement = prev_close - pivot_value
+                
+            # Convert to percentage of ATR
+            shock_value = (retracement / atr) * 100
+            return shock_value
+                
+        except (IndexError, KeyError):
+            return 0.0
 
-                if has_upper_gap:
-                    if prev_is_red:
-                        bar_range = df.high.iat[-2] - df.close.iat[-2]
-                        self.val =   bar_range / (atr * self.atrMultiple) * 100
-                    else:
-                        bar_range = df.high.iat[-2] - df.open.iat[-2]
-                        self.val =  - bar_range / (atr * self.atrMultiple) * 100 # divide by 2 as the prev bar is green so the gap is not as good so reduce the points
 
-            elif self.ls == 'SHORT':
-                has_lower_gap = df.high.iat[-1] < df.low.iat[-2]
-                prev_is_green = df.close.iat[-2] > df.open.iat[-2]
+import math
 
-                if has_lower_gap:
-                    if prev_is_green:
-                        bar_range = df.close.iat[-2] - df.low.iat[-2]
-                        self.val  =  bar_range / (atr * self.atrMultiple) * 100
-                    else:
-                        bar_range = df.open.iat[-2] - df.low.iat[-2]
-                        self.val  = - bar_range / (atr * self.atrMultiple * 2) * 100 # divide by 2 as the prev bar is green so the gap is not as good so reduce the points
-
-        score = self.get_score(self.val)    
-        return self.return_series(df.index[-1], score)
-
-#! Not yet integrated, but tested and working
-@dataclass
-class GappedBarCount(Signals):
-    """Assess the quality of the gap by assessing the previous bar that has been gapped over.
-    """
-    name       : str = 'GBC'
-    ls         : str = 'LONG'
-
-    def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}"
-        self.names = [self.name]
-        self.val        : float = 0.0
-
-    def get_last_window(self, df:pd.DataFrame=pd.DataFrame()):
-        """ get the last window of bars that have a MajorHP and MajorLP """
-        hplp_no_nans = df[['MajorHP', 'MajorLP']][:-2].dropna(how='all')
-
-        if len(hplp_no_nans) > 0:
-            last_point_index = hplp_no_nans.index[-1]
-            last_window      = df.loc[last_point_index:]
-
-            return last_window
-
-    def run(self, df:pd.DataFrame=pd.DataFrame()):
-        if len(df) > 1: 
-
-                if self.ls == 'LONG':
-                    has_upper_gap = df.low.iat[-1] > df.high.iat[-2]
-                    if has_upper_gap:
-                        last_window = self.get_last_window(df)
-                        if last_window is not None:
-                            within_gap = (df.low.iat[-1] > last_window.high) & (df.open.iat[-2] < last_window.high)
-                            valid_bars = last_window[within_gap]
-                            self.val = valid_bars.shape[0]
-        
-                if self.ls == 'SHORT':
-                    has_lower_gap = df.high.iat[-1] < df.low.iat[-2]
-                    if has_lower_gap:
-                        last_window = self.get_last_window(df)
-                        if last_window is not None:
-                            within_gap = (df.high.iat[-1] < last_window.low) & (df.open.iat[-2] > last_window.low)
-                            valid_bars = last_window[within_gap]
-                            self.val = valid_bars.shape[0]
-        
-        score = self.get_score(self.val)
-        return self.return_series(df.index[-1], score)
-
-#! Not yet integrated, but tested and working
+#£Done
 @dataclass
 class GappedPastPivot(Signals):
-    """Assess the quality of the gap by assessing the previous bar that has been gapped over.
     """
-    name   : str = 'GPP'
-    atrCol : str = ''
-    ls     : str = 'LONG'
+    Assess the quality of gaps past pivot points by evaluating gap size relative to ATR.
+    Uses a diminishing returns approach for oversized gaps.
+    """
+    name: str = 'GPP'
+    atrCol: str = ''
+    pointCol: str = ''
+    maxAtrMultiple: int = 10  # Number of ATR past pivot before score starts diminishing
 
-    def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}"
-        self.names = [self.name]
-        self.val = 0.0
-
-    def get_last_hp(self, df:pd.DataFrame=pd.DataFrame()):
-        hp_no_nans = df['MajorHP'][:-2].dropna(how='all')
-        if len(hp_no_nans) > 0:
-            return hp_no_nans.iat[-1]
-    
-    def get_last_lp(self, df:pd.DataFrame=pd.DataFrame()):
-        lp_no_nans = df['MajorLP'][:-2].dropna(how='all')
-        if len(lp_no_nans) > 0:
-            return lp_no_nans.iat[-1]
-        
-    def run(self, df:pd.DataFrame=pd.DataFrame()):
-        if len(df) > 1: 
-
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """
+        Calculate a score based on how far price has gapped over the most recent pivot.
+        Score diminishes as price moves further from the pivot, reaching 0 at max_atr_multiple.
+            
+        Returns:
+        --------
+        float
+            Score between 0 and 100, with higher scores indicating better gaps
+        """
+        # First check if there's a valid gap over pivot
+        if not is_gap_pivot_crossover(df, self.pointCol, self.ls):
+            return 0.0
+            
+        try:
+            # Get relevant values
+            current_price = df['close'].iloc[-1]
+            pivot_value = df[self.pointCol].dropna().iloc[-1]  # Most recent pivot
+            atr = df[self.atrCol].iloc[-1]
+            
+            # Calculate gap size in ATR terms
             if self.ls == 'LONG':
-                has_upper_gap = df.low.iat[-1] > df.high.iat[-2]
-                if has_upper_gap:
-                    last_hp = self.get_last_hp(df)
-                    if last_hp is not None and not df.high.iat[-2] > last_hp:
-                        gap_point_to_low = df.low.iat[-1] - last_hp
-                        gap_atr_ratio    = gap_point_to_low / df[self.atrCol].iat[-1] * 100
-                        self.val = gap_atr_ratio
+                gap_points = current_price - pivot_value
+            else:
+                gap_points = pivot_value - current_price
+                
+            gap_atr_ratio = gap_points / atr
+            
+            # Calculate score using exponential decay
+            # This will create a more gradual decline in score as gap increases
+            decay_factor = -3 * (gap_atr_ratio / self.maxAtrMultiple)
+            score = 100 * math.exp(decay_factor)
+            
+            # Ensure score is between 0 and 100
+            return max(0, min(100, score))
+            
+        except (KeyError, IndexError):
+            return 0.0
 
-            if self.ls == 'SHORT':
-                has_lower_gap = df.high.iat[-1] < df.low.iat[-2]
-                if has_lower_gap:
-                    last_lp = self.get_last_lp(df)
-                    if last_lp is not None and not df.low.iat[-2] < last_lp:
-                        gap_point_to_high = last_lp - df.high.iat[-1]
-                        gap_atr_ratio     = gap_point_to_high / df[self.atrCol].iat[-1] * 100
-                        self.val = gap_atr_ratio
 
-        score = self.get_score(self.val)
-        return self.return_series(df.index[-1], score)
+
+#£Done
+@dataclass
+class GapSize(Signals):
+    """Measure the size of price gaps relative to the previous close."""
+    name: str = 'GSiz'
+    atrCol: str = ''
+    pointCol: str = ''  # Column name for pivot points
+        
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """
+        Calculate the gap score relative to ATR for a confirmed pivot crossover.
+
+        Returns:
+        --------
+        float
+            Gap score as a percentage of ATR
+        """
+        # First check if there's a valid gap over pivot
+        if not is_gap_pivot_crossover(df, self.pointCol, self.ls):
+            return 0.0
+        
+        current_open = df['open'].iloc[-1]
+        prev_close = df['close'].iloc[-2]
+        current_atr = df[self.atrCol].iloc[-1]
+        
+        if current_atr == 0:
+            return 0.0
+            
+        if self.ls == 'LONG':
+            gap_points = current_open - prev_close
+        else:  # SHORT
+            gap_points = prev_close - current_open
+            
+        return gap_points / current_atr * 100
+        
+
+
 
 #$ ------- Volume ---------------
 #£ Done
@@ -845,30 +971,37 @@ class VolumeSpike(Signals):
     Detects a volume spike in a pandas dataframe with a 'volume' column.
     Returns the percent change between the current volume and the rolling average volume over 'volMA' periods.
     """
+    name         : str = 'VolSpike'
     volMACol     : str = ''
-    volRatioBest : float = 2.0
 
-    """
-    Args:
-        volMA (int)          : The number of periods to use for the rolling average volume.
-        volRatioBest (float) : The ratio of current volume to rolling average volume that is considered the best.
-    """
-
-    def __post_init__(self):
-        self.columns = [self.colname]
-
-    def run(self, df, **kwargs):
-        current_volume = df['volume'].iloc[-1]
+    def _compute_row(self, df:pd.DataFrame):
+        current_volume = df['volume'].iat[-1]
+        vol_ma = df[self.volMACol].iat[-1]
         
         # Calculate the percent change between the current volume and the rolling average volume
-        percent_change = ((current_volume - df[self.volMACol].iloc[-1]) / df[self.volMACol].iloc[-1]) * 100
+        return ((current_volume - vol_ma) / vol_ma) * 100
 
-        # Check the value is not NaN
-        if pd.isna(percent_change):
-            percent_change = 0
 
-        self.val = max(percent_change, 0)
-        return self.val
+@dataclass
+class VolumeROC(Signals):
+    """
+    Calculates the Rate of Change (ROC) of volume between consecutive bars.
+    Returns the acceleration of volume changes over the lookback period.
+    """
+    name: str = 'VolROC'
+
+    
+    def _compute_row(self, df: pd.DataFrame):
+        """
+        Calculate volume ROC acceleration over the lookback period.
+        """
+        # Get the volume series for the lookback period
+        vol1 = df['volume'].iat[-1]
+        vol2 = df['volume'].iat[-2]
+        
+        # Calculate ROC
+        return ((vol1 - vol2) / vol2) * 100
+
 
 #$ ------- Price ---------------
 @dataclass
@@ -885,28 +1018,34 @@ class RoomToMove(Signals):
     atr    = 5
     room   = 2
     """
-    tgetLCol : str = ''
-    tgetSCol : str = ''
+    name : str = 'RTM'
+    tgetCol : str = ''
     atrCol: str = ''
-    val   : float = 0.0
 
-    def run(self, longshort:str='', df:pd.DataFrame=pd.DataFrame(), **kwargs):
+    def _compute_row(self, df:pd.DataFrame=pd.DataFrame(), **kwargs):
+
+        val = 0
+
         if len(df) > 1:
-            if longshort == 'LONG':
-                if df[self.tgetLCol].iat[-1] is not None:
-                    self.val = (df[self.tgetLCol].iat[-1] - df.close.iat[-1]) / df[self.atrCol].iat[-1]
+            if self.ls == 'LONG':
+                if df[self.tgetCol].iat[-1] is not None:
+                    return (df[self.tgetCol].iat[-1] - df.close.iat[-1]) / df[self.atrCol].iat[-1]
                 
-                # if there is no pivot point then return 2. meaning it has room to move so give an arbitrary high number
+                # if there is no target then return 2. meaning it has room to move so give an arbitrary high number
                 else:
-                    self.val = 2
+                    return 2
 
-            elif longshort == 'SHORT':
-                if df[self.tgetSCol].iat[-1] is not None:
-                    self.val = (df.close.iat[-1] - df[self.tgetSCol].iat[-1]) / df[self.atrCol].iat[-1]
+            elif self.ls == 'SHORT':
+                if df[self.tgetCol].iat[-1] is not None:
+                    return (df.close.iat[-1] - df[self.tgetCol].iat[-1]) / df[self.atrCol].iat[-1]
 
-                # if there is no pivot point then return 2. meaning it has room to move so give an arbitrary high number
+                # if there is no target then return 2. meaning it has room to move so give an arbitrary high number
                 else:
-                    self.val = 2
+                    return 2
+   
+        return 0
+
+
 
 @dataclass
 class RoomToMoveCustomValues(Signals):

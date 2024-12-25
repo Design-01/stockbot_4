@@ -2,6 +2,7 @@ import pandas as pd
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import numpy as np
+from typing import List, Tuple, Union, Dict
 
 def preprocess_data(func):
     def wrapper(self, data: pd.DataFrame, *args, **kwargs):
@@ -398,7 +399,7 @@ class SupRes(TA):
 @dataclass
 class MansfieldRSI(TA):
     close_col: str = 'close'  # Column name for stock close price
-    index_col: str = 'index_close'  # Column name for index close price
+    market_col: str = 'index_close'  # Column name for index close price
     span: int = 14  # Default lookback period
     
     def __post_init__(self):
@@ -407,11 +408,11 @@ class MansfieldRSI(TA):
         self.rowsToUpdate = 200
 
     @preprocess_data
-    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+    def _old_run(self, data: pd.DataFrame) -> pd.DataFrame:
         df = data.copy()
         
         # Step 1: Calculate raw Relative Strength (RS)
-        rs = df[self.close_col] / df[self.index_col]
+        rs = df[self.close_col] / df[self.market_col]
         
         # Step 2: Smooth RS using moving average
         rs_ma = rs.rolling(window=self.span, min_periods=1).mean()
@@ -424,6 +425,25 @@ class MansfieldRSI(TA):
         
         # Handle any NaN values that might occur at the beginning
         df[self.name_mrsi] = df[self.name_mrsi].fillna(0)
+        
+        return df[[self.name_mrsi]]
+    
+    @preprocess_data
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        df = data.copy()
+        
+        # Step 1: Calculate raw Relative Strength (RS)
+        rs = df[self.close_col] / df[self.market_col]
+        
+        # Step 2: Calculate log returns of RS
+        rs_returns = np.log(rs / rs.shift(1))
+        
+        # Step 3: Calculate the moving average and standard deviation
+        rs_ma = rs_returns.rolling(window=self.span, min_periods=1).mean()
+        rs_std = rs_returns.rolling(window=self.span, min_periods=1).std()
+        
+        # Step 4: Calculate standardized (z-score) RS
+        df[self.name_mrsi] = ((rs_returns - rs_ma) / rs_std).fillna(0)
         
         return df[[self.name_mrsi]]
 
@@ -748,3 +768,240 @@ class SupRes_template:
     def run(self, df, startwith='res'):
         # FIL CODE HERE 
         return df # return the updated DataFrame with the support and resistance levels and the upper and lower bounds
+
+
+#! ---- Trend Lines ----
+
+
+
+
+from dataclasses import dataclass
+import pandas as pd
+import numpy as np
+from typing import List, Dict, Tuple
+from sklearn.cluster import DBSCAN
+
+@dataclass
+class ConsolidationZone:
+    hp_column: str = 'HP_hi_10'
+    lp_column: str = 'LP_lo_10'
+    price_tolerance: float = 0.001
+    max_points_between: int = 2
+    height_width_ratio: float = 0.5
+    name: str = 'RECT'
+    atr_column: str = 'ATR'
+    """A class that identifies consolidation zones in price data using a multi-step algorithm.
+    
+    The algorithm identifies consolidation zones through these key steps:
+    1. Price Level Clustering: Uses DBSCAN to group similar price levels within a tolerance
+    2. Temporal Filtering: Validates point pairs by checking the number of intermediate points
+    3. Zone Validation: Ensures zones meet height-to-width ratio criteria using ATR
+    4. Zone Extension: Extends zones until MA breaches and multiple candle violations occur
+    
+    Key Features:
+    - Identifies both support and resistance levels
+    - Uses adaptive price tolerance based on mean price
+    - Considers market volatility through ATR normalization
+    - Prevents overlapping zones through leftmost point tracking
+    - Supports customizable parameters for different market conditions
+    
+    Parameters:
+        hp_column (str): Column name for high prices, default 'HP_hi_10'
+        lp_column (str): Column name for low prices, default 'LP_lo_10'
+        price_tolerance (float): Maximum price difference for clustering, as % of mean price
+        max_points_between (int): Maximum allowed intermediate points between zone boundaries
+        height_width_ratio (float): Maximum allowed height/width ratio for valid zones
+        name (str): Prefix for zone column names, default 'RECT'
+        atr_column (str): Column name for Average True Range, default 'ATR'
+        
+    Returns DataFrame with added columns for upper and lower zone boundaries.
+    Columns are named as {name}_UPPER_{i} and {name}_LOWER_{i} where i is zone index.
+    """
+    
+    def __post_init__(self):
+        self.names = []
+
+    def filter_close_points(self, cluster: List[Tuple[pd.Timestamp, float]]) -> List[List[Tuple[pd.Timestamp, float]]]:
+        """Filter points within max_points_between constraint"""
+        valid_pairs = []
+        for i in range(len(cluster)-1):
+            for j in range(i+1, len(cluster)):
+                date1, price1 = cluster[i]
+                date2, price2 = cluster[j]
+                
+                # Count points between dates
+                points_between = sum(1 for d, _ in cluster 
+                                   if date1 < d < date2)
+                                   
+                if points_between <= self.max_points_between:
+                    valid_pairs.append([cluster[i], cluster[j]])
+                    
+        return valid_pairs
+
+    def cluster_price_levels(self, series: pd.Series) -> List[List[Tuple[pd.Timestamp, float]]]:
+        """Cluster similar price levels using DBSCAN then filter by max_points_between"""
+        points = series.dropna()
+        if len(points) < 2:
+            return []
+            
+        prices = points.values.reshape(-1, 1)
+        mean_price = np.mean(prices)
+        eps = mean_price * self.price_tolerance
+        
+        clustering = DBSCAN(eps=eps, min_samples=2).fit(prices)
+        
+        valid_pairs = []
+        for label in set(clustering.labels_):
+            if label != -1:
+                cluster_mask = clustering.labels_ == label
+                cluster_points = list(zip(points.index[cluster_mask], 
+                                       points.values[cluster_mask]))
+                cluster_points.sort(key=lambda x: x[0])
+                
+                # Filter points within max_points_between
+                valid_pairs.extend(self.filter_close_points(cluster_points))
+                
+        return valid_pairs
+
+    def find_opposite_extreme(self, data: pd.DataFrame, dates: List[pd.Timestamp], 
+                            is_support: bool) -> Dict:
+        start_date, end_date = min(dates), max(dates)
+        date_range = data.loc[start_date:end_date]
+        
+        if is_support:
+            extreme = date_range['high'].max()
+            extreme_date = date_range[date_range['high'] == extreme].index[0]
+        else:
+            extreme = date_range['low'].min()
+            extreme_date = date_range[date_range['low'] == extreme].index[0]
+            
+        return {'price': extreme, 'date': extreme_date}
+
+    def validate_zone(self, data: pd.DataFrame, dates: List[pd.Timestamp], upper: float, lower: float) -> bool:
+        start_date, end_date = min(dates), max(dates)
+        width = len(data.loc[start_date:end_date])
+        height = upper - lower
+        return height / (width * data.loc[end_date, self.atr_column]) <= self.height_width_ratio
+
+    def extend_zone(self, data: pd.DataFrame, zone: Dict) -> Dict:
+        ma = data['close'].rolling(window=21).mean()
+        
+        for direction in ['left', 'right']:
+            idx = data.index.get_loc(min(zone['dates']) if direction == 'left' 
+                                else max(zone['dates']))
+            ma_breach = False
+            candle_breach = 0
+            
+            while 0 < idx < len(data) - 1:
+                price = ma.iloc[idx]
+                candle = data.iloc[idx]
+                
+                # Check MA breach
+                if not (zone['lower'] <= price <= zone['upper']):
+                    ma_breach = True
+                
+                # Check candle breach
+                if candle['high'] > zone['upper'] or candle['low'] < zone['lower']:
+                    candle_breach += 1
+                
+                # Exit if both conditions met
+                if ma_breach and candle_breach >= 3:
+                    break
+                    
+                idx = idx - 1 if direction == 'left' else idx + 1
+                
+            zone[f'{direction}_date'] = data.index[idx]
+            
+        return zone
+
+    def find_zones(self, data: pd.DataFrame) -> List[Dict]:
+        zones = []
+        leftmost_allowed = data.index[-1]
+
+        # print(f"1. Finding zones starting from leftmost_allowed: {leftmost_allowed}")    
+        
+        while leftmost_allowed >= data.index[0]:
+            valid_data = data[:leftmost_allowed]
+            if len(valid_data) < 3:
+                break
+
+            high_pairs = self.cluster_price_levels(valid_data[self.hp_column])
+            low_pairs = self.cluster_price_levels(valid_data[self.lp_column])
+
+            # print(f"3. Found {len(high_pairs)} high pairs and {len(low_pairs)} low pairs")
+            
+            if not high_pairs and not low_pairs:
+                # No valid pairs found, move left
+                curr_idx = valid_data.index.get_loc(leftmost_allowed)
+                if curr_idx > 0:
+                    leftmost_allowed = valid_data.index[curr_idx - 1]
+                else:
+                    break
+                continue
+            
+            all_pairs = [(pair, True) for pair in high_pairs] + \
+                       [(pair, False) for pair in low_pairs]
+            all_pairs.sort(key=lambda x: min(p[0] for p in x[0]), reverse=False) #!!! reverse=True
+            
+            zone_found = False
+            for pair, is_high in all_pairs:
+                # print(f"4. Checking pair {pair} for {['resistance', 'support'][is_high]}")
+                # print(f"5. max date: {max(date for date, _ in pair)} > {leftmost_allowed} = {max(date for date, _ in pair) > leftmost_allowed}")
+                if max(date for date, _ in pair) > leftmost_allowed:
+                    # print(f"6. Skipping pair {pair} for {['resistance', 'support'][is_high]}")
+                    continue
+                
+            dates = [date for point in pair for date, _ in [point]]
+            opposite = self.find_opposite_extreme(data, dates, not is_high)
+            
+            upper = max(opposite['price'], max(price for _, price in pair))
+            lower = min(opposite['price'], min(price for _, price in pair))
+
+            
+            if self.validate_zone(data, dates + [opposite['date']], upper, lower):
+                zone = {
+                    'upper': upper,
+                    'lower': lower,
+                    'dates': dates + [opposite['date']]
+                }
+                
+                zone = self.extend_zone(data, zone)
+                zones.append(zone)
+                # Update leftmost_allowed to the leftmost point of current zone
+                leftmost_allowed = min(zone['left_date'], min(date for date, _ in pair))
+                # print(f"7. Found zonne. Now leftmost allowed {leftmost_allowed}")
+                zone_found = True
+                continue
+                
+            if not zone_found:
+                # If no valid zone found, move leftmost allowed point left
+                curr_idx = valid_data.index.get_loc(leftmost_allowed)
+                if curr_idx > 0:
+                    leftmost_allowed = valid_data.index[curr_idx - 1]
+                else:
+                    break
+                
+        return zones
+
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        self.names = []
+        result = data.copy()
+        
+        zones = self.find_zones(data)
+        print(f"7. Found {len(zones)} zones")
+        
+        for i, zone in enumerate(zones):
+            upper_name = f"{self.name}_UPPER_{i+1}"
+            lower_name = f"{self.name}_LOWER_{i+1}"
+            self.names.extend([upper_name, lower_name])
+            
+            result[upper_name] = np.nan
+            result[lower_name] = np.nan
+            
+            mask = (result.index >= zone['left_date']) & \
+                   (result.index <= zone['right_date'])
+            result.loc[mask, upper_name] = zone['upper']
+            result.loc[mask, lower_name] = zone['lower']
+        
+        return result
+
