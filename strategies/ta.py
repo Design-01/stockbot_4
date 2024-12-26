@@ -782,7 +782,7 @@ from typing import List, Dict, Tuple
 from sklearn.cluster import DBSCAN
 
 @dataclass
-class ConsolidationZone:
+class ConsolidationZone(TA):
     hp_column: str = 'HP_hi_10'
     lp_column: str = 'LP_lo_10'
     price_tolerance: float = 0.001
@@ -1004,4 +1004,608 @@ class ConsolidationZone:
             result.loc[mask, lower_name] = zone['lower']
         
         return result
+    
 
+@dataclass
+class TrendlineDetector_old(TA):
+    name: str = 'TREND'
+    point_column: str = ''  # Single column for points
+    slope_direction: str = 'up'  # 'up' or 'down'
+    slope_tolerance: float = 0.1
+    min_points: int = 3
+    lookback_points: int = 6
+    
+    
+    def __post_init__(self):
+        self.names = []
+        if self.slope_direction not in ['up', 'down']:
+            raise ValueError("slope_direction must be 'up' or 'down'")
+        
+    def calculate_slope(self, point1: Tuple[pd.Timestamp, float], 
+                       point2: Tuple[pd.Timestamp, float]) -> float:
+        """Calculate slope between two points using time delta in days"""
+        x1 = point1[0].timestamp()
+        x2 = point2[0].timestamp()
+        y1, y2 = point1[1], point2[1]
+        
+        # Convert to days for better slope scaling
+        time_delta = (x2 - x1) / (24 * 3600)  
+        return (y2 - y1) / time_delta if time_delta != 0 else float('inf')
+        
+    def find_similar_slopes(self, slopes: List[Tuple[float, Tuple]]) -> List[List[Tuple]]:
+        """Group points with similar slopes within tolerance"""
+        if not slopes:
+            return []
+            
+        groups = []
+        current_group = [slopes[0][1]]
+        base_slope = slopes[0][0]
+        
+        for slope, point in slopes[1:]:
+            if base_slope == 0:
+                similar = abs(slope) <= self.slope_tolerance
+            else:
+                similar = abs((slope - base_slope) / base_slope) <= self.slope_tolerance
+            if similar:
+                current_group.append(point)
+            else:
+                if len(current_group) >= self.min_points:
+                    groups.append(current_group)
+                current_group = [point]
+                base_slope = slope
+                
+        if len(current_group) >= self.min_points:
+            groups.append(current_group)
+            
+        return groups
+        
+    def calculate_r_squared(self, points: List[Tuple], slope: float, intercept: float) -> float:
+        """Calculate R-squared value for a trendline"""
+        x = np.array([(p[0].timestamp() / (24 * 3600)) for p in points])
+        y = np.array([p[1] for p in points])
+        y_pred = slope * x + intercept
+        return 1 - (np.sum((y - y_pred) ** 2) / np.sum((y - np.mean(y)) ** 2))
+        
+    def validate_trendline(self, points: List[Tuple]) -> Tuple[bool, float, float]:
+        """Validate trendline using R-squared and calculate line parameters"""
+        x = np.array([(p[0].timestamp() / (24 * 3600)) for p in points])
+        y = np.array([p[1] for p in points])
+        
+        slope, intercept = np.polyfit(x, y, 1)
+        r_squared = self.calculate_r_squared(points, slope, intercept)
+        
+        return r_squared >= 0.8, slope, intercept
+        
+
+    def find_trendlines(self, data: pd.DataFrame) -> List[Dict]:
+        series = data[self.point_column]
+        points = [(idx, val) for idx, val in series.dropna().items()]
+        candidate_lines = []
+        
+        for i, current_point in enumerate(points):
+            slopes = []
+            for j in range(i + 1, min(i + self.lookback_points + 1, len(points))):
+                slope = self.calculate_slope(current_point, points[j])
+                # Filter slopes based on direction
+                if (self.slope_direction == 'up' and slope > 0) or \
+                   (self.slope_direction == 'down' and slope < 0):
+                    slopes.append((slope, points[j]))
+            
+            groups = self.find_similar_slopes(slopes)
+            for group in groups:
+                all_points = [current_point] + group
+                is_valid, slope, intercept = self.validate_trendline(all_points)
+                
+                if is_valid:
+                    candidate_lines.append({
+                        'start_date': min(p[0] for p in all_points),
+                        'end_date': max(p[0] for p in all_points),
+                        'slope': slope,
+                        'intercept': intercept,
+                        'r_squared': self.calculate_r_squared(all_points, slope, intercept),
+                        'points': all_points
+                    })
+        
+        # Remove overlapping lines
+        consolidated_lines = []
+        for line in sorted(candidate_lines, key=lambda x: x['r_squared'], reverse=True):
+            overlapping = False
+            for existing in consolidated_lines:
+                if (line['start_date'] <= existing['end_date'] and 
+                    line['end_date'] >= existing['start_date']):
+                    overlapping = True
+                    break
+            if not overlapping:
+                consolidated_lines.append(line)
+        
+        return consolidated_lines
+        
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        self.names = []
+        result = data.copy()
+        trendlines = self.find_trendlines(data)
+        
+        for i, trendline in enumerate(trendlines):
+            name = f"{self.name}_{i+1}"
+            self.names.append(name)
+            result[name] = np.nan
+            mask = (result.index >= trendline['start_date']) & \
+                   (result.index <= trendline['end_date'])
+            x_values = np.array([(d.timestamp() / (24 * 3600)) for d in result.index[mask]])
+            result.loc[mask, name] = trendline['slope'] * x_values + trendline['intercept']
+        
+        return result
+    
+@dataclass
+class TrendlineDetector(TA):
+    name: str = 'TREND'
+    point_column: str = ''  
+    slope_direction: str = 'up'  
+    slope_tolerance: float = 0.1
+    min_points: int = 3
+    lookback_points: int = 6
+    atr_period: int = 14  
+    atr_threshold: float = 1  
+    
+    def __post_init__(self):
+        self.names = []
+        if self.slope_direction not in ['up', 'down']:
+            raise ValueError("slope_direction must be 'up' or 'down'")
+        
+    def calculate_slope(self, point1: Tuple[pd.Timestamp, float], 
+                       point2: Tuple[pd.Timestamp, float]) -> float:
+        x1 = point1[0].timestamp()
+        x2 = point2[0].timestamp()
+        y1, y2 = point1[1], point2[1]
+        time_delta = (x2 - x1) / (24 * 3600)  
+        return (y2 - y1) / time_delta if time_delta != 0 else float('inf')
+
+    def calculate_atr(self, data: pd.DataFrame) -> pd.Series:
+        high = data['high'] if 'high' in data.columns else data[self.point_column]
+        low = data['low'] if 'low' in data.columns else data[self.point_column]
+        close = data[self.point_column].shift(1)
+        
+        tr1 = high - low
+        tr2 = abs(high - close)
+        tr3 = abs(low - close)
+        tr = pd.DataFrame({'tr1': tr1, 'tr2': tr2, 'tr3': tr3}).max(axis=1)
+        return tr.rolling(window=self.atr_period).mean()
+        
+    def find_similar_slopes(self, slopes: List[Tuple[float, Tuple]]) -> List[List[Tuple]]:
+        if not slopes:
+            return []
+            
+        groups = []
+        current_group = [slopes[0][1]]
+        base_slope = slopes[0][0]
+        
+        for slope, point in slopes[1:]:
+            if base_slope == 0:
+                similar = abs(slope) <= self.slope_tolerance
+            else:
+                similar = abs((slope - base_slope) / base_slope) <= self.slope_tolerance
+            if similar:
+                current_group.append(point)
+            else:
+                if len(current_group) >= self.min_points:
+                    groups.append(current_group)
+                current_group = [point]
+                base_slope = slope
+                
+        if len(current_group) >= self.min_points:
+            groups.append(current_group)
+            
+        return groups
+        
+    def calculate_r_squared(self, points: List[Tuple], slope: float, intercept: float) -> float:
+        x = np.array([(p[0].timestamp() / (24 * 3600)) for p in points])
+        y = np.array([p[1] for p in points])
+        y_pred = slope * x + intercept
+        return 1 - (np.sum((y - y_pred) ** 2) / np.sum((y - np.mean(y)) ** 2))
+        
+    def validate_trendline(self, points: List[Tuple]) -> Tuple[bool, float, float]:
+        x = np.array([(p[0].timestamp() / (24 * 3600)) for p in points])
+        y = np.array([p[1] for p in points])
+        
+        slope, intercept = np.polyfit(x, y, 1)
+        r_squared = self.calculate_r_squared(points, slope, intercept)
+        
+        return r_squared >= 0.8, slope, intercept
+
+    def validate_points_distance(self, points: List[Tuple], slope: float, 
+                               intercept: float, atr: pd.Series) -> bool:
+        for point in points:
+            date, price = point
+            x_val = date.timestamp() / (24 * 3600)
+            line_price = slope * x_val + intercept
+            deviation = abs(price - line_price)
+            
+            current_atr = atr.get(date, atr.mean())
+            # Check deviation in both directions
+            if (self.slope_direction == 'up' and (price - line_price) > current_atr * self.atr_threshold) or \
+               (self.slope_direction == 'down' and (line_price - price) > current_atr * self.atr_threshold):
+                return False
+        return True
+
+    def find_trendlines(self, data: pd.DataFrame) -> List[Dict]:
+        series = data[self.point_column]
+        points = [(idx, val) for idx, val in series.dropna().items()]
+        candidate_lines = []
+        atr = self.calculate_atr(data)
+        
+        for i, current_point in enumerate(points):
+            slopes = []
+            for j in range(i + 1, min(i + self.lookback_points + 1, len(points))):
+                slope = self.calculate_slope(current_point, points[j])
+                if (self.slope_direction == 'up' and slope > 0) or \
+                   (self.slope_direction == 'down' and slope < 0):
+                    slopes.append((slope, points[j]))
+            
+            groups = self.find_similar_slopes(slopes)
+            for group in groups:
+                all_points = [current_point] + group
+                is_valid, slope, intercept = self.validate_trendline(all_points)
+                
+                if is_valid and self.validate_points_distance(all_points, slope, intercept, atr):
+                    candidate_lines.append({
+                        'start_date': min(p[0] for p in all_points),
+                        'end_date': max(p[0] for p in all_points),
+                        'slope': slope,
+                        'intercept': intercept,
+                        'r_squared': self.calculate_r_squared(all_points, slope, intercept),
+                        'points': all_points
+                    })
+        
+        consolidated_lines = []
+        for line in sorted(candidate_lines, key=lambda x: x['r_squared'], reverse=True):
+            overlapping = False
+            for existing in consolidated_lines:
+                if (line['start_date'] <= existing['end_date'] and 
+                    line['end_date'] >= existing['start_date']):
+                    overlapping = True
+                    break
+            if not overlapping:
+                consolidated_lines.append(line)
+        
+        return consolidated_lines
+        
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        self.names = []
+        result = data.copy()
+        trendlines = self.find_trendlines(data)
+        
+        for i, trendline in enumerate(trendlines):
+            name = f"{self.name}_{i+1}"
+            self.names.append(name)
+            result[name] = np.nan
+            mask = (result.index >= trendline['start_date']) & \
+                   (result.index <= trendline['end_date'])
+            x_values = np.array([(d.timestamp() / (24 * 3600)) for d in result.index[mask]])
+            result.loc[mask, name] = trendline['slope'] * x_values + trendline['intercept']
+        
+        return result
+    
+
+@dataclass
+class MicroTrendline_example(TA):
+    name: str = 'MTREND'
+    pointsCol: str = ''  
+    atrCol: str = 'ATR'
+    slopeDir: str = 'up'  
+    slopeToleranceATR: float = 2
+    projectionPeriod: int = 5
+
+    def __post_init__(self):
+        self.names = []
+        if self.slope_direction not in ['up', 'down']:
+            raise ValueError("slope_direction must be 'up' or 'down'")
+        
+    # -->> other methods here <<--
+
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        self.names = []
+        result = data.copy()
+        trendlines = self.find_trendlines(data)
+        
+        for i, trendline in enumerate(trendlines):
+            name = f"{self.name}_{i+1}"
+            self.names.append(name)
+            result[name] = np.nan
+            mask = (result.index >= trendline['start_date']) & \
+                   (result.index <= trendline['end_date'])
+            x_values = np.array([(d.timestamp() / (24 * 3600)) for d in result.index[mask]])
+            result.loc[mask, name] = trendline['slope'] * x_values + trendline['intercept']
+        
+        return result
+    
+
+from dataclasses import dataclass
+import pandas as pd
+import numpy as np
+from typing import List, Dict, Any
+
+@dataclass
+class MicroTrendline:
+    name: str = 'MTREND'
+    pointsCol: str = ''  # Column containing points
+    atrCol: str = 'ATR'
+    slopeDir: str = 'down'  
+    slopeToleranceATR: float = 2.0
+    projectionPeriod: int = 5
+
+    def __post_init__(self):
+        self.names = []
+        if self.slopeDir not in ['up', 'down']:
+            raise ValueError("slopeDir must be 'up' or 'down'")
+
+    def find_micro_extremes(self, data: pd.DataFrame, start_idx: int) -> List[Dict[str, Any]]:
+        """Find micro extreme points (highs for downtrend, lows for uptrend) after the last major point."""
+        micro_points = []
+        
+        for i in range(start_idx + 1, len(data) - 1):
+            if self.slopeDir == 'down':
+                current = data.iloc[i]['high']
+                prev = data.iloc[i-1]['high']
+                next_val = data.iloc[i+1]['high']
+                condition = current > prev and current > next_val
+            else:  # uptrend
+                current = data.iloc[i]['low']
+                prev = data.iloc[i-1]['low']
+                next_val = data.iloc[i+1]['low']
+                condition = current < prev and current < next_val
+            
+            if condition:
+                micro_points.append({
+                    'date': data.index[i],
+                    'price': current
+                })
+                
+        return micro_points
+
+    def calculate_best_fit_line(self, points: List[Dict[str, Any]]) -> Dict[str, float]:
+        """Calculate best fit line through given points."""
+        x = np.array([(p['date'].timestamp() / (24 * 3600)) for p in points])
+        y = np.array([p['price'] for p in points])
+        
+        slope, intercept = np.polyfit(x, y, 1)
+        return {'slope': slope, 'intercept': intercept}
+
+    def find_most_protruding_point(self, data: pd.DataFrame, start_date: pd.Timestamp, 
+                                 end_date: pd.Timestamp, line_params: Dict[str, float]) -> Dict[str, Any]:
+        """Find the point that most protrudes from the best fit line."""
+        mask = (data.index >= start_date) & (data.index <= end_date)
+        subset = data[mask]
+        
+        max_deviation = -np.inf if self.slopeDir == 'down' else np.inf
+        max_point = None
+        
+        for idx, row in subset.iterrows():
+            x_val = idx.timestamp() / (24 * 3600)
+            projected_price = line_params['slope'] * x_val + line_params['intercept']
+            
+            if self.slopeDir == 'down':
+                price = row['high']
+                deviation = price - projected_price
+                condition = deviation > max_deviation
+            else:
+                price = row['low']
+                deviation = projected_price - price
+                condition = deviation > max_deviation
+            
+            if condition:
+                max_deviation = deviation
+                max_point = {'date': idx, 'price': price}
+                
+        return max_point
+
+    def project_line(self, data: pd.DataFrame, point_b: Dict[str, Any], 
+                    point_a: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Project a line from point A through point B and beyond until breakthrough.
+        For downtrend: point_a should be higher than point_b
+        For uptrend: point_a should be lower than point_b
+        """
+        x1 = point_a['date'].timestamp() / (24 * 3600)
+        x2 = point_b['date'].timestamp() / (24 * 3600)
+        y1 = point_a['price']
+        y2 = point_b['price']
+        
+        slope = (y2 - y1) / (x2 - x1)
+        intercept = y1 - slope * x1
+        
+        start_idx = data.index.get_loc(point_b['date'])
+        consecutive_breaks = 0
+        breakthrough_idx = None
+        first_break_idx = None
+        
+        for i in range(start_idx, len(data)):
+            x_val = data.index[i].timestamp() / (24 * 3600)
+            projected_price = slope * x_val + intercept
+            
+            if self.slopeDir == 'down':
+                break_condition = data.iloc[i]['low'] > projected_price
+            else:
+                break_condition = data.iloc[i]['high'] < projected_price
+            
+            if break_condition:
+                if consecutive_breaks == 0:
+                    first_break_idx = i
+                consecutive_breaks += 1
+                if consecutive_breaks >= self.projectionPeriod:
+                    breakthrough_idx = first_break_idx
+                    break
+            else:
+                consecutive_breaks = 0
+                first_break_idx = None
+        
+        # If we found a breakthrough, extend the line by projectionPeriod bars after the breakthrough
+        if breakthrough_idx is not None:
+            end_idx = min(breakthrough_idx + self.projectionPeriod, len(data) - 1)
+            end_date = data.index[end_idx]
+        else:
+            end_date = data.index[-1]
+        
+        return {
+            'slope': slope,
+            'intercept': intercept,
+            'start_date': point_a['date'],
+            'end_date': end_date
+        }
+
+    def find_trendlines(self, data: pd.DataFrame) -> List[Dict[str, Any]]:
+        """Find trendlines in the data based on slope direction."""
+        trendlines = []
+        
+        valid_points = data[data[self.pointsCol].notna()].index
+        if len(valid_points) < 2:
+            return trendlines
+            
+        valid_points = valid_points.tolist()[::-1]
+        
+        for i in range(len(valid_points) - 1):
+            current_idx = valid_points[i]      # More recent point (Point B)
+            prev_idx = valid_points[i + 1]     # Previous point (Point A)
+            
+            point_b = {
+                'date': current_idx,
+                'price': data.loc[current_idx, self.pointsCol]
+            }
+            
+            point_a = {
+                'date': prev_idx,
+                'price': data.loc[prev_idx, self.pointsCol]
+            }
+            
+            # Check price difference based on trend direction
+            if self.slopeDir == 'down':
+                price_diff = point_a['price'] - point_b['price']  # A should be higher than B
+            else:
+                price_diff = point_b['price'] - point_a['price']  # B should be higher than A
+                
+            atr_multiple = price_diff / data.loc[point_b['date'], self.atrCol]
+            
+            if atr_multiple >= self.slopeToleranceATR:
+                # Special handling for the most recent high/low point
+                if i == 0:
+                    start_idx = data.index.get_loc(current_idx)
+                    subset_data = data.iloc[start_idx:]
+                    
+                    # Check if all subsequent bars respect the trend direction
+                    if self.slopeDir == 'down':
+                        all_lower = all(subset_data['high'] <= point_b['price'])
+                    else:
+                        all_higher = all(subset_data['low'] >= point_b['price'])
+                    
+                    if (self.slopeDir == 'down' and all_lower) or (self.slopeDir == 'up' and all_higher):
+                        # Find micro extremes (highs for downtrend, lows for uptrend)
+                        micro_points = []
+                        for j in range(start_idx + 1, len(data) - 1):
+                            if self.slopeDir == 'down':
+                                current = data.iloc[j]['high']
+                                prev = data.iloc[j-1]['high']
+                                next_val = data.iloc[j+1]['high']
+                                is_extreme = current > prev and current > next_val
+                            else:
+                                current = data.iloc[j]['low']
+                                prev = data.iloc[j-1]['low']
+                                next_val = data.iloc[j+1]['low']
+                                is_extreme = current < prev and current < next_val
+                            
+                            if is_extreme:
+                                micro_points.append({
+                                    'date': data.index[j],
+                                    'price': current
+                                })
+                        
+                        if micro_points:
+                            # Use best fit line through last point and micro points
+                            all_points = [point_b] + micro_points
+                            line_params = self.calculate_best_fit_line(all_points)
+                            if len(micro_points) >= 2:
+                                trendline = {
+                                    'slope': line_params['slope'],
+                                    'intercept': line_params['intercept'],
+                                    'start_date': point_b['date'],
+                                    'end_date': data.index[-1]
+                                }
+                                trendlines.append(trendline)
+                                continue
+                        
+                        # If no micro points found, use all highs/lows if more than 2 bars remain
+                        remaining_bars = len(data) - start_idx - 1
+                        if remaining_bars >= 2:
+                            bar_points = []
+                            for j in range(start_idx + 1, len(data)):
+                                price = data.iloc[j]['high'] if self.slopeDir == 'down' else data.iloc[j]['low']
+                                bar_points.append({
+                                    'date': data.index[j],
+                                    'price': price
+                                })
+                            
+                            if bar_points:
+                                # Initial best fit line
+                                all_points = [point_b] + bar_points
+                                line_params = self.calculate_best_fit_line(all_points)
+                                
+                                # Find points that exceed the best fit line
+                                exceeding_points = [point_b]  # Always include the starting point
+                                for j in range(start_idx + 1, len(data)):
+                                    x_val = data.index[j].timestamp() / (24 * 3600)
+                                    projected_price = line_params['slope'] * x_val + line_params['intercept']
+                                    
+                                    if self.slopeDir == 'down':
+                                        actual_price = data.iloc[j]['high']
+                                        if actual_price > projected_price:
+                                            exceeding_points.append({
+                                                'date': data.index[j],
+                                                'price': actual_price
+                                            })
+                                    else:  # uptrend
+                                        actual_price = data.iloc[j]['low']
+                                        if actual_price < projected_price:
+                                            exceeding_points.append({
+                                                'date': data.index[j],
+                                                'price': actual_price
+                                            })
+                                
+                                # Create final best fit line through exceeding points
+                                if len(exceeding_points) >= 2:
+                                    final_line_params = self.calculate_best_fit_line(exceeding_points)
+                                    trendline = {
+                                        'slope': final_line_params['slope'],
+                                        'intercept': final_line_params['intercept'],
+                                        'start_date': point_b['date'],
+                                        'end_date': data.index[-1]
+                                    }
+                                else:
+                                    # Fallback to original best fit if not enough exceeding points
+                                    trendline = {
+                                        'slope': line_params['slope'],
+                                        'intercept': line_params['intercept'],
+                                        'start_date': point_b['date'],
+                                        'end_date': data.index[-1]
+                                    }
+                                trendlines.append(trendline)
+                                continue
+                
+                trendline = self.project_line(data, point_b, point_a)
+                trendlines.append(trendline)
+        
+        return trendlines
+
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Run the analysis and return DataFrame with trendlines."""
+        self.names = []
+        result = data.copy()
+        trendlines = self.find_trendlines(data)
+        
+        for i, trendline in enumerate(trendlines):
+            name = f"{self.name}_{self.slopeDir.upper()}_{i+1}"
+            self.names.append(name)
+            result[name] = np.nan
+            mask = (result.index >= trendline['start_date']) & \
+                   (result.index <= trendline['end_date'])
+            x_values = np.array([(d.timestamp() / (24 * 3600)) for d in result.index[mask]])
+            result.loc[mask, name] = trendline['slope'] * x_values + trendline['intercept']
+        
+        return result

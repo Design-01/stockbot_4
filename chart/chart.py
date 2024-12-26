@@ -466,6 +466,18 @@ class Chart:
 
         if chart_type == 'rect':
             self.add_rectangle(data, style)
+        
+        if chart_type == 'trendlines':
+            trend_cols = [col for col in data.columns if 'TREND' in col]
+            for col in trend_cols:
+                mask = ~data[col].isna()
+                if mask.any():
+                    self.fig.add_trace(go.Scatter(
+                        x=data.index[mask],
+                        y=data[col][mask],
+                        name=col,
+                        line=style[0]  # Use the same style for all trend lines
+                    ), row=row, col=1)
 
     def add_support_resistance(self, data: pd.DataFrame, style: List[Dict[str, Any]]) -> None:
         """
@@ -600,8 +612,6 @@ class Chart:
             for trace in create_traces(upper_col, lower_col, support_style):
                 self.fig.add_trace(trace, row=1, col=1)
 
-
-   
     def add_line(self, data: pd.Series, style: Dict[str, Any], row:int=1) -> None:
         """Adds a line to the chart
 
