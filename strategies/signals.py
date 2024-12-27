@@ -2056,10 +2056,9 @@ class ConsolidationPreMove(MultiSignals):
 
             
             # Calculate score using the premove_height and premove_duration.  
-            # higher,  wider and steeper all contribute to the score. 
             steepness = premove_height / premove_duration
             final_score = steepness * premove_height * np.log1p(premove_duration)
-            
+
             # Create a series of zeros for the full index
             score_series = pd.Series(0, index=df.index)
 
@@ -2070,6 +2069,6 @@ class ConsolidationPreMove(MultiSignals):
             score_series[cons_mask] = final_score
 
             # Assign scores to result DataFrame
-            results[signal_name] = self.get_score(score_series)
+            results[signal_name] = np.where(cons_mask, self.get_score(score_series), np.nan)
 
         return results
