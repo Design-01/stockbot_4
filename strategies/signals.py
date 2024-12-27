@@ -1610,35 +1610,129 @@ class CountTouches(MultiSignals):
 
 
 @dataclass
-class TouchFrequencyEscalation(Signals):
-    """
-    TouchFrequencyEscalation class to calculate the score based on the touch frequency escalation.
-    More touches more recently is a sign of escalation, thus more significant line or level.
-    """
-    touchCol : str = ''
-
-    def _compute_row(self, df: pd.DataFrame) -> float:
-        """This method is to compute each row in the lookback period."""
-        pass
-
-@dataclass
-class LineLengths(Signals):
+class LineLengths(MultiSignals):
     """
     LineLength class to calculate the score based on the line length.
     Longer lines are more significant and thus score higher.
-    Length is the number of bars of the line. 
+    Length is measured as the number of bars the line has existed.
+    
+    Implementation Details:
+    --------------------
+    - Tracks the length of each trend line by counting non-NaN values
+    - Updates lengths incrementally to support streaming/real-time updates
+    - Normalizes lengths to provide scores between 0-100
+    - Higher scores indicate longer, more established lines
+    
+    Parameters:
+    ----------
+    name : str
+        Name prefix for the generated signals (defaults to 'LLen')
+    columnStartsWith : str
+        Prefix for columns to process (must match trend line columns)
+    minBars : int
+        Minimum number of bars required for a line to be considered valid
+    maxBars : int
+        Maximum number of bars to consider for normalization
     """
-    name : str = 'LLen'
-    lineCol : str = ''
+    name: str = 'LLen'
+    columnStartsWith: str = ''
+    minBars: int = 10  # Minimum bars for a valid line
+    maxBars: int = 100  # Maximum bars for normalization
 
+    def __post_init__(self):
+        """Initialize with empty signal names and length tracking."""
+        super().__post_init__()
+        # Dictionary to track running lengths for each line
+        self._line_lengths = {}
+        
+    def _calculate_line_length(self, series: pd.Series) -> int:
+        """
+        Calculate the current length of a line by counting consecutive non-NaN values
+        from the most recent point backwards.
+        
+        Parameters:
+        -----------
+        series : pd.Series
+            Series containing line values
+            
+        Returns:
+        --------
+        int
+            Number of consecutive valid (non-NaN) values
+        """
+        # Get the last valid value's position
+        last_valid_idx = series.last_valid_index()
+        if last_valid_idx is None:
+            return 0
+            
+        # Count backwards from last valid value until we hit NaN
+        length = 0
+        current_idx = series.index.get_loc(last_valid_idx)
+        
+        while current_idx >= 0:
+            if pd.isna(series.iloc[current_idx]):
+                break
+            length += 1
+            current_idx -= 1
+            
+        return length
 
-    def _compute_row(self, df: pd.DataFrame) -> float:
-        """This method is to compute each row in the lookback period."""
-        pass
+    def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Compute length-based scores for all trend lines efficiently.
+        Returns DataFrame with scores normalized based on line lengths.
+        
+        Parameters:
+        -----------
+        df : pd.DataFrame
+            DataFrame containing trend line columns
+            
+        Returns:
+        --------
+        pd.DataFrame
+            DataFrame with normalized scores for each line
+        """
+        # Initialize results DataFrame
+        results = pd.DataFrame(0, index=df.index, columns=self.names)
+        
+        # Process each trend line
+        for src_col in self.source_columns:
+            signal_name = self.column_mapping[src_col]
+            
+            # Calculate length for current line
+            current_length = self._calculate_line_length(df[src_col])
+            
+            # Store length for reference
+            self._line_lengths[signal_name] = current_length
+            
+            # Calculate score only if we meet minimum length requirement
+            if current_length >= self.minBars:
+                # Normalize length to score
+                # Score increases with length but caps at maxBars
+                score = min(current_length, self.maxBars) / self.maxBars * 100
+            else:
+                score = 0
+                
+            # Set the score for all points in the current window
+            results[signal_name] = score
+            
+        return results
+
+    def get_line_lengths(self) -> Dict[str, int]:
+        """
+        Get the current raw lengths of all tracked lines.
+        Useful for debugging or additional analysis.
+        
+        Returns:
+        --------
+        Dict[str, int]
+            Dictionary mapping signal names to their current lengths
+        """
+        return self._line_lengths.copy()
 
 
 @dataclass
-class ConsolidationShape(Signals):
+class ConsolidationShape(MultiSignals):
     """
     Looks at the height vs width of the consolidation area. 
     A tighter consolidation scores higher meaning that the ratio between 
@@ -1657,7 +1751,7 @@ class ConsolidationShape(Signals):
         pass
 
 @dataclass
-class ConsolidationPosition(Signals):
+class ConsolidationPosition(MultiSignals):
     """
     ConsolidationPosition class to calculate the score based on the consolidation position.
     The is scored by how far the price is towards the extremees of the overal stock price range.
@@ -1672,7 +1766,7 @@ class ConsolidationPosition(Signals):
         pass
 
 @dataclass
-class ConsolidationPreMove(Signals):
+class ConsolidationPreMove(MultiSignals):
     """
     ConsolidationPreMove class to calculate the score based on the consolidation pre move.
     The pre move values are base on the MoveCol (eg 50MA) and the ATR.
