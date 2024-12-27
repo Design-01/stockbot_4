@@ -1367,7 +1367,8 @@ class MultiSignals(ABC):
         """Normalize values efficiently using vectorized operations."""
         def normalize_vec(x):
                 normalized = (x - self.normRange[0]) / (self.normRange[1] - self.normRange[0]) * 100
-                return np.round(normalized, 2)  # Added rounding to match single-value function
+                clamped = np.clip(normalized, 0, 100)  # Clamp the values between 0 and 100
+                return np.round(clamped, 2)  # Added rounding to match single-value function
                 
         if isinstance(val, (pd.Series, pd.DataFrame)):
             return val.apply(normalize_vec)
@@ -1608,7 +1609,6 @@ class CountTouches(MultiSignals):
         return results
     
 
-
 @dataclass
 class LineLengths(MultiSignals):
     """
@@ -1666,11 +1666,64 @@ class LineLengths(MultiSignals):
 @dataclass
 class ConsolidationShape(MultiSignals):
     """
-    Looks at the height vs width of the consolidation area. 
-    A tighter consolidation scores higher meaning that the ratio between 
-    the width as determined by the number of bars 
-    versus the height as determined by the atr multiples.
-    shorter and longer the better
+    A signal class that analyzes the shape characteristics of price consolidation periods.
+    It calculates a ratio between the width (time duration) and height (price range) of 
+    consolidation areas, normalized by ATR. Higher scores indicate "tighter" consolidations,
+    which are periods where price stays within a narrow range over a longer time period.
+
+    Key Concepts:
+    -------------
+    - Width: Number of bars in the consolidation period
+    - Height: Difference between upper and lower consolidation boundaries
+    - ATR Normalization: Height is normalized by ATR to make comparisons meaningful
+      across different price ranges and volatility regimes
+    - Score = width / (height/ATR): Higher scores indicate tighter consolidations
+
+    Implementation Details:
+    ----------------------
+    1. Column Setup:
+       - Overrides the base MultiSignals setup_columns method because consolidations
+         require paired columns (UPPER/LOWER) rather than single columns
+       - Uses the base class's column discovery mechanism to find UPPER columns,
+         then matches them with corresponding LOWER columns
+       - Creates simplified numerical signal names (e.g., ConsShape_1) instead of
+         using full column names to maintain clarity
+
+    2. Signal Computation:
+       - Processes each consolidation pair separately
+       - Only calculates scores during valid consolidation periods (when both
+         UPPER and LOWER values exist)
+       - Returns NaN for periods outside consolidations
+       - Requires a minimum number of bars (minBars) to consider a consolidation valid
+       - Normalizes the height by ATR to make scores comparable across different
+         price ranges and volatility conditions
+
+    Usage Notes:
+    ------------
+    - Higher scores indicate "better" consolidations (longer duration relative to height)
+    - NaN values in output indicate periods where no valid consolidation exists
+    - The score is dynamic and will change as the consolidation develops
+    - Multiple consolidation areas can be tracked simultaneously (e.g., ConsShape_1, ConsShape_2)
+
+    Parameters:
+    -----------
+    name : str, default 'ConsShape'
+        Base name for the signal outputs
+    consUpperCol : str, default ''
+        Column name prefix for upper consolidation boundaries
+    consLowerCol : str, default ''
+        Column name prefix for lower consolidation boundaries
+    atrCol : str, default 'ATR'
+        Name of the ATR column used for normalization
+    minBars : int, default 5
+        Minimum number of bars required for a valid consolidation
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame with columns named {name}_1, {name}_2, etc., containing
+        shape scores for each consolidation period. Values are NaN outside
+        of valid consolidation periods.
     """
     name: str = 'ConsShape'
     consUpperCol: str = ''
@@ -1729,7 +1782,7 @@ class ConsolidationShape(MultiSignals):
         pd.DataFrame
             DataFrame with raw (unnormalized) shape scores for each consolidation
         """
-        # Initialize results DataFrame
+        # Initialize results DataFrame with NaN
         results = pd.DataFrame(index=df.index, columns=self.names)
         
         # Process each consolidation pair
@@ -1738,16 +1791,27 @@ class ConsolidationShape(MultiSignals):
             
             # For each point in the window
             for i in range(len(df)):
-                current_window = df.iloc[:i+1]
+                current_row = df.iloc[i]
                 
-                # Find the last valid consolidation window
-                # (where both upper and lower values exist)
+                # If current row has no consolidation, append NaN
+                if pd.isna(current_row[upper_col]) or pd.isna(current_row[lower_col]):
+                    scores.append(np.nan)
+                    continue
+                
+                # Find the current consolidation window
+                current_window = df.iloc[:i+1]
                 mask = current_window[[upper_col, lower_col]].notna().all(axis=1)
                 cons_window = current_window[mask]
                 
+                # If we don't have enough bars in this consolidation, append NaN
                 if len(cons_window) < self.minBars:
-                    scores.append(0)
+                    scores.append(np.nan)
                     continue
+                
+                # Get the last complete consolidation window
+                last_nan_idx = cons_window.index[-1]
+                window_start = cons_window.index[0]
+                cons_window = df.loc[window_start:last_nan_idx]
                 
                 # Calculate consolidation metrics for current window only
                 height = cons_window[upper_col].iloc[-1] - cons_window[lower_col].iloc[-1]
@@ -1760,7 +1824,7 @@ class ConsolidationShape(MultiSignals):
                 if width > 0 and height > 0:
                     shape_score = width / (height / atr)
                 else:
-                    shape_score = 0
+                    shape_score = np.nan
                     
                 scores.append(shape_score)
             
@@ -1769,103 +1833,243 @@ class ConsolidationShape(MultiSignals):
             
         return results
 
+
 @dataclass
 class ConsolidationPosition(MultiSignals):
     """
     ConsolidationPosition class to calculate the score based on the consolidation position.
-    The is scored by how far the price is towards the extremees of the overal stock price range.
-    eg all time high or all time low.
+    The score is based on how far the consolidation zone is positioned within the overall
+    price range of the stock. Consolidations near all-time highs or all-time lows score 
+    highest (100), while consolidations in the middle of the overall range score lowest (0).
+    When scoring, we consider:
+    - For consolidations above the middle: distance of upper boundary to overall high
+    - For consolidations below the middle: distance of lower boundary to overall low
     """
-    name : str = 'ConsPos'
-    consUpperCol : str = ''
-    consLowerCol : str = ''
+    name: str = 'ConsPos'
+    consUpperCol: str = ''  # Column name prefix for upper consolidation boundaries
+    consLowerCol: str = ''  # Column name prefix for lower consolidation boundaries
+    priceCol: str = 'close'  # Column to use for overall price range calculation
+    
+    def __post_init__(self):
+        """Initialize pairs of consolidation columns."""
+        super().__post_init__()
+        self.columnStartsWith = 'CONS_UPPER'
+        self.column_pairs = []
+        # Set normalization range for scores to be between 0 and 1
+        self.normRange = (0, 1)
+        
+    def setup_columns(self, df: pd.DataFrame):
+        """Set up column mappings for consolidation pairs."""
+        super().setup_columns(df)
+        self.names = []
+        self.column_pairs = []
+        
+        for upper_col in self.source_columns:
+            lower_col = upper_col.replace('UPPER', 'LOWER')
+            if lower_col in df.columns:
+                signal_name = f"{self.name}_{len(self.names) + 1}"
+                self.names.append(signal_name)
+                self.column_pairs.append((upper_col, lower_col))
+                
+    def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Compute position-based scores for consolidation areas relative to the overall price range.
+        Raw scores are between 0 and 1, which will be normalized to 0-100 by the base class.
+        """
+        results = pd.DataFrame(index=df.index, columns=self.names)
+        
+        # Calculate overall price range for the entire dataset
+        overall_high = df[self.priceCol].max()
+        overall_low = df[self.priceCol].min()
+        overall_range = overall_high - overall_low
+        range_midpoint = overall_low + (overall_range / 2)
+        
+        for (upper_col, lower_col), signal_name in zip(self.column_pairs, self.names):
+            upper_first_idx = df[upper_col].first_valid_index()
+            lower_first_idx = df[lower_col].first_valid_index()
+            
+            if upper_first_idx is not None and lower_first_idx is not None:
+                cons_upper = df.loc[upper_first_idx, upper_col]
+                cons_lower = df.loc[lower_first_idx, lower_col]
+                cons_mid = (cons_upper + cons_lower) / 2
+                
+                # Determine if consolidation is in upper or lower half
+                in_upper_half = cons_mid > range_midpoint
+                
+                if in_upper_half:
+                    # For upper half, normalize distance from midpoint to high
+                    distance = max(0, min(cons_upper - range_midpoint, overall_high - range_midpoint))
+                    position_score = distance / (overall_high - range_midpoint)
+                else:
+                    # For lower half, normalize distance from low to midpoint
+                    distance = max(0, min(range_midpoint - cons_lower, range_midpoint - overall_low))
+                    position_score = distance / (range_midpoint - overall_low)
+                
+                # Create mask for valid consolidation periods
+                mask = (~pd.isna(df[upper_col])) & (~pd.isna(df[lower_col]))
+                
+                # Apply score only where consolidation exists, now outputting 0-1 range
+                results[signal_name] = np.where(mask, position_score, np.nan)
+            else:
+                results[signal_name] = np.nan
+            
+        return results
 
-    def _compute_row(self, df: pd.DataFrame) -> float:
-        """This method is to compute each row in the lookback period."""
-        pass
 
 @dataclass
 class ConsolidationPreMove(MultiSignals):
     """
-    ConsolidationPreMove class to calculate the score based on the consolidation pre move.
-    The pre move values are base on the MoveCol (eg 50MA) and the ATR.
-    The score is based on the height, duration, and steepness of the move.
-    The move is detremined from the last pivot of the move to where it enters the consolidation zone. 
-    The height of the move is the ATR multiple.
-    The duration is the number of bars the move took.
-    
+    ConsolidationPreMove class to calculate the score based on the price move before entering into a consolidation period.
+    The pre move values are based on the MoveCol (eg 50MA) and the ATR.
+    1. get the last pivot of the MA before entering the consolidation zone.
+    2. detremine if the pivoit is above the upper bound or below the lower bound. if not then pass
+    3. if the pivot is above then calculate the move height from the MA pivot down to the upper bound. opposite if the MA pivot is below. the height vales is in ATR multiples.
+    4. calculate the move duration in bars. the duration is from the MA pivot to the point where it crosses the upper or lower bound price level even if it cross the 
+    price level before or after the zone it is still valid.  it is the price level cross over point that is important. 
+    5. calculate the score based on the height, duration, and steepness of the move. both steepness and druation add to increasing the score.
+
+    Notes: 
+    The consUpperCol and consLowerCol are the bounds for each consolidation zone in the dataframe.
+    The values in the coluns will be the same for the entire consolidation period. the other values outside of the consilidation period will be NaN. 
+    The output will be a score column for each consolidation periods (pair of upper and lower bounds).
+    The output filled values wil match the same rows as the consolidation rows from the consUpperCol and consLowerCol columns.
     """
-    name : str = 'ConsPreMove'
-    consUpperCol : str = ''
-    consLowerCol : str = ''
-    moveCol : str = ''
-    atrCol : str = ''
+    name: str = 'ConsPreMove'
+    consUpperCol: str = ''
+    consLowerCol: str = ''
+    maCol: str = ''
+    atrCol: str = ''
+    columnStartsWith: str = 'CONS_UPPER'
+    
+    def setup_columns(self, df: pd.DataFrame):
+        """Set up column mappings for consolidation pairs."""
+        upper_columns = [col for col in df.columns if col.startswith(self.columnStartsWith)]
+        self.names = []
+        self.column_pairs = []
+        
+        for upper_col in upper_columns:
+            lower_col = upper_col.replace('UPPER', 'LOWER')
+            if lower_col in df.columns:
+                signal_name = f"{self.name}_{upper_col.split('_')[-1]}"
+                self.names.append(signal_name)
+                self.column_pairs.append((upper_col, lower_col))
 
+    def find_last_pivot(self, ma_series: pd.Series) -> Tuple[pd.Timestamp, float]:
+        """
+        Find the last pivot point (peak or trough) in the MA series.
+        Returns (pivot_timestamp, pivot_price)
+        """
+        if len(ma_series) < 3:
+            return ma_series.index[-1], ma_series.iloc[-1]
 
-    def score_ma50_movement(self,
-        move_height: float,
-        move_duration: int,
-        height_weight: float = 30,
-        duration_weight: float = 30,
-        steepness_weight: float = 40,
-        optimal_duration_min: int = 15,
-        optimal_duration_max: int = 25,
-        duration_penalty_short: float = 2,
-        duration_penalty_long: float = 1
-    ) -> dict:
-        """
-        Score MA50 movement based on height, duration, and steepness.
+        # Calculate differences between consecutive points
+        diffs = ma_series.diff()
         
-        Args:
-            move_height: Price movement in points
-            move_duration: Number of bars the move took
-            height_weight: Maximum points for height (default 30)
-            duration_weight: Maximum points for duration (default 30)
-            steepness_weight: Maximum points for steepness (default 40)
-            optimal_duration_min: Minimum optimal duration in bars (default 15)
-            optimal_duration_max: Maximum optimal duration in bars (default 25)
-            duration_penalty_short: Points deducted per bar below min (default 2)
-            duration_penalty_long: Points deducted per bar above max (default 1)
+        # Find where the direction changes (sign changes in differences)
+        sign_changes = np.sign(diffs).diff()
         
-        Returns:
-            Dictionary containing scores and ratios
-        """
-        # Height score
-        height_score = (move_height / 100) * height_weight
+        # Get indices of pivot points (where sign changes)
+        pivot_indices = ma_series.index[abs(sign_changes) > 0]
         
-        # Duration score
-        duration_score = duration_weight
-        if move_duration < optimal_duration_min:
-            duration_score -= (optimal_duration_min - move_duration) * duration_penalty_short
-        elif move_duration > optimal_duration_max:
-            duration_score -= (move_duration - optimal_duration_max) * duration_penalty_long
-        duration_score = max(0, duration_score)
-        
-        # Steepness score
-        ratio = move_height / move_duration
-        if ratio > 2:
-            steepness_score = steepness_weight
-        elif ratio > 1:
-            steepness_score = steepness_weight * 0.75
-        elif ratio > 0.5:
-            steepness_score = steepness_weight * 0.5
-        else:
-            steepness_score = steepness_weight * 0.25
+        if len(pivot_indices) == 0:
+            return ma_series.index[-1], ma_series.iloc[-1]
             
-        base_score = height_score + duration_score
-        total_score = base_score + steepness_score
+        # Return the last pivot point
+
+        # if no pivit found then use the start of the ma 
+        if len(pivot_indices) == 0:
+            return ma_series.index[0], ma_series.iloc[0]
         
-        return {
-            'total_score': round(total_score),
-            'base_score': round(base_score),
-            'height_score': round(height_score),
-            'duration_score': round(duration_score),
-            'steepness_score': round(steepness_score),
-            'ratio': round(ratio, 2)
-        }
+        last_pivot_idx = pivot_indices[-1]
+        return last_pivot_idx, ma_series[last_pivot_idx]
 
-    def _compute_row(self, df: pd.DataFrame) -> float:
-        """This method is to compute each row in the lookback period."""
-        pass
+    def find_crossover_point(self, ma_series: pd.Series, upper_bound: float, lower_bound: float) -> Tuple[pd.Timestamp, float]:
+        """
+        Find the point where the MA series crosses the consolidation bounds.
+        Returns (crossover_timestamp, crossover_price)
+        """
+        if ma_series.empty:
+            return None, None
 
+        # Create series indicating whether price is outside bounds
+        above_upper = ma_series > upper_bound
+        below_lower = ma_series < lower_bound
+        outside_bounds = above_upper | below_lower
 
+        # print(f'above_upper: {above_upper}')
+
+        # Find the first point where price moves outside bounds
+        if not outside_bounds.any():
+            return None, None
+
+        crossover_idx = outside_bounds[outside_bounds].index[-1]
+        return crossover_idx, ma_series[crossover_idx]
+
+    def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Compute pre-move scores for each consolidation area.
+        """
+        if df.empty or len(self.column_pairs) == 0:
+            return pd.DataFrame(0, index=df.index, columns=self.names)
+
+        results = pd.DataFrame(0, index=df.index, columns=self.names)
+        
+        for (upper_col, lower_col), signal_name in zip(self.column_pairs, self.names):
+            # Skip if required columns are missing
+            if not all(col in df.columns for col in [upper_col, lower_col, self.maCol, self.atrCol]):
+                continue
+
+            # Get consolidation bounds
+            upper_bound = df[upper_col].dropna().iloc[0] if not df[upper_col].dropna().empty else None
+            lower_bound = df[lower_col].dropna().iloc[0] if not df[lower_col].dropna().empty else None
+            
+            if upper_bound is None or lower_bound is None:
+                continue
+
+            # Get the consolidation zone start and end
+            cons_start = df[upper_col].dropna().index[0]
+            cons_end = df[upper_col].dropna().index[-1]
+            
+            # Get MA series up to consolidation start and up to the end
+            ma_before_cons = df[self.maCol].loc[:cons_start]
+            
+            # Find last pivot before consolidation
+            pivot_time, pivot_price = self.find_last_pivot(ma_before_cons)
+            print(f'pivot_time: {pivot_time}, pivot_price: {pivot_price}')
+            if pivot_time is None:
+                continue
+
+            # Find crossover point with consolidation bounds
+            if pivot_time > cons_start:
+                continue
+
+            ma_from_pivot = df[self.maCol].loc[pivot_time:cons_end]
+            crossover_time, crossover_price = self.find_crossover_point(ma_from_pivot, upper_bound, lower_bound)
+            print(f'crossover_time: {crossover_time}, crossover_price: {crossover_price}')
+
+            # Calculate score components
+            if crossover_time is None or crossover_price is None:
+                continue
+
+            premove_height = abs(pivot_price - crossover_price) / df[self.atrCol].loc[pivot_time]
+            premove_duration = len(ma_from_pivot)
+
+            
+            # Calculate score using the premove_height and premove_duration.  
+            # higher,  wider and steeper all contribute to the score. 
+            steepness = premove_height / premove_duration
+            final_score = steepness * premove_height * np.log1p(premove_duration)
+            
+            # Create a series of zeros for the full index
+            score_series = pd.Series(0, index=df.index)
+
+            # Create a mask for the consolidation period
+            cons_mask = (df.index >= cons_start) & (df.index <= cons_end)
+
+            # Assign the score only during consolidation period
+            score_series[cons_mask] = final_score
+
+            # Assign scores to result DataFrame
+            results[signal_name] = self.get_score(score_series)
+
+        return results
