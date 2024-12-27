@@ -788,7 +788,7 @@ class ConsolidationZone(TA):
     price_tolerance: float = 0.001
     max_points_between: int = 2
     height_width_ratio: float = 0.5
-    name: str = 'RECT'
+    name: str = 'CONS'
     atr_column: str = 'ATR'
     """A class that identifies consolidation zones in price data using a multi-step algorithm.
     

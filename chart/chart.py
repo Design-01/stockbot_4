@@ -464,8 +464,8 @@ class Chart:
         if chart_type == 'support_resistance':
             self.add_support_resistance(data, style)
 
-        if chart_type == 'rect':
-            self.add_rectangle(data, style)
+        if chart_type.upper() in ['CONS', 'RECT']:
+            self.add_rectangle(data, style, chart_type.upper())
         
         if chart_type == 'trendlines':
             trend_cols = [col for col in data.columns if 'TREND' in col]
@@ -544,7 +544,7 @@ class Chart:
             for trace in create_traces(resistance_cols[i], resistance_cols[i+1], resistance_cols[i+2], resistance_style):
                 self.fig.add_trace(trace, row=1, col=1)
    
-    def add_rectangle(self, data: pd.DataFrame, style: List[Dict[str, Any]]) -> None:
+    def add_rectangle(self, data: pd.DataFrame, style: List[Dict[str, Any]], chart_type='') -> None:
         """
         Adds support and resistance levels to the chart with upper and lower bounds.
 
@@ -557,7 +557,7 @@ class Chart:
             
         support_style, resistance_style = style
 
-        def create_traces(upper_col, lower_col, style):
+        def create_traces(upper_col, lower_col, style, name):
             color = style.get('color', 'blue')
             dash = style.get('dash', 'solid')
             width = style.get('width', 2)
@@ -567,7 +567,7 @@ class Chart:
             yield go.Scatter(
                 x=data.index, 
                 y=data[upper_col], 
-                name=f"Rectangle {upper_col.split('_')[-1]} Upper",
+                name=f"{name} {upper_col.split('_')[-1]} Upper",
                 line=dict(color=color, width=width-1, dash='dash')
             )
             
@@ -575,7 +575,7 @@ class Chart:
             yield go.Scatter(
                 x=data.index, 
                 y=data[lower_col], 
-                name=f"Rectangle {lower_col.split('_')[-1]} Lower",
+                name=f"{name} {lower_col.split('_')[-1]} Lower",
                 line=dict(color=color, width=width-1, dash='dash')
             )
             
@@ -593,23 +593,24 @@ class Chart:
                 fillcolor=fillcolour,
                 line=dict(color='rgba(255,255,255,0)'),
                 showlegend=False,
-                name=f"Rectangle {upper_col.split('_')[-1]} Zone"
+                name=f"{name} {upper_col.split('_')[-1]} Zone"
             )
 
         # Get all rectangle columns
-        rect_cols = [col for col in data.columns if col.startswith('RECT')]
+        name = chart_type.upper()
+        rect_cols = [col for col in data.columns if col.startswith(name)]
         rect_pairs = []
         
         # Group upper and lower bounds
         for i in range(1, len(rect_cols)//2 + 1):
-            upper = f"RECT_UPPER_{i}"
-            lower = f"RECT_LOWER_{i}"
+            upper = f"{name}_UPPER_{i}"
+            lower = f"{name}_LOWER_{i}"
             if upper in rect_cols and lower in rect_cols:
                 rect_pairs.append((upper, lower))
         
         # Add traces for each rectangle
         for upper_col, lower_col in rect_pairs:
-            for trace in create_traces(upper_col, lower_col, support_style):
+            for trace in create_traces(upper_col, lower_col, support_style, name):
                 self.fig.add_trace(trace, row=1, col=1)
 
     def add_line(self, data: pd.Series, style: Dict[str, Any], row:int=1) -> None:

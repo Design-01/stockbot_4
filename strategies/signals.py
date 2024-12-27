@@ -1612,123 +1612,55 @@ class CountTouches(MultiSignals):
 @dataclass
 class LineLengths(MultiSignals):
     """
-    LineLength class to calculate the score based on the line length.
+    LineLength class to calculate scores based on trend line lengths.
     Longer lines are more significant and thus score higher.
     Length is measured as the number of bars the line has existed.
-    
-    Implementation Details:
-    --------------------
-    - Tracks the length of each trend line by counting non-NaN values
-    - Updates lengths incrementally to support streaming/real-time updates
-    - Normalizes lengths to provide scores between 0-100
-    - Higher scores indicate longer, more established lines
-    
-    Parameters:
-    ----------
-    name : str
-        Name prefix for the generated signals (defaults to 'LLen')
-    columnStartsWith : str
-        Prefix for columns to process (must match trend line columns)
-    minBars : int
-        Minimum number of bars required for a line to be considered valid
-    maxBars : int
-        Maximum number of bars to consider for normalization
     """
     name: str = 'LLen'
     columnStartsWith: str = ''
     minBars: int = 10  # Minimum bars for a valid line
-    maxBars: int = 100  # Maximum bars for normalization
-
-    def __post_init__(self):
-        """Initialize with empty signal names and length tracking."""
-        super().__post_init__()
-        # Dictionary to track running lengths for each line
-        self._line_lengths = {}
-        
-    def _calculate_line_length(self, series: pd.Series) -> int:
-        """
-        Calculate the current length of a line by counting consecutive non-NaN values
-        from the most recent point backwards.
-        
-        Parameters:
-        -----------
-        series : pd.Series
-            Series containing line values
-            
-        Returns:
-        --------
-        int
-            Number of consecutive valid (non-NaN) values
-        """
-        # Get the last valid value's position
-        last_valid_idx = series.last_valid_index()
-        if last_valid_idx is None:
-            return 0
-            
-        # Count backwards from last valid value until we hit NaN
-        length = 0
-        current_idx = series.index.get_loc(last_valid_idx)
-        
-        while current_idx >= 0:
-            if pd.isna(series.iloc[current_idx]):
-                break
-            length += 1
-            current_idx -= 1
-            
-        return length
-
+    
     def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Compute length-based scores for all trend lines efficiently.
-        Returns DataFrame with scores normalized based on line lengths.
+        Compute length-based scores for all trend lines in the window.
         
         Parameters:
         -----------
         df : pd.DataFrame
-            DataFrame containing trend line columns
+            DataFrame containing the lookback window of data
             
         Returns:
         --------
         pd.DataFrame
-            DataFrame with normalized scores for each line
+            DataFrame with raw (unnormalized) lengths for each line
         """
-        # Initialize results DataFrame
-        results = pd.DataFrame(0, index=df.index, columns=self.names)
+        # Initialize results with the same index as input window
+        results = pd.DataFrame(index=df.index, columns=self.names)
         
         # Process each trend line
         for src_col in self.source_columns:
             signal_name = self.column_mapping[src_col]
             
-            # Calculate length for current line
-            current_length = self._calculate_line_length(df[src_col])
-            
-            # Store length for reference
-            self._line_lengths[signal_name] = current_length
-            
-            # Calculate score only if we meet minimum length requirement
-            if current_length >= self.minBars:
-                # Normalize length to score
-                # Score increases with length but caps at maxBars
-                score = min(current_length, self.maxBars) / self.maxBars * 100
-            else:
-                score = 0
+            # For each point in the window, calculate the length up to that point
+            lengths = []
+            for i in range(len(df)):
+                # Get data up to current point
+                current_slice = df[src_col].iloc[:i+1]
                 
-            # Set the score for all points in the current window
-            results[signal_name] = score
+                # Count backwards from current point until we hit NaN
+                length = 0
+                for val in reversed(current_slice):
+                    if pd.isna(val):
+                        break
+                    length += 1
+                    
+                # Only count if we meet minimum length requirement
+                lengths.append(length if length >= self.minBars else 0)
+            
+            # Assign the lengths to results
+            results[signal_name] = lengths
             
         return results
-
-    def get_line_lengths(self) -> Dict[str, int]:
-        """
-        Get the current raw lengths of all tracked lines.
-        Useful for debugging or additional analysis.
-        
-        Returns:
-        --------
-        Dict[str, int]
-            Dictionary mapping signal names to their current lengths
-        """
-        return self._line_lengths.copy()
 
 
 @dataclass
@@ -1740,15 +1672,102 @@ class ConsolidationShape(MultiSignals):
     versus the height as determined by the atr multiples.
     shorter and longer the better
     """
-    name : str = 'ConsShape'
-    consUpperCol : str = ''
-    consLowerCol : str = ''
-    artCol       : str = ''
-    ls           : str = 'LONG'
+    name: str = 'ConsShape'
+    consUpperCol: str = ''
+    consLowerCol: str = ''
+    atrCol: str = 'ATR'  # Default ATR column name
+    minBars: int = 5     # Minimum bars needed for valid consolidation
 
-    def _compute_row(self, df: pd.DataFrame) -> float:
-        """This method is to compute each row in the lookback period."""
-        pass
+    def __post_init__(self):
+        """Initialize with consolidation column pairs."""
+        super().__post_init__()
+        # Extract the base names without the suffix
+        if self.consUpperCol.endswith('_1'):
+            self.base_name = self.consUpperCol[:-2]
+        elif self.consUpperCol.endswith('_2'):
+            self.base_name = self.consUpperCol[:-2]
+        else:
+            self.base_name = self.consUpperCol
+            
+    def __post_init__(self):
+        """Initialize pairs of consolidation columns."""
+        super().__post_init__()
+        self.columnStartsWith = 'CONS_UPPER'  # This helps the base class find relevant columns
+        self.column_pairs = []  # We'll populate this in setup_columns
+        
+    def setup_columns(self, df: pd.DataFrame):
+        """Set up column mappings for consolidation pairs."""
+        # Use base class to find upper columns
+        super().setup_columns(df)
+        
+        # Reset our specific attributes
+        self.names = []
+        self.column_pairs = []
+        
+        # For each upper column found by base class
+        for upper_col in self.source_columns:
+            # Find corresponding lower column
+            lower_col = upper_col.replace('UPPER', 'LOWER')
+            if lower_col in df.columns:
+                # Create numbered signal names instead of using column names
+                signal_name = f"{self.name}_{len(self.names) + 1}"
+                self.names.append(signal_name)
+                self.column_pairs.append((upper_col, lower_col))
+
+    def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Compute shape-based scores for all consolidation areas in the window.
+        A tighter consolidation (smaller height/width ratio) scores higher.
+        
+        Parameters:
+        -----------
+        df : pd.DataFrame
+            DataFrame containing the lookback window of data
+            
+        Returns:
+        --------
+        pd.DataFrame
+            DataFrame with raw (unnormalized) shape scores for each consolidation
+        """
+        # Initialize results DataFrame
+        results = pd.DataFrame(index=df.index, columns=self.names)
+        
+        # Process each consolidation pair
+        for (upper_col, lower_col), signal_name in zip(self.column_pairs, self.names):
+            scores = []
+            
+            # For each point in the window
+            for i in range(len(df)):
+                current_window = df.iloc[:i+1]
+                
+                # Find the last valid consolidation window
+                # (where both upper and lower values exist)
+                mask = current_window[[upper_col, lower_col]].notna().all(axis=1)
+                cons_window = current_window[mask]
+                
+                if len(cons_window) < self.minBars:
+                    scores.append(0)
+                    continue
+                
+                # Calculate consolidation metrics for current window only
+                height = cons_window[upper_col].iloc[-1] - cons_window[lower_col].iloc[-1]
+                width = len(cons_window)  # Number of bars in current consolidation
+                
+                # Get ATR for scale normalization
+                atr = cons_window[self.atrCol].iloc[-1] if self.atrCol in cons_window else 1
+                
+                # Calculate shape score using width / (height/atr)
+                if width > 0 and height > 0:
+                    shape_score = width / (height / atr)
+                else:
+                    shape_score = 0
+                    
+                scores.append(shape_score)
+            
+            # Assign scores to results
+            results[signal_name] = scores
+            
+        return results
 
 @dataclass
 class ConsolidationPosition(MultiSignals):
