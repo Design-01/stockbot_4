@@ -200,25 +200,53 @@ class Signals(ABC):
 class Score(Signals):
     cols: List[str] = field(default_factory=list)
     weight: float = 1.0
-    scoreType:str = 'mean' # 'mean', 'sum', 'max', 'min'
+    scoreType: str = 'mean'  # 'mean', 'sum', 'max', 'min'
+    containsString: str = ''
+    containsAllStrings: List[str] = field(default_factory=list)
+    lastRowOnly: bool = False
+    rawName: str = ''
+
+    def __post_init__(self):
+        if self.rawName != '':
+            self.name = self.rawName
+        else:
+            self.name = f"Score_{self.rawName}"
+        self.names = [self.name]
     
     def _compute_row(self, df: pd.DataFrame) -> float:
         """This method is to compute each row in the lookback period."""
-        if len(self.cols) == 0:
+        if self.cols == []:
+            self.cols = list(df.columns)
+        
+        # Filter columns based on containsString
+        if self.containsString:
+            filtered_cols = [col for col in self.cols if self.containsString in col]
+            print(f'filtered_cols-containsString: {filtered_cols}')
+        else:
+            filtered_cols = self.cols
+        
+        # Further filter columns based on containsAllStrings
+        if self.containsAllStrings:
+            filtered_cols =  [c for c in filtered_cols if all(s in c for s in self.containsAllStrings)]
+            print(f'filtered_cols-containsAllStrings: {filtered_cols}')
+        
+        if len(filtered_cols) == 0:
+            print(f"No columns found for {self.name}")
             return 0.0
         
-        val = 0.0
-
-        last_row = df[self.cols].iloc[-1]
-
+        if self.lastRowOnly:
+            rows_to_score = df[filtered_cols].iloc[-1:]
+        else:
+            rows_to_score = df[filtered_cols]
+        
         if self.scoreType == 'mean':
-            val = last_row.mean()
+            val = rows_to_score.mean().mean()
         elif self.scoreType == 'sum':
-            val = last_row.sum()
+            val = rows_to_score.sum().sum()
         elif self.scoreType == 'max':
-            val = last_row.max()
+            val = rows_to_score.max().max()
         elif self.scoreType == 'min':
-            val = last_row.min()
+            val = rows_to_score.min().min()
         else:
             val = 0.0
 
@@ -2035,7 +2063,7 @@ class ConsolidationPreMove(MultiSignals):
             
             # Find last pivot before consolidation
             pivot_time, pivot_price = self.find_last_pivot(ma_before_cons)
-            print(f'pivot_time: {pivot_time}, pivot_price: {pivot_price}')
+            # print(f'pivot_time: {pivot_time}, pivot_price: {pivot_price}')
             if pivot_time is None:
                 continue
 
@@ -2045,7 +2073,7 @@ class ConsolidationPreMove(MultiSignals):
 
             ma_from_pivot = df[self.maCol].loc[pivot_time:cons_end]
             crossover_time, crossover_price = self.find_crossover_point(ma_from_pivot, upper_bound, lower_bound)
-            print(f'crossover_time: {crossover_time}, crossover_price: {crossover_price}')
+            # print(f'crossover_time: {crossover_time}, crossover_price: {crossover_price}')
 
             # Calculate score components
             if crossover_time is None or crossover_price is None:
@@ -2060,7 +2088,7 @@ class ConsolidationPreMove(MultiSignals):
             final_score = steepness * premove_height * np.log1p(premove_duration)
 
             # Create a series of zeros for the full index
-            score_series = pd.Series(0, index=df.index)
+            score_series = pd.Series(np.nan, index=df.index)
 
             # Create a mask for the consolidation period
             cons_mask = (df.index >= cons_start) & (df.index <= cons_end)
