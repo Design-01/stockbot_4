@@ -2,7 +2,7 @@ import pandas as pd
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import numpy as np
-from typing import List, Tuple, Union, Dict
+from typing import List, Tuple, Union, Dict, Optional
 
 def preprocess_data(func):
     def wrapper(self, data: pd.DataFrame, *args, **kwargs):
@@ -1451,6 +1451,27 @@ class MicroTrendline:
             'start_date': point_a['date'],
             'end_date': end_date
         }
+    
+    def check_backward_points(self, data: pd.DataFrame, trendline: Dict[str, Any], tolerance_atr: float) -> Optional[pd.Timestamp]:
+        """Check for valid points behind the start of a trendline within tolerance."""
+        start_idx = data.index.get_loc(trendline['start_date'])
+        
+        # Look backward
+        for i in range(start_idx - 1, -1, -1):
+            x_val = data.index[i].timestamp() / (24 * 3600)
+            projected_price = trendline['slope'] * x_val + trendline['intercept']
+            current_atr = data.iloc[i][self.atrCol]
+            
+            if self.slopeDir == 'down':
+                price = data.iloc[i]['high']
+                if abs(price - projected_price) <= tolerance_atr * current_atr:
+                    return data.index[i]
+            else:
+                price = data.iloc[i]['low']
+                if abs(price - projected_price) <= tolerance_atr * current_atr:
+                    return data.index[i]
+        
+        return None
 
     def find_trendlines(self, data: pd.DataFrame) -> List[Dict[str, Any]]:
         """Find trendlines in the data based on slope direction."""
@@ -1591,6 +1612,8 @@ class MicroTrendline:
                 trendline = self.project_line(data, point_b, point_a)
                 trendlines.append(trendline)
         
+
+        
         return trendlines
 
     def run(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -1609,3 +1632,15 @@ class MicroTrendline:
             result.loc[mask, name] = trendline['slope'] * x_values + trendline['intercept']
         
         return result
+
+
+# todo: add the following classes to the strategies/ta.py file
+@dataclass
+class LineMerge(TA):
+    """Takes multiple trendlines and merges them into a single line.
+    Checks slope direction and tolerance for merging.
+    """
+
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Run the analysis and return DataFrame with merged trendlines."""
+        pass

@@ -100,6 +100,27 @@ class Frame:
         """Updates the data for all the technical indicators in the frame"""
         for ta, style, chart_type, row in self.ta:
             self.data = self.update_data(ta.run(self.data))
+    
+    def get_ta_columns(self, nameattr, containsName=None):
+        """
+        Iterates through a list of tuples containing objects and returns the names
+        of the object that matches the target_name.
+        
+        Args:
+            object_list: List of tuples where first element is an object
+            target_name: Name to search for
+            
+        Returns:
+            Names of the matching object or None if not found
+        """
+        self.update_ta_data()
+        for obj_tuple in self.ta:
+            obj = obj_tuple[0]  # Get the object from the tuple
+            if hasattr(obj, 'name') and obj.name == nameattr:
+                if containsName:
+                    return [n for n in obj.names if containsName in n]
+                return obj.names
+        return None
         
 
     def plot(self, width: int = 1400, height: int = 800, trading_hours: bool = False, show: bool = True):   

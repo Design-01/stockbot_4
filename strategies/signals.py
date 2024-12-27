@@ -4,7 +4,7 @@ from typing import Tuple, Any
 import pandas as pd
 import numpy as np
 from dataclasses import dataclass, field
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Literal
 from collections import defaultdict
 from abc import ABC, abstractmethod
 
@@ -154,9 +154,15 @@ class Signals(ABC):
 
         return None
     
-    def return_series(self, index:pd.DatetimeIndex, val:float):
+    def return_series(self, index: pd.DatetimeIndex, val: Union[float, pd.Series]):
         if isinstance(val, pd.Series):
-            val.name = self.name
+            # If single column Series, use existing logic
+            if len(val.shape) == 1:
+                val.name = self.name
+                return val
+            # If multiple columns, handle each column
+            for col, name in zip(val.columns, self.names):
+                val[col].name = name
             return val
         return pd.Series(index=[index], data=val, name=self.name)
     
@@ -1320,12 +1326,433 @@ class ReversalParabolic(Signals):
 #$ Market Timing (MT)
 
 # --------------------------------------------------------------------
+# ---- M U L T I   S i g n a l s -------------------------------------
+# --------------------------------------------------------------------
+from dataclasses import dataclass
+from abc import ABC, abstractmethod
+from typing import Tuple, Union
+import pandas as pd
+import numpy as np
+
+@dataclass
+class MultiSignals(ABC):
+    """
+    Optimized base class for indicators that generate multiple related signals.
+    Processes data in bulk rather than row by row for better performance.
+    """
+    name: str = ''
+    normRange: Tuple[int, int] = (0, 100)
+    ls: str = 'LONG'
+    lookBack: int = 20
+    columnStartsWith: str = ''
+
+    def __post_init__(self):
+        """Initialize with empty signal names - will be populated during setup."""
+        self.names = []
+        self.source_columns = []
+        self.column_mapping = {}
+
+    def setup_columns(self, df: pd.DataFrame):
+        """Set up column mappings and signal names."""
+        self.source_columns = [col for col in df.columns if col.startswith(self.columnStartsWith)]
+        self.names = []
+        self.column_mapping = {}
+        
+        for col in self.source_columns:
+            signal_name = f"{self.name}_{col}"
+            self.names.append(signal_name)
+            self.column_mapping[col] = signal_name
+
+    def get_score(self, val):
+        """Normalize values efficiently using vectorized operations."""
+        def normalize_vec(x):
+                normalized = (x - self.normRange[0]) / (self.normRange[1] - self.normRange[0]) * 100
+                return np.round(normalized, 2)  # Added rounding to match single-value function
+                
+        if isinstance(val, (pd.Series, pd.DataFrame)):
+            return val.apply(normalize_vec)
+        return normalize_vec(val)
+
+    @abstractmethod
+    def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Child classes implement this to compute all signals for the given window.
+        Should return DataFrame with columns for each signal.
+        """
+        pass
+
+    def run(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Generate all signals using efficient bulk processing.
+        """
+        if not self.names:
+            self.setup_columns(df)
+
+        if len(df) <= self.lookBack:
+            return pd.DataFrame(0, index=[df.index[-1]], columns=self.names)
+
+        # Get the window we need to process
+        window = df.iloc[-self.lookBack:]
+        
+        # Compute signals for the entire window at once
+        signals = self.compute_signals(window)
+        
+        # Ensure we have all expected columns
+        for name in self.names:
+            if name not in signals.columns:
+                signals[name] = 0
+                
+        # Normalize the results
+        for col in signals.columns:
+            signals[col] = self.get_score(signals[col])
+
+        return signals
+#$ -------  Cosnsolidation and Trend Signals ---------------
 
 
 
+@dataclass
+class CountTouches(MultiSignals):
+    """
+    Optimized version of CountTouches that processes data more efficiently
+    and properly handles support/resistance touches based on specific rules.
+
+    Touch Detection Rules:
+    ---------------------
+    For Support Lines:
+    1. Distance Rule:
+        - The low of the bar must be within [tolerance * ATR] distance of the support line
+        - The high of the bar should not be below [tolerance * ATR] distance of the support line
+        - Distance is measured in absolute terms using abs(price - line)
+    
+    2. Bar Position Rule:
+        Either:
+        - The line must be within the bar's range (high > line > low)
+        OR
+        - The bar must be very close to the line (within tolerance/2 * ATR)
+    
+    3. Price Distribution Rule:
+        - After N consecutive bars below the line, we need at least N bars
+          above the line before counting new touches
+        - This ensures proper recovery after a support break
+        - A bar is considered "below" if its high is below the line
+        - A bar is considered "above" if its low is above the line
+
+    For Resistance Lines:
+    1. Distance Rule:
+        - The high of the bar must be within [tolerance * ATR] distance of the resistance line
+        - The low of the bar should not be above [tolerance * ATR] distance of the resistance line
+        - Distance is measured in absolute terms using abs(price - line)
+    
+    2. Bar Position Rule:
+        Either:
+        - The line must be within the bar's range (high > line > low)
+        OR
+        - The bar must be very close to the line (within tolerance/2 * ATR)
+    
+    3. Price Distribution Rule:
+        - Same as support but inverted
+        - After N consecutive bars above the line, we need at least N bars
+          below the line before counting new touches
+        - This ensures proper recovery after a resistance break
+
+    Parameters:
+    ----------
+    name : str
+        Name prefix for the generated signals
+    columnStartsWith : str
+        Prefix for columns to process
+    touchTolerance : float
+        Multiplier for ATR to determine acceptable distance from line
+        e.g., if touchTolerance = 2 and ATR = 0.5, touches within 1.0 units are valid
+    atrCol : str
+        Name of the ATR column in the dataframe
+    ls : str
+        Signal type identifier
+    supOrRes : Literal['sup', 'res']
+        Whether to look for support ('sup') or resistance ('res') touches
+
+    Implementation Details:
+    --------------------
+    - Uses a 3-bar window for analysis (setup bar, touch bar, follow-through bar)
+    - ATR tolerance is dynamically calculated based on current ATR value
+    - Maintains running count of touches for each line
+    - Processes data incrementally to support streaming/real-time updates
+    """
+    name: str = 'CTouch'
+    columnStartsWith: str = ''
+    touchTolerance: float = 0.0
+    atrCol: str = 'ATR'
+    ls: str = 'LONG'
+    supOrRes: Literal['sup', 'res'] = 'sup'
+
+    def _check_price_distribution(self, df_slice: pd.DataFrame, line_vals: pd.Series) -> bool:
+        """
+        Check price distribution with the rule that after N bars below the line,
+        we need at least N bars above the line before counting new touches.
+        """
+        highs = df_slice['high'].values
+        lows = df_slice['low'].values
+        line = line_vals.values
+        
+        # Count consecutive bars below the line leading up to this point
+        bars_below = 0
+        i = len(highs) - 1
+        while i >= 0 and highs[i] < line[i]:
+            bars_below += 1
+            i -= 1
+            
+        if bars_below == 0:  # If no bars below, distribution is valid
+            return True
+            
+        # Now count how many bars are above the line since the last bar below
+        bars_above = 0
+        while i >= 0 and lows[i] > line[i]:
+            bars_above += 1
+            i -= 1
+            
+        # Need at least as many bars above as we had below
+        return bars_above >= bars_below
+
+    def _is_valid_touch_sequence(self, df_slice: pd.DataFrame, line_vals: pd.Series, tolerance: float) -> bool:
+        """
+        Check if we have a valid touch sequence based on the rules:
+        For support:
+        1. Low within tolerance distance of the line
+        2. High not below the line
+        3. Line is within the bar or very close
+        4. Price distribution condition met
+        """
+        if line_vals.isna().any():
+            return False
+
+        # Get relevant price data for current bar
+        high = df_slice['high'].iloc[1]  # Touch bar
+        low = df_slice['low'].iloc[1]
+        line = line_vals.iloc[1]
+        
+        distance_to_line = abs(low - line)
+        
+        if self.supOrRes == 'sup':
+            # Check if the low is within tolerance distance of the line
+            low_within_tolerance = distance_to_line <= tolerance
+            
+            # High should not be significantly below the line
+            high_not_below = high >= (line - tolerance)
+            
+            # Either the line is within the bar or very close
+            line_within_range = (high > line and low < line) or distance_to_line <= tolerance/2
+            
+            # Check price distribution
+            valid_distribution = self._check_price_distribution(df_slice, line_vals)
+            
+            return low_within_tolerance and high_not_below and line_within_range and valid_distribution
+            
+        else:  # resistance
+            # For resistance, we check the high against the line
+            high_within_tolerance = abs(high - line) <= tolerance
+            
+            # Low should not be significantly above the line
+            low_not_above = low <= (line + tolerance)
+            
+            # Either the line is within the bar or very close
+            line_within_range = (high > line and low < line) or abs(high - line) <= tolerance/2
+            
+            # Check price distribution
+            valid_distribution = self._check_price_distribution(df_slice, line_vals)
+            
+            return high_within_tolerance and low_not_above and line_within_range and valid_distribution
+
+    def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Compute cumulative touch counts for all lines efficiently.
+        Returns DataFrame with running counts for each line.
+        """
+        # Get ATR-based tolerance
+        current_atr = df[self.atrCol].iloc[-1]
+        if pd.isna(current_atr):
+            current_atr = df[self.atrCol].mean()
+        tolerance = current_atr * self.touchTolerance
+
+        # Initialize results DataFrame
+        results = pd.DataFrame(0, index=df.index, columns=self.names)
+        
+        # Get the count from previous data if available
+        prev_counts = {col: 0 for col in self.names}
+        if hasattr(self, '_prev_touch_counts'):
+            prev_counts = self._prev_touch_counts
+        
+        # Process each trend line
+        for src_col in self.source_columns:
+            signal_name = self.column_mapping[src_col]
+            touch_count = prev_counts[signal_name]
+            
+            # Need enough bars to check for distribution pattern
+            if len(df) >= 3:
+                # Look for touches in rolling windows
+                for i in range(1, len(df) - 1):
+                    df_slice = df.iloc[i-1:i+2]  # Get 3 bars for analysis
+                    line_vals = df[src_col].iloc[i-1:i+2]
+                    
+                    if self._is_valid_touch_sequence(df_slice, line_vals, tolerance):
+                        touch_count += 1
+                        # Set the count from the touch bar onwards
+                        results.loc[df_slice.index[1]:, signal_name] = touch_count
+            
+            # Store final count for next run
+            prev_counts[signal_name] = touch_count
+            
+        # Store counts for next computation
+        self._prev_touch_counts = prev_counts
+        
+        return results
+    
 
 
+@dataclass
+class TouchFrequencyEscalation(Signals):
+    """
+    TouchFrequencyEscalation class to calculate the score based on the touch frequency escalation.
+    More touches more recently is a sign of escalation, thus more significant line or level.
+    """
+    touchCol : str = ''
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """This method is to compute each row in the lookback period."""
+        pass
+
+@dataclass
+class LineLengths(Signals):
+    """
+    LineLength class to calculate the score based on the line length.
+    Longer lines are more significant and thus score higher.
+    Length is the number of bars of the line. 
+    """
+    name : str = 'LLen'
+    lineCol : str = ''
 
 
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """This method is to compute each row in the lookback period."""
+        pass
+
+
+@dataclass
+class ConsolidationShape(Signals):
+    """
+    Looks at the height vs width of the consolidation area. 
+    A tighter consolidation scores higher meaning that the ratio between 
+    the width as determined by the number of bars 
+    versus the height as determined by the atr multiples.
+    shorter and longer the better
+    """
+    name : str = 'ConsShape'
+    consUpperCol : str = ''
+    consLowerCol : str = ''
+    artCol       : str = ''
+    ls           : str = 'LONG'
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """This method is to compute each row in the lookback period."""
+        pass
+
+@dataclass
+class ConsolidationPosition(Signals):
+    """
+    ConsolidationPosition class to calculate the score based on the consolidation position.
+    The is scored by how far the price is towards the extremees of the overal stock price range.
+    eg all time high or all time low.
+    """
+    name : str = 'ConsPos'
+    consUpperCol : str = ''
+    consLowerCol : str = ''
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """This method is to compute each row in the lookback period."""
+        pass
+
+@dataclass
+class ConsolidationPreMove(Signals):
+    """
+    ConsolidationPreMove class to calculate the score based on the consolidation pre move.
+    The pre move values are base on the MoveCol (eg 50MA) and the ATR.
+    The score is based on the height, duration, and steepness of the move.
+    The move is detremined from the last pivot of the move to where it enters the consolidation zone. 
+    The height of the move is the ATR multiple.
+    The duration is the number of bars the move took.
+    
+    """
+    name : str = 'ConsPreMove'
+    consUpperCol : str = ''
+    consLowerCol : str = ''
+    moveCol : str = ''
+    atrCol : str = ''
+
+
+    def score_ma50_movement(self,
+        move_height: float,
+        move_duration: int,
+        height_weight: float = 30,
+        duration_weight: float = 30,
+        steepness_weight: float = 40,
+        optimal_duration_min: int = 15,
+        optimal_duration_max: int = 25,
+        duration_penalty_short: float = 2,
+        duration_penalty_long: float = 1
+    ) -> dict:
+        """
+        Score MA50 movement based on height, duration, and steepness.
+        
+        Args:
+            move_height: Price movement in points
+            move_duration: Number of bars the move took
+            height_weight: Maximum points for height (default 30)
+            duration_weight: Maximum points for duration (default 30)
+            steepness_weight: Maximum points for steepness (default 40)
+            optimal_duration_min: Minimum optimal duration in bars (default 15)
+            optimal_duration_max: Maximum optimal duration in bars (default 25)
+            duration_penalty_short: Points deducted per bar below min (default 2)
+            duration_penalty_long: Points deducted per bar above max (default 1)
+        
+        Returns:
+            Dictionary containing scores and ratios
+        """
+        # Height score
+        height_score = (move_height / 100) * height_weight
+        
+        # Duration score
+        duration_score = duration_weight
+        if move_duration < optimal_duration_min:
+            duration_score -= (optimal_duration_min - move_duration) * duration_penalty_short
+        elif move_duration > optimal_duration_max:
+            duration_score -= (move_duration - optimal_duration_max) * duration_penalty_long
+        duration_score = max(0, duration_score)
+        
+        # Steepness score
+        ratio = move_height / move_duration
+        if ratio > 2:
+            steepness_score = steepness_weight
+        elif ratio > 1:
+            steepness_score = steepness_weight * 0.75
+        elif ratio > 0.5:
+            steepness_score = steepness_weight * 0.5
+        else:
+            steepness_score = steepness_weight * 0.25
+            
+        base_score = height_score + duration_score
+        total_score = base_score + steepness_score
+        
+        return {
+            'total_score': round(total_score),
+            'base_score': round(base_score),
+            'height_score': round(height_score),
+            'duration_score': round(duration_score),
+            'steepness_score': round(steepness_score),
+            'ratio': round(ratio, 2)
+        }
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """This method is to compute each row in the lookback period."""
+        pass
 
 
