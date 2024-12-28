@@ -121,9 +121,12 @@ class Signals(ABC):
     def get_score(self, val):
         if isinstance(val, pd.Series):
             # Apply the function to each element in the series
-            return val.apply(lambda x: 0 if x == 0 else normalize(x, self.normRange[0], self.normRange[1]))
+            # return val.apply(lambda x: 0 if x == 0 else normalize(x, self.normRange[0], self.normRange[1]))
+            return val.apply(lambda x: 0 if x == 0 else (np.nan if pd.isna(x) else normalize(x, self.normRange[0], self.normRange[1])))
         else:
             # Handle single value
+            if pd.isna(val):
+                return np.nan
             if val == 0:
                 return 0
             return normalize(val, self.normRange[0], self.normRange[1])
@@ -178,7 +181,7 @@ class Signals(ABC):
             return self.return_series(df.index[-1], self.get_score(0))
 
         # this then gets populated with the results of the computation
-        result_series = pd.Series(0.0, index=df.index[-self.lookBack:])
+        result_series = pd.Series(np.nan, index=df.index[-self.lookBack:])
         
         for i in range(self.lookBack):
             current_idx = -(self.lookBack - i)
@@ -191,7 +194,8 @@ class Signals(ABC):
             if current_window.empty:
                 continue
             val = self._compute_row(current_window)
-            result_series.iloc[i] = float(val)
+            if not pd.isna(val):
+                result_series.iloc[i] = float(val)
 
         return self.return_series(df.index[-self.lookBack:], self.get_score(result_series))
 
@@ -203,42 +207,51 @@ class Score(Signals):
     scoreType: str = 'mean'  # 'mean', 'sum', 'max', 'min'
     containsString: str = ''
     containsAllStrings: List[str] = field(default_factory=list)
-    lastRowOnly: bool = False
     rawName: str = ''
-
+    
     def __post_init__(self):
-        if self.rawName != '':
-            self.name = self.rawName
-        else:
-            self.name = f"Score_{self.rawName}"
+        """Initialize the Score class and validate inputs."""
+        if self.scoreType not in ['mean', 'sum', 'max', 'min']:
+            raise ValueError(f"Invalid scoreType: {self.scoreType}")
+            
+        self.name = self.rawName if self.rawName else f"Score_{self.name}"
         self.names = [self.name]
+        self._filtered_cols = None  # Cache for filtered columns
+    
+    def _get_filtered_columns(self, df: pd.DataFrame) -> List[str]:
+        """Get and cache filtered columns to avoid recomputation."""
+        if self._filtered_cols is None:
+            cols = self.cols if self.cols else list(df.columns)
+            
+            if self.containsString:
+                cols = [col for col in cols if self.containsString in col]
+            
+            if self.containsAllStrings:
+                cols = [col for col in cols if all(s in col for s in self.containsAllStrings)]
+                
+            self._filtered_cols = cols
+            
+        return self._filtered_cols
     
     def _compute_row(self, df: pd.DataFrame) -> float:
-        """This method is to compute each row in the lookback period."""
-        if self.cols == []:
-            self.cols = list(df.columns)
-        
-        # Filter columns based on containsString
-        if self.containsString:
-            filtered_cols = [col for col in self.cols if self.containsString in col]
-            print(f'filtered_cols-containsString: {filtered_cols}')
-        else:
-            filtered_cols = self.cols
-        
-        # Further filter columns based on containsAllStrings
-        if self.containsAllStrings:
-            filtered_cols =  [c for c in filtered_cols if all(s in c for s in self.containsAllStrings)]
-            print(f'filtered_cols-containsAllStrings: {filtered_cols}')
+        """Compute score for the current window of data."""
+        # Get filtered columns (using cached version if available)
+        filtered_cols = self._get_filtered_columns(df)
         
         if len(filtered_cols) == 0:
-            print(f"No columns found for {self.name}")
-            return 0.0
+            return np.nan
         
-        if self.lastRowOnly:
-            rows_to_score = df[filtered_cols].iloc[-1:]
-        else:
-            rows_to_score = df[filtered_cols]
+        # Get rows to score
+        rows_to_score = df[filtered_cols].iloc[-1:] 
         
+        # Handle empty or all-NaN case
+        if rows_to_score.isna().all().all():
+            return np.nan
+        
+        # Fill NaN with 0 before calculating
+        rows_to_score = rows_to_score.fillna(0)
+        
+        # Compute the score based on type
         if self.scoreType == 'mean':
             val = rows_to_score.mean().mean()
         elif self.scoreType == 'sum':
@@ -246,12 +259,20 @@ class Score(Signals):
         elif self.scoreType == 'max':
             val = rows_to_score.max().max()
         elif self.scoreType == 'min':
-            val = rows_to_score.min().min()
+            # For min, we might want to exclude the zeros that were NaN
+            val = rows_to_score.replace(0, np.inf).min().min()
         else:
-            val = 0.0
-
-        score = self.get_score(val) * self.weight
-        return score
+            val = np.nan
+        
+        if pd.isna(val):
+            return np.nan
+            
+        return val * self.weight
+    
+    def reset_cache(self):
+        """Reset the filtered columns cache if needed (e.g., if columns change)."""
+        self._filtered_cols = None
+            
 
       
 import random
@@ -1604,7 +1625,7 @@ class CountTouches(MultiSignals):
         tolerance = current_atr * self.touchTolerance
 
         # Initialize results DataFrame
-        results = pd.DataFrame(0, index=df.index, columns=self.names)
+        results = pd.DataFrame(index=df.index, columns=self.names)
         
         # Get the count from previous data if available
         prev_counts = {col: 0 for col in self.names}
@@ -1622,6 +1643,12 @@ class CountTouches(MultiSignals):
                 for i in range(1, len(df) - 1):
                     df_slice = df.iloc[i-1:i+2]  # Get 3 bars for analysis
                     line_vals = df[src_col].iloc[i-1:i+2]
+                    
+                    # Check if trend line exists (not NaN) in current window
+                    if line_vals.isna().any():
+                        touch_count = 0  # Reset count when trend line disappears
+                        results.loc[df_slice.index[1]:, signal_name] = 0
+                        continue
                     
                     if self._is_valid_touch_sequence(df_slice, line_vals, tolerance):
                         touch_count += 1
@@ -2038,9 +2065,9 @@ class ConsolidationPreMove(MultiSignals):
         Compute pre-move scores for each consolidation area.
         """
         if df.empty or len(self.column_pairs) == 0:
-            return pd.DataFrame(0, index=df.index, columns=self.names)
+            return pd.DataFrame(np.nan, index=df.index, columns=self.names)
 
-        results = pd.DataFrame(0, index=df.index, columns=self.names)
+        results = pd.DataFrame(np.nan, index=df.index, columns=self.names)
         
         for (upper_col, lower_col), signal_name in zip(self.column_pairs, self.names):
             # Skip if required columns are missing
@@ -2091,12 +2118,11 @@ class ConsolidationPreMove(MultiSignals):
             score_series = pd.Series(np.nan, index=df.index)
 
             # Create a mask for the consolidation period
-            cons_mask = (df.index >= cons_start) & (df.index <= cons_end)
-
+            cons_mask = (~pd.isna(df[upper_col])) & (~pd.isna(df[lower_col]))
             # Assign the score only during consolidation period
-            score_series[cons_mask] = final_score
-
+            
             # Assign scores to result DataFrame
-            results[signal_name] = np.where(cons_mask, self.get_score(score_series), np.nan)
+            score_series[cons_mask] = self.get_score(final_score)
+            results[signal_name] = score_series[cons_mask]
 
         return results
