@@ -108,11 +108,11 @@ class Frame:
         for ta, style, chart_type, row in self.ta:
             self.data = self.update_data(ta.run(self.data))
     
-    def import_data(self, df_high, target_columns, auto_limit=True, manual_limit=None, prefix='htf_', merge_from_backtest:bool=False):
+    def import_data(self, df_high, target_columns, auto_limit=True, manual_limit=None, prefix='htf_', merge_to_backtest:bool=False):
         if isinstance(target_columns, str):
             target_columns = [target_columns]
         
-        df_low = self.backtest_data if merge_from_backtest else self.data
+        df_low = self.backtest_data if merge_to_backtest else self.data
         column_mapping = {col: f"{prefix}{col}" for col in target_columns}
         df_low = df_low.drop(columns=list(column_mapping.values()), errors='ignore')
         
@@ -131,7 +131,7 @@ class Frame:
         for col in column_mapping.values():
             df_merged[col] = df_merged[col].fillna(method='ffill', limit=fill_limit)
         
-        if merge_from_backtest:
+        if merge_to_backtest:
             self.backtest_data = df_merged
         else:
             self.data = df_merged
@@ -240,7 +240,7 @@ class Frame:
                 'data': self.backtest_data.copy()
             })
 
-    def backtest_next_row(self) -> bool:
+    def backtest_next_row(self, importData:pd.DataFrame=None, prefix:str='') -> bool:
         """Move to the next row in the backtest data."""
         if self._current_backtest_idx is None:
             raise ValueError("Backtest not initialized. Call backtest_setup first.")
@@ -251,6 +251,9 @@ class Frame:
         # Add next row to backtest data
         next_row = self.data.iloc[self._current_backtest_idx:self._current_backtest_idx + 1]
         self.backtest_data = pd.concat([self.backtest_data, next_row])
+
+        if importData is not None:
+            self.import_data(importData, importData.columns, merge_to_backtest=True, prefix=prefix)
         
         # Run TA on the updated backtest data
         temp_data = self.data  # Store original data

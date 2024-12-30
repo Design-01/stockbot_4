@@ -15,8 +15,8 @@ class RandDataStore:
 @dataclass
 class RandomOHLCV:
     """Creates random data for testing."""
-    open_rng  : tuple = (0.4,0.4)         # Range % change (min, max) from one bar to the next #* making min more neg than max gives a nore bias
-    close_rng : tuple = (0.4,0.4)        # Range % change(min, max)  from one bar to the next
+    open_rng  : tuple = (-0.4,0.4)         # Range % change (min, max) from one bar to the next #* making min more neg than max gives a nore bias
+    close_rng : tuple = (-0.4,0.4)        # Range % change(min, max)  from one bar to the next
     start     : str   = '2022' # start date as string ge '2022'
     periods   : int   = 50     # length of the data
     freq      : str   ='5 min' # eg 'H', '4H', '5 min', 'D'
