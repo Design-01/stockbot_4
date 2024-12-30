@@ -108,26 +108,42 @@ class Frame:
         for ta, style, chart_type, row in self.ta:
             self.data = self.update_data(ta.run(self.data))
     
-    def get_ta_columns(self, nameattr, containsName=None):
-        """
-        Iterates through a list of tuples containing objects and returns the names
-        of the object that matches the target_name.
+    def import_data(self, df_high, target_columns, auto_limit=True, manual_limit=None, prefix='htf_', merge_from_backtest:bool=False):
+        if isinstance(target_columns, str):
+            target_columns = [target_columns]
         
-        Args:
-            object_list: List of tuples where first element is an object
-            target_name: Name to search for
-            
-        Returns:
-            Names of the matching object or None if not found
-        """
-        self.update_ta_data()
-        for obj_tuple in self.ta:
-            obj = obj_tuple[0]  # Get the object from the tuple
-            if hasattr(obj, 'name') and obj.name == nameattr:
-                if containsName:
-                    return [n for n in obj.names if containsName in n]
-                return obj.names
-        return None
+        df_low = self.backtest_data if merge_from_backtest else self.data
+        column_mapping = {col: f"{prefix}{col}" for col in target_columns}
+        df_low = df_low.drop(columns=list(column_mapping.values()), errors='ignore')
+        
+        if auto_limit:
+            low_tf_delta = pd.Series(df_low.index).diff().mode()[0]
+            high_tf_delta = pd.Series(df_high.index).diff().mode()[0]
+            fill_limit = max(1, int((high_tf_delta / low_tf_delta) - 1))
+        else:
+            fill_limit = max(1, manual_limit if manual_limit is not None else 4)
+        
+        # Pre-rename columns before merge
+        df_high_subset = df_high[target_columns].rename(columns=column_mapping)
+        df_merged = pd.merge_asof(df_low, df_high_subset, left_index=True, right_index=True, direction='backward')
+        
+        # Forward fill the new columns
+        for col in column_mapping.values():
+            df_merged[col] = df_merged[col].fillna(method='ffill', limit=fill_limit)
+        
+        if merge_from_backtest:
+            self.backtest_data = df_merged
+        else:
+            self.data = df_merged
+        
+
+
+# Example usage:
+# Auto detect limit
+# result = merge_timeframes(df_1min, df_5min, ['close', 'volume'])
+
+# Manual limit
+# result = merge_timeframes(df_1min, df_5min, 'close', auto_limit=False, manual_limit=4)
         
     def plot(self, width: int = 1400, height: int = 800, trading_hours: bool = False, 
             show: bool = True, snapshot_data: pd.DataFrame = None, use_backtest_data: bool = False):
