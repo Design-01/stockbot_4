@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from typing import Tuple, Any
-
+import random
 import pandas as pd
 import numpy as np
+import math
 from dataclasses import dataclass, field
 from typing import List, Dict, Union, Literal
 from collections import defaultdict
@@ -105,14 +106,13 @@ def is_gap_pivot_crossover(df: pd.DataFrame, pivot_col: str, ls: str) -> bool:
 
 
 
-
 #£ Done
 @dataclass
 class Signals(ABC):
     name: str = ''
     normRange: Tuple[int, int] = (0, 100)
     ls: str = 'LONG'
-    lookBack: int = 20
+    lookBack: int = 1
 
     def __post_init__(self):
         self.name = f"Sig{self.ls[0]}_{self.name}"
@@ -274,9 +274,6 @@ class Score(Signals):
         self._filtered_cols = None
             
 
-      
-import random
-
 #£ Done
 @dataclass
 class ExampleClass(Signals):
@@ -309,6 +306,7 @@ class GetSignalAtPoint(Signals):
         
         return df[self.sigCol].loc[index]
 
+
 @dataclass
 class GetMaxSignalSincePoint(Signals):
     name: str = 'MaxSig'
@@ -329,56 +327,9 @@ class GetMaxSignalSincePoint(Signals):
         
         return df[self.sigCol].loc[index:].max()
 
-@dataclass
-class PullbackBounce(Signals):
-    name: str = 'PBB'
-    pointCol: str = ''
-    supResCol: str = ''
 
-    def _compute_row(self, df: pd.DataFrame) -> float:
-        """
-        Gets a Signal at a high Point or a low Point by looking back 
-        to the nth most recent point and getting the corresponding signal.
-        """
-        points = df[self.pointCol].dropna()
-        if len(points) < 1:
-            return 0.0
-        
-        pnt_idx = points.index[-1]
 
-        if self.ls == 'LONG':
-            # recent hp low > current support (proves hp clears current support levels)
-            recent_hp_low = df['low'].loc[pnt_idx]
-            sup = df[self.supResCol].iloc[-1]
-            hp_bar_cleard_sup = recent_hp_low > sup
 
-            # since recent HP the lowest point < current support
-            lowest = df['low'].loc[pnt_idx:].min()
-            hp_lowest_below_sup = lowest < sup
-
-            # close > support (price bounced off support)
-            close = df['close'].iloc[-1]
-            close_above_sup = close > sup
-
-            return hp_bar_cleard_sup and hp_lowest_below_sup and close_above_sup
-        
-        elif self.ls == 'SHORT':
-            # recent lp high < current resistance (proves lp clears current resistance levels)
-            recent_lp_high = df['high'].loc[pnt_idx]
-            res = df[self.supResCol].iloc[-1]
-            lp_bar_cleard_res = recent_lp_high < res
-
-            # since recent LP the highest point > current resistance
-            highest = df['high'].loc[pnt_idx:].max()
-            lp_highest_above_res = highest > res
-
-            # close < resistance (price bounced off resistance)
-            close = df['close'].iloc[-1]
-            close_below_res = close < res
-
-            return lp_bar_cleard_res and lp_highest_above_res and close_below_res
-        
-        return False
 
 #£ Done
 @dataclass
@@ -826,6 +777,7 @@ class IsGappedOverPivot(Signals):
     Simple signal class to verify gap-over-pivot conditions.
     Returns 1.0 when a pivot is gapped over, 0.0 otherwise.
     """
+    name: str = 'GapPiv'
     pointCol: str = 'pivot'
 
     def _compute_row(self, df: pd.DataFrame) -> float:
@@ -848,7 +800,7 @@ class GappedPivots(Signals):
     ls : str 'LONG' or 'SHORT' to indicate direction
     lookBack : int Number of recent bars to analyze
     """
-    name: str = 'GPiv'
+    name: str = 'GPivs'
     pointCol: str = ''
     runType: str = 'pct'
     span: int = 20
@@ -925,7 +877,7 @@ class GappedRetracement(Signals):
             return 0.0
 
 
-import math
+
 
 #£Done
 @dataclass
@@ -1076,6 +1028,10 @@ class RoomToMove(Signals):
     name : str = 'RTM'
     tgetCol : str = ''
     atrCol: str = ''
+
+    def __post_init__(self):
+        self.name = f"Sig{self.ls[0]}_{self.name}{self.tgetCol}"
+        self.names = [self.name]
 
     def _compute_row(self, df:pd.DataFrame=pd.DataFrame(), **kwargs):
 
@@ -1392,7 +1348,7 @@ class MultiSignals(ABC):
     name: str = ''
     normRange: Tuple[int, int] = (0, 100)
     ls: str = 'LONG'
-    lookBack: int = 20
+    lookBack: int = 1
     columnStartsWith: str = ''
 
     def __post_init__(self):
@@ -2125,4 +2081,487 @@ class ConsolidationPreMove(MultiSignals):
             score_series[cons_mask] = self.get_score(final_score)
             results[signal_name] = score_series[cons_mask]
 
+        return results
+
+
+
+# --------------------------------------------------------------------
+# ----- E V E N T   S I G N A L S ------------------------------------
+# --------------------------------------------------------------------
+@dataclass
+class Breaks:
+    """Checks if price crosses above/below a metric"""
+    price_column: str
+    direction: str  # 'above' or 'below'
+    metric_column: str
+
+    def __post_init__(self):
+        self.name = f"BRK_{self.price_column}_{self.direction[:2]}_{self.metric_column}"
+        self.names = [self.name]
+
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        df = data.copy()
+        
+        curr_price = df[self.price_column]
+        prev_price = curr_price.shift(1)
+        curr_metric = df[self.metric_column]
+        prev_metric = curr_metric.shift(1)
+
+        if self.direction == 'above':
+            df[self.name] = (prev_price <= prev_metric) & (curr_price > curr_metric)
+            return df
+        elif self.direction == 'below':
+            df[self.name] = (prev_price >= prev_metric) & (curr_price < curr_metric)
+            return df
+        
+        raise ValueError("Direction must be 'above' or 'below'")
+
+
+@dataclass
+class AboveBelow:
+    """Checks if price is above/below a metric"""
+    value: str | float
+    direction: str  # 'above' or 'below'
+    metric_column: str
+
+    def __post_init__(self):
+        self.name = f"AB_{self.value}_{self.direction[:2]}_{self.metric_column}"
+        self.names = [self.name]
+
+    def run(self, df: pd.DataFrame) -> pd.DataFrame:
+        value =  df[self.value] if isinstance(self.value, str) else self.value
+        metric = df[self.metric_column] if isinstance(self.metric_column, str) else self.metric_column
+
+        if self.direction == 'above':
+            df[self.name] = value > metric
+        elif self.direction == 'below':
+            df[self.name] = value < metric
+        else:
+            raise ValueError("Direction must be 'above' or 'below'")
+            
+        return df
+
+@dataclass
+class IsPullbackBounce(Signals):
+    name: str = 'PBB'
+    pointCol: str = ''
+    supResCol: str = ''
+
+    def __post_init__(self):
+        self.name = f"{self.name}_{self.pointCol}_{self.supResCol}"
+        self.names = [self.name]
+        self.normRange = (0,1)
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """
+        Gets a Signal at a high Point or a low Point by looking back 
+        to the nth most recent point and confirming if:
+        Long example:
+        1. recent hp low > current support (proves hp clears current support levels)
+        2. since recent HP the lowest point < current support
+        3. close > support (price bounced off support)
+        """
+        points = df[self.pointCol].dropna()
+        if len(points) < 1:
+            return 0.0
+        
+        pnt_idx = points.index[-1]
+
+        if self.ls == 'LONG':
+            # recent hp low > current support (proves hp clears current support levels)
+            recent_hp_low = df['low'].loc[pnt_idx]
+            sup = df[self.supResCol].iloc[-1]
+            hp_bar_cleard_sup = recent_hp_low > sup
+
+            # since recent HP the lowest point < current support
+            lowest = df['low'].loc[pnt_idx:].min()
+            hp_lowest_below_sup = lowest < sup
+
+            # close > support (price bounced off support)
+            close = df['close'].iloc[-1]
+            close_above_sup = close > sup
+
+            return hp_bar_cleard_sup and hp_lowest_below_sup and close_above_sup
+        
+        elif self.ls == 'SHORT':
+            # recent lp high < current resistance (proves lp clears current resistance levels)
+            recent_lp_high = df['high'].loc[pnt_idx]
+            res = df[self.supResCol].iloc[-1]
+            lp_bar_cleard_res = recent_lp_high < res
+
+            # since recent LP the highest point > current resistance
+            highest = df['high'].loc[pnt_idx:].max()
+            lp_highest_above_res = highest > res
+
+            # close < resistance (price bounced off resistance)
+            close = df['close'].iloc[-1]
+            close_below_res = close < res
+
+            return lp_bar_cleard_res and lp_highest_above_res and close_below_res
+        
+        return False
+    
+
+@dataclass
+class IsConsolidationBreakout(Signals):
+    """
+    Detects breakouts from consolidation zones, using provided pivot points column.
+    Only considers breakouts after the last pivot point within consolidation duration.
+    """
+    valToCheck: str = 'close'  # Price column to check
+    pointCol: str = ''  # Column containing pivot points (highs for SHORT, lows for LONG)
+    consColumns: list[str] = field(default_factory=list)  # List of consolidation columns
+    extendPeriods: int = 0  # Number of periods to extend consolidation check
+    
+    def __post_init__(self):
+        self.name = f"CONS_BRK_{self.valToCheck}"
+        super().__post_init__()
+    
+    def _find_last_point_in_consolidation(self, df: pd.DataFrame, cons_col: str) -> int:
+        """
+        Find the last valid pivot point within the consolidation duration.
+        Uses the provided pointCol which contains pre-calculated pivot points.
+        """
+        if len(df) < 2:
+            return None
+            
+        # Get valid consolidation periods (non-NaN values)
+        valid_cons = df[cons_col].notna()
+        if not valid_cons.any():
+            return None
+            
+        # Find the last valid consolidation point
+        last_cons_idx = valid_cons.last_valid_index()
+        if last_cons_idx is None:
+            return None
+            
+        # Get the start of this consolidation period
+        cons_start_idx = valid_cons.loc[:last_cons_idx].first_valid_index()
+        if cons_start_idx is None:
+            return None
+            
+        # Get pivot points within consolidation period
+        points = df[self.pointCol].loc[cons_start_idx:last_cons_idx]
+        valid_points = points[points.notna()]
+        
+        # Return last pivot point index if any exist
+        if not valid_points.empty:
+            return df.index.get_loc(valid_points.index[-1])
+            
+        return None
+    
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """
+        Compute breakout signal for the current window.
+        Only considers breakouts after the last pivot point within consolidation duration.
+        Can check for breakouts beyond consolidation end using extendPeriods.
+        """
+        if len(df) < 2:
+            return np.nan
+            
+        curr_price = df[self.valToCheck].iloc[-1]
+        prev_price = df[self.valToCheck].iloc[-2]
+        
+        # Check each consolidation column until we find a valid one
+        for cons_col in self.consColumns:
+            if cons_col not in df.columns:
+                continue
+                
+            # Find last point within consolidation
+            pivot_idx = self._find_last_point_in_consolidation(df, cons_col)
+            if pivot_idx is None:
+                continue
+                
+            pivot_point = df[self.pointCol].iloc[pivot_idx]
+            if pd.isna(pivot_point):
+                continue
+                
+            # Get the last valid consolidation value
+            last_cons_idx = df[cons_col].last_valid_index()
+            if last_cons_idx is None:
+                continue
+                
+            # Check if we're within the extended check period
+            curr_idx = df.index[-1]
+            periods_after_cons = len(df.loc[last_cons_idx:curr_idx]) - 1
+            if periods_after_cons > self.extendPeriods:
+                continue
+                
+            cons_level = df[cons_col].loc[last_cons_idx]
+            
+            if self.ls == 'LONG':
+                # Check if last low point was within consolidation
+                was_inside = pivot_point <= cons_level
+                # Check for breakout
+                breaks_out = (prev_price <= cons_level and curr_price > cons_level)
+                
+                if was_inside and breaks_out:
+                    return 1.0
+                    
+            else:  # SHORT
+                # Check if last high point was within consolidation
+                was_inside = pivot_point >= cons_level
+                # Check for breakout
+                breaks_out = (prev_price >= cons_level and curr_price < cons_level)
+                
+                if was_inside and breaks_out:
+                    return 1.0
+        
+        return 0.0
+
+# --------------------------------------------------------------------
+# ----- S T R A T E G Y   S I G N A L S ------------------------------
+# --------------------------------------------------------------------
+    
+@dataclass
+class Strategy:
+    name: str = ''
+    ls: str = 'LONG'
+    lookBack: int = 20
+
+    def __post_init__(self):
+        self.name = f'Stgy_{self.name}'
+        self.event_tracker = {}
+        self.steps = set()
+        self.current_step = 1
+        self.triggered_events = set()
+        
+        # Track conditions by type
+        self.reset_conditions = set()
+        self.reset_after_validation_conditions = set()
+        self.true_counts = {}  # Track periods true for each reset-after condition
+        
+        # Initialize names list - will be populated as conditions are added
+        self.names = []
+
+    def add_event(self, step: int, name: str, valToCheck: Union[str, float], checkIf: str, colThreshold: str):
+        """Add an event that happens once and triggers a validation."""
+        condition_name = f'{self.name}_{name}'
+        self.event_tracker[condition_name] = {
+            'step': step,
+            'type': 'event',
+            'status': 'pending',
+            'valToCheck': valToCheck,
+            'checkIf': checkIf,
+            'colThreshold': colThreshold,
+            'isTrue': 0
+        }
+        self.steps.add(step)
+        self.names.append(condition_name)
+
+    def add_validation(self, step: int, name: str, valToCheck: Union[str, float], checkIf: str, colThreshold: str):
+        """Add a validation that is ongoing and reversible."""
+        condition_name = f'{self.name}_{name}'
+        self.event_tracker[condition_name] = {
+            'step': step,
+            'type': 'validation',
+            'status': 'pending',
+            'valToCheck': valToCheck,
+            'checkIf': checkIf,
+            'colThreshold': colThreshold,
+            'isTrue': 0
+        }
+        self.steps.add(step)
+        self.names.append(condition_name)
+
+    def add_reset(self, name: str, valToCheck: Union[str, float], checkIf: str, colThreshold: str):
+        """Add a reset condition that cancels the strategy if triggered."""
+        condition_name = f'{self.name}_{name}'
+        self.event_tracker[condition_name] = {
+            'type': 'reset',
+            'valToCheck': valToCheck,
+            'checkIf': checkIf,
+            'colThreshold': colThreshold,
+            'isTrue': 0
+        }
+        self.reset_conditions.add(condition_name)
+        self.names.append(condition_name)
+
+    def add_reset_after_validation(self, name: str, valToCheck: Union[str, float], 
+                                 checkIf: str, colThreshold: str, periods: int = 5):
+        """Add a condition that resets the strategy after being valid for N periods."""
+        condition_name = f'{self.name}_{name}'
+        self.event_tracker[condition_name] = {
+            'type': 'reset_after_validation',
+            'valToCheck': valToCheck,
+            'checkIf': checkIf,
+            'colThreshold': colThreshold,
+            'isTrue': 0,
+            'periods': periods
+        }
+        self.reset_after_validation_conditions.add(condition_name)
+        self.true_counts[condition_name] = 0
+        self.names.append(condition_name)
+
+    def evaluate_condition(self, row: pd.Series, condition: dict) -> bool:
+        """Evaluate a single condition against a row of data."""
+        val = condition['valToCheck']
+        threshold = condition['colThreshold']
+        
+        actual_val = float(row[val]) if isinstance(val, str) else val
+        
+        # Handle multiple threshold columns
+        if isinstance(threshold, list):
+            # Get first non-NaN value from the threshold columns
+            threshold_val = None
+            for col in threshold:
+                if pd.notna(row[col]):
+                    threshold_val = float(row[col])
+                    break
+            if threshold_val is None:
+                return False
+        else:
+            # Handle single threshold column as before
+            threshold_val = float(row[threshold])
+        
+        if condition['checkIf'] == '>':
+            return actual_val > threshold_val
+        elif condition['checkIf'] == '<':
+            return actual_val < threshold_val
+        elif condition['checkIf'] == '>=':
+            return actual_val >= threshold_val
+        elif condition['checkIf'] == '<=':
+            return actual_val <= threshold_val
+        return False
+
+    def reset_strategy(self):
+        """Reset all strategy state."""
+        self.current_step = 1
+        self.triggered_events.clear()
+        for event in self.event_tracker.values():
+            event['isTrue'] = 0
+            event['status'] = 'pending'
+        for condition in self.true_counts:
+            self.true_counts[condition] = 0
+
+    def check_step_completion(self, step: int) -> float:
+        """Calculate completion percentage for a given step."""
+        step_items = {k: v for k, v in self.event_tracker.items() 
+                     if v.get('step') == step}
+        if not step_items:
+            return 0.0
+        
+        completed = 0
+        for name, condition in step_items.items():
+            if condition['type'] == 'event' and name in self.triggered_events:
+                completed += 1
+            elif condition['type'] == 'validation' and condition['isTrue'] == 1:
+                completed += 1
+                
+        return completed / len(step_items) if step_items else 0.0
+
+    def _compute_row(self, df: pd.DataFrame) -> pd.Series:
+        """Compute strategy values for the current row."""
+        if len(df) < 2:
+            return pd.Series(0, index=self.names)
+            
+        current_row = df.iloc[-1]
+        results = {}
+        
+        # Check reset conditions first
+        for name in self.reset_conditions:
+            condition = self.event_tracker[name]
+            if self.evaluate_condition(current_row, condition):
+                condition['isTrue'] = 1
+                results[name] = 100  # Signal the reset condition that triggered
+                self.reset_strategy()
+                return pd.Series(results)
+            condition['isTrue'] = 0
+            results[name] = 0
+        
+        # Process events and validations for current step
+        step_items = {k: v for k, v in self.event_tracker.items() 
+                     if v.get('step', 0) == self.current_step}
+        
+        # Update events (permanent until reset)
+        for name, condition in step_items.items():
+            if condition['type'] == 'event':
+                if name in self.triggered_events:
+                    condition['isTrue'] = 1
+                    results[name] = 100
+                elif self.evaluate_condition(current_row, condition):
+                    self.triggered_events.add(name)
+                    condition['isTrue'] = 1
+                    condition['status'] = 'completed'
+                    results[name] = 100
+                else:
+                    results[name] = 0
+
+        # Update validations (can change each row)
+        for name, condition in step_items.items():
+            if condition['type'] == 'validation':
+                condition['isTrue'] = 1 if self.evaluate_condition(current_row, condition) else 0
+                results[name] = 100 if condition['isTrue'] else 0
+        
+        # Calculate step completions
+        for step in sorted(self.steps):
+            completion = self.check_step_completion(step)
+            results[f'{self.name}_step{step}'] = completion * 100
+            
+            # Progress to next step if current is complete
+            if step == self.current_step and completion == 1.0:
+                if step < max(self.steps):
+                    self.current_step += 1
+        
+        # Calculate total completion
+        if self.steps:
+            total_completion = sum(self.check_step_completion(step) 
+                                 for step in range(1, self.current_step + 1)) / len(self.steps)
+            results[f'{self.name}_total'] = total_completion * 100
+        else:
+            results[f'{self.name}_total'] = 0
+            
+        # Handle reset after validation conditions
+        for name in self.reset_after_validation_conditions:
+            condition = self.event_tracker[name]
+            if self.evaluate_condition(current_row, condition):
+                condition['isTrue'] = 1
+                self.true_counts[name] += 1
+                if self.true_counts[name] >= condition['periods']:
+                    results[name] = 100  # Signal which reset-after condition triggered
+                    self.reset_strategy()
+                    return pd.Series(results)
+            else:
+                condition['isTrue'] = 0
+                self.true_counts[name] = 0
+            results[name] = 100 if condition['isTrue'] else 0
+                
+        return pd.Series(results)
+
+    def run(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Process strategy over lookback period maintaining proper state progression."""
+        if len(df) <= self.lookBack:
+            return pd.DataFrame(0, index=df.index, columns=self.names)
+
+        # Add step and total columns if not already in names
+        for step in sorted(self.steps):
+            step_col = f'{self.name}_step{step}'
+            if step_col not in self.names:
+                self.names.append(step_col)
+        total_col = f'{self.name}_total'
+        if total_col not in self.names:
+            self.names.append(total_col)
+
+        # Initialize results DataFrame
+        results = pd.DataFrame(0, index=df.index, columns=self.names)
+        
+        # Reset strategy state at start of run
+        self.reset_strategy()
+        
+        # Process each row in the lookback period
+        lookback_indices = df.index[-self.lookBack:]
+        
+        for i, idx in enumerate(lookback_indices):
+            current_window = df.loc[:idx]
+            if current_window.empty:
+                continue
+                
+            row_results = self._compute_row(current_window)
+            
+            # Ensure row_results has all the columns in the correct order
+            row_results = row_results.reindex(results.columns, fill_value=0)
+            
+            # Use the index location for setting values
+            results.loc[idx] = row_results
+            
         return results

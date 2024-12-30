@@ -144,8 +144,8 @@ class ATR(TA):
     span: int = 14  # Common default span for ATR
 
     def __post_init__(self):
-        self.name_atr = f"ATR_{self.span}"
-        self.names = [self.name_atr]
+        self.name = f"ATR_{self.span}"
+        self.names = [self.name]
         self.rowsToUpdate = 200
 
     @preprocess_data
@@ -156,12 +156,12 @@ class ATR(TA):
         df['TR'] = df[self.hi_col] - df[self.lo_col]
 
         # Calculate ATR using a rolling mean of the True Range
-        df[self.name_atr] = df['TR'].rolling(window=self.span, min_periods=1).mean()
+        df[self.name] = df['TR'].rolling(window=self.span, min_periods=1).mean()
 
         # Drop the intermediate 'TR' column
         df.drop(columns=['TR'], inplace=True)
 
-        return df[[self.name_atr]]
+        return df[[self.name]]
 
 import pandas as pd
 import numpy as np
@@ -781,6 +781,8 @@ import numpy as np
 from typing import List, Dict, Tuple
 from sklearn.cluster import DBSCAN
 
+
+
 @dataclass
 class ConsolidationZone(TA):
     hp_column: str = 'HP_hi_10'
@@ -790,6 +792,7 @@ class ConsolidationZone(TA):
     height_width_ratio: float = 0.5
     name: str = 'CONS'
     atr_column: str = 'ATR'
+    limit_zones: int = 5
     """A class that identifies consolidation zones in price data using a multi-step algorithm.
     
     The algorithm identifies consolidation zones through these key steps:
@@ -921,6 +924,9 @@ class ConsolidationZone(TA):
         # print(f"1. Finding zones starting from leftmost_allowed: {leftmost_allowed}")    
         
         while leftmost_allowed >= data.index[0]:
+            # Add the zone limit check here - if we've hit our limit, break out
+            if len(zones) >= self.limit_zones:
+                break
             valid_data = data[:leftmost_allowed]
             if len(valid_data) < 3:
                 break
@@ -988,8 +994,7 @@ class ConsolidationZone(TA):
         result = data.copy()
         
         zones = self.find_zones(data)
-        print(f"7. Found {len(zones)} zones")
-        
+
         for i, zone in enumerate(zones):
             upper_name = f"{self.name}_UPPER_{i+1}"
             lower_name = f"{self.name}_LOWER_{i+1}"
