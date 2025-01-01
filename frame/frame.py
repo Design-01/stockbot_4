@@ -3,18 +3,20 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import pandas as pd
 from chart.chart import Chart  # Use relative import for Chart
+import strategies.ta as ta
 from strategies.ta import TA
 from strategies.signals import Signals
 
 @dataclass
 class Frame:
     symbol: str
+    data: pd.DataFrame = pd.DataFrame()
     trading_hours: List[Tuple[str, str]] = field(default_factory=lambda: [("09:30", "16:00")])
     run_ta_on_load: bool = True
+    rowHeights: List[float] = field(default_factory=lambda: [0.1, 0.2, 0.2, 0.6])
 
     def __post_init__(self):
         self.traders = []
-        self.data = pd.DataFrame()
         self.ta = []
         self.chart = None
         # Backtesting attributes
@@ -25,6 +27,8 @@ class Frame:
         self._current_backtest_idx = None
         self._save_snapshots = False
 
+        self.load_ohlcv(self.data)
+
     def load_ohlcv(self, ohlcv: pd.DataFrame):
         if self.data.empty:
             self.data = ohlcv
@@ -34,7 +38,7 @@ class Frame:
             self.data = combined_data[~combined_data.index.duplicated(keep='last')].sort_index()
 
     def setup_chart(self):  
-        self.chart = Chart(title=self.symbol, rowHeights=[0.1, 0.2, 0.2, 0.6], height=800, width=800)
+        self.chart = Chart(title=self.symbol, rowHeights=self.rowHeights, height=800, width=800)
         self.chart.add_candles_and_volume(self.data)
         # self.chart.add_trading_hours(self.data, self.trading_hours)
 
@@ -103,34 +107,76 @@ class Frame:
         
         self.ta.append((ta, style, chart_type, row))
 
+    def add_ta_batch(self, taList:list[ta.TAData], forceRun:bool=False):
+        for ta in taList:
+            self.add_ta(ta.ta, ta.style, ta.chart_type, ta.row)
+
     def update_ta_data(self):
         """Updates the data for all the technical indicators in the frame"""
         for ta, style, chart_type, row in self.ta:
             self.data = self.update_data(ta.run(self.data))
     
-    def import_data(self, df_high, target_columns, auto_limit=True, manual_limit=None, prefix='htf_', merge_to_backtest:bool=False):
-        if isinstance(target_columns, str):
-            target_columns = [target_columns]
-        
+    def import_data(self, df_high, has_columns: list[str] = None, columns_contain: list[str] = None, auto_limit=True, manual_limit=None, prefix='htf_', merge_to_backtest: bool = False):
+        """
+        Import and merge high timeframe data into the existing low timeframe data.
+
+        Parameters:
+        df_high (pd.DataFrame): The high timeframe DataFrame to import.
+        has_columns (Union[str, List[str]]): The column(s) to import from the high timeframe DataFrame.
+                                            If a single string is provided, it will be converted to a list.
+        columns_contain (Union[str, List[str]]): The text(s) to search for within the column names of the high timeframe DataFrame.
+                                                If a single string is provided, it will be converted to a list.
+        auto_limit (bool): If True, automatically determine the forward fill limit based on the time delta between rows.
+                        If False, use the manual_limit value.
+        manual_limit (Optional[int]): The maximum number of rows to forward fill if auto_limit is False.
+                                    If None, a default value of 4 will be used.
+        prefix (str): The prefix to add to the column names from the high timeframe DataFrame when merging.
+        merge_to_backtest (bool): If True, merge the data into the backtest_data attribute.
+                                If False, merge the data into the data attribute.
+
+        Returns:
+        None: The method updates the data or backtest_data attribute of the Frame instance in place.
+
+        Notes:
+        - The method first filters the columns of df_high based on the has_columns and columns_contain parameters.
+        - It then renames the filtered columns with the specified prefix.
+        - The method merges the filtered and renamed columns into the low timeframe DataFrame (df_low).
+        - The merged columns are forward filled based on the determined or specified fill limit.
+        - The updated DataFrame is assigned back to either the data or backtest_data attribute of the Frame instance.
+        """
+        if isinstance(has_columns, str):
+            has_columns = [has_columns]
+        if isinstance(columns_contain, str):
+            columns_contain = [columns_contain]
+
         df_low = self.backtest_data if merge_to_backtest else self.data
-        column_mapping = {col: f"{prefix}{col}" for col in target_columns}
+
+        filtered_columns = []
+        if has_columns:
+            filtered_columns.extend([col for col in df_high.columns if col in has_columns])
+        if columns_contain:
+            filtered_columns.extend([col for col in df_high.columns if any(target in col for target in columns_contain)])
+
+        filtered_columns = list(set(filtered_columns))  # Remove duplicates
+
+        column_mapping = {col: f"{prefix}{col}" for col in filtered_columns}
         df_low = df_low.drop(columns=list(column_mapping.values()), errors='ignore')
-        
+
         if auto_limit:
             low_tf_delta = pd.Series(df_low.index).diff().mode()[0]
             high_tf_delta = pd.Series(df_high.index).diff().mode()[0]
             fill_limit = max(1, int((high_tf_delta / low_tf_delta) - 1))
         else:
             fill_limit = max(1, manual_limit if manual_limit is not None else 4)
-        
+
         # Pre-rename columns before merge
-        df_high_subset = df_high[target_columns].rename(columns=column_mapping)
+        df_high_subset = df_high[filtered_columns].rename(columns=column_mapping)
         df_merged = pd.merge_asof(df_low, df_high_subset, left_index=True, right_index=True, direction='backward')
-        
+
         # Forward fill the new columns
         for col in column_mapping.values():
             df_merged[col] = df_merged[col].fillna(method='ffill', limit=fill_limit)
-        
+
         if merge_to_backtest:
             self.backtest_data = df_merged
         else:
@@ -138,16 +184,25 @@ class Frame:
         
 
 
-# Example usage:
-# Auto detect limit
-# result = merge_timeframes(df_1min, df_5min, ['close', 'volume'])
+        # Example usage:
+        # Auto detect limit
+        # result = merge_timeframes(df_1min, df_5min, ['close', 'volume'])
 
-# Manual limit
-# result = merge_timeframes(df_1min, df_5min, 'close', auto_limit=False, manual_limit=4)
-        
+        # Manual limit
+        # result = merge_timeframes(df_1min, df_5min, 'close', auto_limit=False, manual_limit=4)
+
     def plot(self, width: int = 1400, height: int = 800, trading_hours: bool = False, 
-            show: bool = True, snapshot_data: pd.DataFrame = None, use_backtest_data: bool = False):
+        show: bool = True, snapshot_data: pd.DataFrame = None, use_backtest_data: bool = False,
+        animate: bool = False):
+
         """Plot the frame data with technical indicators."""
+
+        if animate and self.snapshots:
+            if self.chart is None:
+                self.setup_chart()
+            self.chart.enable_animation()
+            self.chart.create_frames_from_snapshots(self.snapshots)
+
         # Determine which data to use for plotting
         original_data = None
         if snapshot_data is not None:
@@ -190,7 +245,7 @@ class Frame:
         if original_data is not None:
             self.data = original_data
 
-    # ---------------- Backtesting Methods ----------------
+       # ---------------- Backtesting Methods ----------------
 
     def backtest_setup(self, start: str | int, end: str | int, save_snapshots: bool = False):
         """Create a slice of the data for backtesting."""
@@ -449,6 +504,8 @@ class Frame:
                 time.sleep(sleep_time)
         
         # return viewed_snapshots
+
+
 
     def get_current_backtest_state(self) -> dict:
         """

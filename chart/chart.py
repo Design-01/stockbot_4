@@ -17,8 +17,11 @@ class Chart:
         self.height = height
         self.width = width
         self.fig = None
-        self.indicators: Dict[str, Dict[str, Any]] = {}
+        self.ta = []
         self.set_fig()
+    
+    def store_ta(self, ta_list):
+        self.ta = ta_list
 
     def set_fig(self):
         self.fig = make_subplots(
@@ -623,4 +626,7 @@ class Chart:
 
         if style == {}: return
         self.fig.add_trace(go.Scatter(x=data.index, y=data, name=data.name, line=style), row=row, col=1)
+
+    
+
 

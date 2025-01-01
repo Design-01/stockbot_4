@@ -104,7 +104,65 @@ def is_gap_pivot_crossover(df: pd.DataFrame, pivot_col: str, ls: str) -> bool:
     except (KeyError, IndexError):
         return False
 
+def get_valid_pb(ls, df, pointCol:str, toCol:str, atrCol:str, minLen:int=3, atrMultiple:int=1):
+    # check if names exists in df
+    if not all([pointCol in df.columns, toCol in df.columns, atrCol in df.columns]):
+        return None
+    
+    # print(f'{ls} {pointCol=} {toCol=} {atrCol} {minLen} {atrMultiple}')
+    # check if has points
+    points = df[pointCol].dropna()
+    # print(f'length of points: {len(points)}')
+    if len(points) < 2:
+        return None
+    
+    # check if window long enough
+    w0 = df.loc[points.index[-1]:]
+    # print(f'lenght of w0: {len(w0)}')
+    if len(w0) < minLen:
+        return None
+    
+    # important to check if the value are ok at the point and not after the point
+    toVal = w0[toCol].iat[0]
+    atr = w0[atrCol].iat[0]
 
+    # print(f'{toVal=} {atr=}')
+
+    if any([pd.isna(toVal), pd.isna(atr)]):
+        return None
+    
+    if ls == 'LONG':
+        hp_bar_low = w0.low.iat[0]
+
+        #check if high < two previous high ago
+        if not w0.high.iat[-1] < w0.high.iat[-3] :
+            return None
+        
+        # Check if the distance between high point and toCol is at least n ATRs
+        distance = hp_bar_low - toVal
+        if distance <= 0:
+            return None
+        
+        if distance < (atrMultiple * atr):
+            return None
+
+        # print(f'{atr=} {hp_bar_low=} {toVal=} {distance=} ')
+        return w0
+    
+    if ls == 'SHORT':       
+        lp_bar_high = w0.high.iat[0]
+        
+        # Check if the distance between high point and toCol is at least n ATRs
+        distance = toVal - lp_bar_high
+        if distance <= 0:
+            return None
+        
+        if distance < (atrMultiple * atr):
+            return None
+        
+        return w0
+    
+    return None
 
 #£ Done
 @dataclass
@@ -177,14 +235,16 @@ class Signals(ABC):
     # @abstractmethod
     def run(self, df: pd.DataFrame = pd.DataFrame()) -> pd.Series:
         """Generate signal scores for the lookback period."""
-        if len(df) <= self.lookBack:
+        if len(df) < 10:
             return self.return_series(df.index[-1], self.get_score(0))
+        
+        lookback = min(self.lookBack, len(df)) - 1
 
         # this then gets populated with the results of the computation
-        result_series = pd.Series(np.nan, index=df.index[-self.lookBack:])
+        result_series = pd.Series(np.nan, index=df.index[-lookback:])
         
-        for i in range(self.lookBack):
-            current_idx = -(self.lookBack - i)
+        for i in range(lookback):
+            current_idx = -(lookback - i)
             if abs(current_idx) >= len(df) :
                 continue
             
@@ -328,8 +388,222 @@ class GetMaxSignalSincePoint(Signals):
         return df[self.sigCol].loc[index:].max()
 
 
+# --------------------------------------------------------------
+# ------- P U L L B A C K   S I G N A L S ----------------------
+# --------------------------------------------------------------
+#£ Done
+@dataclass
+class PBPctHLLH(Signals):
+    """Computes the % of bars that have a lower highs (BULL pullback, so downward)
+    Vice versa for BEAR case. So this is only for pullbacks not overall trends. """
+    name: str = 'PB_HLLH'
+    pointCol: str = ''
+    toCol  : str = ''
+    atrCol: str = ''
+    atrMultiple: float = 1.0 # minimum number of ATRs required between pointCol low and toCol
+    
+    def __post_init__(self):
+        self.name = f"Sig{self.ls[0]}_{self.name}"
+        self.names = [self.name]   
+   
+
+    #$ **kwargs is used to allow any signal arguments to be passed to any run method. This so that the same run method can be used when looping through signals.
+    def _compute_row(self, df:pd.DataFrame=pd.DataFrame(), **kwargs):
+        """Computes the % of bars that have a lower highs (BULL pullback, so downward)
+        Vice versa for BEAR case. So this is only for pullbacks not overall trends. """
+
+        window  = get_valid_pb(
+            ls=self.ls, 
+            df=df, 
+            pointCol=self.pointCol, 
+            toCol=self.toCol, 
+            atrCol=self.atrCol, 
+            minLen=3, 
+            atrMultiple=1)
+        
+        if window is None:
+            return 0.0
+
+        if self.ls == 'LONG': # if there are more than 2 bars in the pullback from the high
+            # eg fhp.high < fhp.high.shift() retruns a series of bools. 
+            # 2000-01-01 00:13:00    False
+            # 2000-01-01 00:14:00     True
+            # 2000-01-01 00:15:00    False
+            # then [1:] removes the first bar becasue it will always be False
+            # 2000-01-01 00:14:00     True
+            # 2000-01-01 00:15:00    False
+            # then mean() returns the mean of the bools.
+            return (window.high < window.high.shift())[1:].mean() * 100
+    
+
+        if self.ls == 'SHORT' and len(window) > 2: # if there are more than 2 bars in the pullback from the low
+            return (window.low > window.low.shift())[1:].mean() * 100
+    
+        return 0.0
 
 
+@dataclass
+class PBAllSameColour(Signals):
+    """Retruns the ration of how many bars are of the same colour as the longshort direction. 
+    This class is the check the pullback is all in the same direction. 
+    eg if long then all the bars in the pullback are red.
+    eg if short then all the bars in the pullback are green.
+    """
+    name: str = 'PB_ASClr'
+    pointCol: str = ''
+    toCol  : str = ''
+    atrCol: str = ''
+    atrMultiple: float = 1.0 # minimum number of ATRs required between pointCol low and toCol
+    
+    
+    def __post_init__(self):
+        self.name = f"Sig{self.ls[0]}_{self.name}"
+        self.names = [self.name]
+
+    # def run(self,longshort:str='', fromHP:pd.DataFrame=pd.DataFrame(), fromLP:pd.DataFrame=pd.DataFrame(), **kwargs):
+    def _compute_row(self, df:pd.DataFrame=pd.DataFrame()):
+        window  = get_valid_pb(
+            ls=self.ls, 
+            df=df, 
+            pointCol=self.pointCol, 
+            toCol=self.toCol, 
+            atrCol=self.atrCol, 
+            minLen=3, 
+            atrMultiple=1)
+        
+        if window is None:
+            return 0.0
+        
+        total_bars = len(window) -1
+        if len(window) > 2:
+            if self.ls == 'LONG':
+                same_colour_bars = len(window[window['close'] < window['open']]) # red bars
+                return  (same_colour_bars / total_bars) * 100
+
+            if self.ls == 'SHORT':
+                same_colour_bars = len(window[window['close'] > window['open']]) # green bars
+                return  (same_colour_bars / total_bars) * 100
+
+        return 0.0
+
+
+#£ Done
+@dataclass
+class PBOverlap(Signals):
+    """Computes the overlap as % from this high to prev low (BULL, so pullback is down) as ratio to prev bar range .
+    Then gets the mean % of all overlaps. Works very well to give a good guide for a smooth pullback
+    if the mean % is 50%. so the nearer to 50% the better """
+    name  : str = 'Olap'
+    pointCol: str = ''
+    toCol  : str = ''
+    atrCol: str = ''
+    atrMultiple: float = 1.0 # minimum number of ATRs required between pointCol low and toCol
+    
+
+    def __post_init__(self):
+        self.name = f"Sig{self.ls[0]}_{self.name}"
+        self.names = [self.name]
+
+    def _compute_row(self, df:pd.DataFrame):
+        window  = get_valid_pb(
+            ls=self.ls, 
+            df=df, 
+            pointCol=self.pointCol, 
+            toCol=self.toCol, 
+            atrCol=self.atrCol, 
+            minLen=3, 
+            atrMultiple=1)
+        
+        if window is None:
+            return 0.0
+            
+        prev = window.shift(1).copy()
+        olap          = window.high - prev.low if self.ls == 'LONG' else prev.high - window.low
+        prev_rng      = abs(prev.high - prev.low)
+        olap_pct      = olap / prev_rng 
+        olap_pct_mean = olap_pct.mean()
+
+        # 150 is to scale the score to be between 0 and 100. playing around with this number will change the sensitivity of the score
+        # 100 is the best score as it means the olap_pct is 50% which is the best
+        # calculate score based on olap_pct
+        optimal_olap_pct = 0.5
+        score = 100 - abs(olap_pct_mean - optimal_olap_pct) * 150 
+        return max(score, 0)
+
+
+#£ Done
+@dataclass
+class Trace(Signals):
+    name      : str = 'Rtcmt'
+    usePoints : bool = True # if True then use points else use fromPriceCol and toPriceCol
+    fromCol   : str = ''
+    toCol     : str = ''
+    optimalRtc: float = None # optimal retracement eg if 50 then 50% is the best retracement
+  
+    def __post_init__(self):
+        self.name = f"Sig{self.ls[0]}_{self.name}"
+        self.names = [self.name]
+
+    def compute_from_mid_trace(self, retracement, optimalRetracement):
+        """ compute_from_mid_trace is based on retracement. optimal retracement is 50%. 
+        Socre decreases by 2 for every 1% away from optimal retracement in either direction. 
+        eg 49% or 51% retracement will have a score of 98. 48% or 52% retracement will have a score of 96.
+        eg 10% or 90% retracement will have a score of 20. 0% or 100% retracement will have a score of 0.
+        Can also work with any optimal values eg 200% or 300% retracement.
+        
+        """
+        
+        score = 100 - (2 * abs(retracement - optimalRetracement))
+        if score < 0:
+            score = 0
+        return score
+
+    #$ **kwargs is used to allow any signal arguments to be passed to any run method. This so that the same run method can be used when looping through signals.
+    def _compute_row(self, df:pd.DataFrame=pd.DataFrame()):
+        """trace high 1 ago to low 1 ago and compare  """
+
+        def last_change_index(df, col):
+            changes = df[col] != df[col].shift(1)
+            last_change_index = changes[::-1].idxmax()
+            return last_change_index
+
+        if not df.empty:
+            fromPrice = 0
+            toPrice = 0
+
+            # only want to get values for the direction the trace. 
+            # it will return values on the bouce back as well as the pullback if we don't do this
+            # get the recnt change in prices of the HPs and LPs
+            from_last_change = last_change_index(df, self.fromCol)
+            to_last_change = last_change_index(df, self.toCol)
+
+            if from_last_change < to_last_change:
+                return 0
+
+            # long W1 is the move up from the low of W1 to the high of W1 which is the most recent HP point (the start of the pullback represented by fromHP) 
+            if self.ls == 'LONG':
+                fromPrice = df[self.fromCol].iat[-1]
+                toPrice   = df[self.toCol].iat[-1]
+
+            # short W1 is the move down from the high of W1 to the low of W1 which is the most recent LP point (the start of the pullback represented by fromLP)
+            elif self.ls == 'SHORT': 
+                fromPrice = df[self.fromCol].iat[-1]
+                toPrice   = df[self.toCol].iat[-1]
+
+            priceNow  = df.close.iat[-1]
+
+            # avoid div by zero
+            if fromPrice != toPrice:
+                t = trace(fromPrice, toPrice, priceNow)
+                if self.optimalRtc:
+                    return self.compute_from_mid_trace(t, self.optimalRtc)
+                
+        return 0
+
+
+# --------------------------------------------------------------
+# ------- R E V E R S A L   S I G N A L S ----------------------
+# --------------------------------------------------------------
 
 #£ Done
 @dataclass
@@ -395,11 +669,15 @@ class Tail(Signals):
 @dataclass
 class PullbackNear(Signals):
     name: str = 'PBN'
-    pullbackCol     : str = '' # col which the price pullback is near to
-    maxCol          : str = '' # col which the price is near to : used for get window
-    minCol          : str = '' # col which the price is near to : used for get window
+    fromCol: str = ''  # col which the price pullback is near to
+    toCol: str = ''    # col which the points are in
     optimalRetracement: float = 99
+    atrCol: str = ''   # column name for ATR values
+    atrMultiple: float = 2.0  # minimum number of ATRs required between fromCol and toCol
 
+    def __post_init__(self):
+        self.name = f"Sig{self.ls[0]}_{self.name}_{self.toCol[:3]}"
+        self.names = [self.name]
 
     def pb_score(self, retracement):
         """Calculate score based on retracement back to a value eg MA21. Optimal retracement is 95%.
@@ -412,169 +690,71 @@ class PullbackNear(Signals):
         if retracement <= optimal_retracement:
             return max(retracement, 0)
         
-        score = optimal_retracement - (retracement - optimal_retracement) * 10
+        score = optimal_retracement - (retracement - optimal_retracement) * 5
         return max(score, 0)
 
-    def _compute_row(self, df:pd.DataFrame):
-        """How near is the priceNow to the MA from the pullback high at start (bull case) to the low at the end """
-        #! even though the lower of two recent bars is chosen as the low point the MA is always the current bar. so the distance will change evethough it may be compared to the same low point.
-        if len(df) < 3:
-            return 0
+    def _compute_row(self, df: pd.DataFrame):
+        """How near is the priceNow to the MA from the pullback high at start (bull case) to the low at the end.
+        Also validates that the distance between fromCol and toCol is at least n ATRs."""
         
-        w0 = self.get_window(df, self.ls, 0)
-        if w0.empty or len(w0) < 2:
-            return 0
+        if self.fromCol not in df.columns or self.toCol not in df.columns:
+            return 0.0
         
+        points = df[self.fromCol].dropna()
+        if len(points) < 2:
+            return 0.0
+        
+        w0 = df.loc[points.index[-1]:]
+        if len(w0) < 3:
+            return 0.0
+
         priceNow = df.close.iat[-1]
+        current_atr = df[self.atrCol].iat[-1]
 
         if self.ls == 'LONG':
-            val = trace(w0.high.iat[0], df[self.pullbackCol].iat[-1], priceNow)
+            # check high bar has cleared the toCol value
+            if not w0.low.iat[-1] > df[self.toCol].iat[-1]:
+                return 0.0
+            # Get the high point and the corresponding toCol value
+            high_point = w0.high.iat[0]
+            to_col_value = df[self.toCol].iat[-1]
+            
+            # Check if the distance between high point and toCol is at least n ATRs
+            distance = abs(high_point - to_col_value)
+            if distance < (self.atrMultiple * current_atr):
+                return 0.0
+                
+            val = trace(high_point, df[self.toCol].iat[-1], priceNow)
             return self.pb_score(val)
 
         elif self.ls == 'SHORT':
-            val = trace(w0.low.iat[0], df[self.pullbackCol].iat[-1], priceNow)
+            # check low bar has cleared the toCol value
+            if not w0.high.iat[-1] < df[self.toCol].iat[-1]:
+                return 0.0
+            # Get the low point and the corresponding toCol value
+            low_point = w0.low.iat[0]
+            to_col_value = df[self.toCol].iat[-1]
+            
+            # Check if the distance between low point and toCol is at least n ATRs
+            distance = abs(low_point - to_col_value)
+            if distance < (self.atrMultiple * current_atr):
+                return 0.0
+                
+            val = trace(low_point, df[self.toCol].iat[-1], priceNow)
             return self.pb_score(val)
 
         return 0
 
 
-#£ Done
-@dataclass
-class Overlap(Signals):
-    name  : str = 'Olap'
-    maxCol: str = '' # col which the price is near to : used for get window
-    minCol: str = '' # col which the price is near to : used for get window
 
-    def _compute_row(self, df:pd.DataFrame):
-        """Computes the overlap as % from this high to prev low (BULL, so pullback is down) as ratio to prev bar range .
-            Then gets the mean % of all overlaps. Works very well to give a good guide for a smooth pullback
-            if the mean % is 50%. so the nearer to 50% the better """
-
-        # from recent high point (fromHP) or from recent low point (fromLP) to the end of the df
-        w0 = self.get_window(df, self.ls, 0)
-        
-        if  len(w0) <= 2:
-            return 0
-        
-        # check if in downward pullback the high of the current bar is lower than the low of the prior bar etc
-        if self.ls == 'LONG' and not w0.high.iat[-3] > w0.high.iat[-1]: 
-            return 0
-        if self.ls == 'SHORT'and not w0.low.iat[-3]  < w0.low.iat[-1]:
-            return 0
-            
-        prev = w0.shift(1).copy()
-        olap          = w0.high - prev.low if self.ls == 'LONG' else prev.high - w0.low
-        prev_rng      = abs(prev.high - prev.low)
-        olap_pct      = olap / prev_rng 
-        olap_pct_mean = olap_pct.mean()
-
-        # 150 is to scale the score to be between 0 and 100. playing around with this number will change the sensitivity of the score
-        # 100 is the best score as it means the olap_pct is 50% which is the best
-        # calculate score based on olap_pct
-        optimal_olap_pct = 0.5
-        score = 100 - abs(olap_pct_mean - optimal_olap_pct) * 150 
-        return max(score, 0)
 
 
 
 #!!! --------->>>  Not implemented yet.  Needs to be checked  <<<-----------
 
-#£ Done
-@dataclass
-class Trace(Signals):
-    usePoints    : bool = True # if True then use points else use fromPriceCol and toPriceCol
-    fromLongCol  : str = ''
-    fromShortCol : str = ''
-    toLongCol    : str = ''
-    toShortCol   : str = ''
-    optimalRtc: float = None # optimal retracement eg if 50 then 50% is the best retracement
-  
-    def __post_init__(self):
-        self.columns = [self.colname] + ['fromPrice', 'toPrice', 'priceNow', 'fromIdx', 'toIdx']  
 
-    def compute_from_mid_trace(self, retracement, optimalRetracement):
-        """ compute_from_mid_trace is based on retracement. optimal retracement is 50%. 
-        Socre decreases by 2 for every 1% away from optimal retracement in either direction. 
-        eg 49% or 51% retracement will have a score of 98. 48% or 52% retracement will have a score of 96.
-        eg 10% or 90% retracement will have a score of 20. 0% or 100% retracement will have a score of 0.
-        Can also work with any optimal values eg 200% or 300% retracement.
-        
-        """
-        
-        score = 100 - (2 * abs(retracement - optimalRetracement))
-        if score < 0:
-            score = 0
-        return score
 
-    #$ **kwargs is used to allow any signal arguments to be passed to any run method. This so that the same run method can be used when looping through signals.
-    def run(self, longshort:str='', df:pd.DataFrame=pd.DataFrame(), longW1:pd.DataFrame=pd.DataFrame(), shortW1:pd.DataFrame=pd.DataFrame(), **kwargs):
-        """trace high 1 ago to low 1 ago and compare  """
 
-        if not df.empty:
-            fromPrice = 0
-            toPrice = 0
-            # long W1 is the move up from the low of W1 to the high of W1 which is the most recent HP point (the start of the pullback represented by fromHP) 
-            if longshort == 'LONG': #and not longW1.empty:
-                # fromPrice = longW1.high.iat[-1] 
-                # toPrice   = longW1.low.iat[0]
-                fromPrice = df[self.fromLongCol].iat[-1]
-                toPrice   = df[self.toLongCol].iat[-1]
-
-            # short W1 is the move down from the high of W1 to the low of W1 which is the most recent LP point (the start of the pullback represented by fromLP)
-            elif longshort == 'SHORT':  #and not shortW1.empty:
-                # fromPrice = shortW1.low.iat[-1]
-                # toPrice   = shortW1.high.iat[0]
-                fromPrice = df[self.fromShortCol].iat[-1]
-                toPrice   = df[self.toShortCol].iat[-1]
-
-            priceNow  = df.close.iat[-1]
-
-            
-            # avoid div by zero
-            if fromPrice != toPrice:
-                t = trace(fromPrice, toPrice, priceNow)
-                if self.optimalRtc:
-                    self.val = self.compute_from_mid_trace(t, self.optimalRtc)
-                else: 
-                    self.val = t
-            # display((f'{longshort} {df.index[-1]}-- fromPrice: {fromPrice}, toPrice: {toPrice}, priceNow: {priceNow}, trace: {self.val}'))
-        else:
-            self.val = 0
-
-    def reset(self):
-        self.val = 0
-
-#£ Done
-@dataclass
-class HigherLowsLowerHighs(Signals):
-    
-    def __post_init__(self):
-        self.columns = [self.colname]   
-   
-
-    #$ **kwargs is used to allow any signal arguments to be passed to any run method. This so that the same run method can be used when looping through signals.
-    def run(self, longshort:str='', fromHP:pd.DataFrame=pd.DataFrame(), fromLP:pd.DataFrame=pd.DataFrame(), **kwargs):
-        """Computes the % of bars that have a lower highs (BULL pullback, so downward)
-        Vice versa for BEAR case. So this is only for pullbacks not overall trends. """
-
-        if longshort == 'LONG' and len(fromHP) > 2: # if there are more than 2 bars in the pullback from the high
-            # eg fhp.high < fhp.high.shift() retruns a series of bools. 
-            # 2000-01-01 00:13:00    False
-            # 2000-01-01 00:14:00     True
-            # 2000-01-01 00:15:00    False
-            # then [1:] removes the first bar becasue it will always be False
-            # 2000-01-01 00:14:00     True
-            # 2000-01-01 00:15:00    False
-            # then mean() returns the mean of the bools.
-            self.val = (fromHP.high < fromHP.high.shift())[1:].mean()
-
-        elif longshort == 'SHORT' and len(fromLP) > 2:
-            self.val = (fromLP.low > fromLP.low.shift())[1:].mean()
-        
-        else: 
-            self.val = 0
-            
-        self.val *= 100
 
     
 
@@ -655,36 +835,7 @@ class TrendlinneRightDirection:
         return self.val
 
 
-@dataclass
-class AllSameColour(Signals):
-    """Retruns the ration of how many bars are of the same colour as the longshort direction. 
-    This class is the check the pullback is all in the same direction. 
-    eg if long then all the bars in the pullback are red.
-    eg if short then all the bars in the pullback are green.
-    """
-    
-    def __post_init__(self):
-        self.columns = [self.colname]     
-        self.df = pd.DataFrame()
-
-    # def run(self,longshort:str='', fromHP:pd.DataFrame=pd.DataFrame(), fromLP:pd.DataFrame=pd.DataFrame(), **kwargs):
-    def run(self,longshort:str='', **kwargs):
-        df = kwargs.get('fromHP') if longshort == 'LONG' else kwargs.get('fromLP')
-        
-        total_bars = len(df)
-        if len(df) > 2:
-            if longshort == 'LONG':
-                same_colour_bars = len(df[df['close'] < df['open']])
-                self.val =  (same_colour_bars / total_bars) * 100
-
-            if longshort == 'SHORT':
-                same_colour_bars = len(df[df['close'] > df['open']])
-                self.val =  (same_colour_bars / total_bars) * 100
-
-        else:
-            self.val = 0
-
-        return self.val    
+  
 
 #£ Done
 @dataclass
@@ -969,8 +1120,9 @@ class GapSize(Signals):
         
 
 
-
-#$ ------- Volume ---------------
+# -----------------------------------------------------------------------
+# ---- V O L U M E ------------------------------------------------------
+# -----------------------------------------------------------------------
 #£ Done
 @dataclass
 class VolumeSpike(Signals):
@@ -1057,7 +1209,6 @@ class RoomToMove(Signals):
         return 0
 
 
-
 @dataclass
 class RoomToMoveCustomValues(Signals):
     """This signal calculates the room to move based on the current price and the last pivot point.
@@ -1087,7 +1238,6 @@ class RoomToMoveCustomValues(Signals):
         else:
             self.val = 2
 
-       
 
 @dataclass
 class PriceProximity(Signals):
@@ -1280,9 +1430,9 @@ class Acceleration(Signals):
         return self.val
 
 
-#$ -------  Reversal Signals ---------------
-
-
+# --------------------------------------------------------------------
+# ---- R E V E R S A L   S i g n a l s -------------------------------
+# --------------------------------------------------------------------
 
 @dataclass
 class ReversalIntoResistance(Signals):
@@ -1394,11 +1544,13 @@ class MultiSignals(ABC):
         if not self.names:
             self.setup_columns(df)
 
-        if len(df) <= self.lookBack:
+        if len(df) < 10:
             return pd.DataFrame(0, index=[df.index[-1]], columns=self.names)
+        
+        lookBack = min(self.lookBack, len(df))
 
         # Get the window we need to process
-        window = df.iloc[-self.lookBack:]
+        window = df.iloc[-lookBack:]
         
         # Compute signals for the entire window at once
         signals = self.compute_signals(window)
@@ -1910,11 +2062,19 @@ class ConsolidationPosition(MultiSignals):
                 if in_upper_half:
                     # For upper half, normalize distance from midpoint to high
                     distance = max(0, min(cons_upper - range_midpoint, overall_high - range_midpoint))
-                    position_score = distance / (overall_high - range_midpoint)
+                    denominator = overall_high - range_midpoint
+                    if denominator != 0:
+                        position_score = distance / denominator
+                    else:
+                        position_score = 0  # or some other appropriate value or handling
                 else:
                     # For lower half, normalize distance from low to midpoint
                     distance = max(0, min(range_midpoint - cons_lower, range_midpoint - overall_low))
-                    position_score = distance / (range_midpoint - overall_low)
+                    denominator = range_midpoint - overall_low
+                    if denominator != 0:
+                        position_score = distance / denominator
+                    else:
+                        position_score = 0  # or some other appropriate value or handling
                 
                 # Create mask for valid consolidation periods
                 mask = (~pd.isna(df[upper_col])) & (~pd.isna(df[lower_col]))
@@ -2089,57 +2249,56 @@ class ConsolidationPreMove(MultiSignals):
 # ----- E V E N T   S I G N A L S ------------------------------------
 # --------------------------------------------------------------------
 @dataclass
-class Breaks:
+class Breaks(Signals):
     """Checks if price crosses above/below a metric"""
-    price_column: str
-    direction: str  # 'above' or 'below'
-    metric_column: str
+    price_column: str = ''
+    direction: str = '' # 'above' or 'below'
+    metric_column: str = ''
 
     def __post_init__(self):
         self.name = f"BRK_{self.price_column}_{self.direction[:2]}_{self.metric_column}"
         self.names = [self.name]
 
-    def run(self, data: pd.DataFrame) -> pd.DataFrame:
-        df = data.copy()
+    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
         
-        curr_price = df[self.price_column]
-        prev_price = curr_price.shift(1)
-        curr_metric = df[self.metric_column]
-        prev_metric = curr_metric.shift(1)
+        curr_price = df[self.price_column].iloc[-1]
+        prev_price = df[self.price_column].iloc[-2]
+        curr_metric = df[self.metric_column].iloc[-1]
+        prev_metric = df[self.metric_column].iloc[-2]
 
         if self.direction == 'above':
-            df[self.name] = (prev_price <= prev_metric) & (curr_price > curr_metric)
-            return df
+            return (prev_price <= prev_metric) & (curr_price > curr_metric)
         elif self.direction == 'below':
-            df[self.name] = (prev_price >= prev_metric) & (curr_price < curr_metric)
-            return df
+            return (prev_price >= prev_metric) & (curr_price < curr_metric)
         
-        raise ValueError("Direction must be 'above' or 'below'")
+        else:
+            raise ValueError("Direction must be 'above' or 'below'")
+  
+        
 
 
 @dataclass
-class AboveBelow:
+class AboveBelow(Signals):
     """Checks if price is above/below a metric"""
-    value: str | float
-    direction: str  # 'above' or 'below'
-    metric_column: str
+    value: str | float = ''
+    direction: str  = ''# 'above' or 'below'
+    metric_column: str = ''
 
     def __post_init__(self):
         self.name = f"AB_{self.value}_{self.direction[:2]}_{self.metric_column}"
         self.names = [self.name]
 
-    def run(self, df: pd.DataFrame) -> pd.DataFrame:
-        value =  df[self.value] if isinstance(self.value, str) else self.value
-        metric = df[self.metric_column] if isinstance(self.metric_column, str) else self.metric_column
+    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
+        value =  df[self.value].iat[-1] if isinstance(self.value, str) else self.value
+        metric = df[self.metric_column].iat[-1] if isinstance(self.metric_column, str) else self.metric_column
 
         if self.direction == 'above':
-            df[self.name] = value > metric
+            return  value > metric
         elif self.direction == 'below':
-            df[self.name] = value < metric
+            return  value < metric
         else:
             raise ValueError("Direction must be 'above' or 'below'")
-            
-        return df
+        
 
 @dataclass
 class IsPullbackBounce(Signals):
@@ -2201,7 +2360,7 @@ class IsPullbackBounce(Signals):
         
         return False
     
-
+#! not working.maybe redundent
 @dataclass
 class IsConsolidationBreakout(Signals):
     """
@@ -2216,39 +2375,7 @@ class IsConsolidationBreakout(Signals):
     def __post_init__(self):
         self.name = f"CONS_BRK_{self.valToCheck}"
         super().__post_init__()
-    
-    def _find_last_point_in_consolidation(self, df: pd.DataFrame, cons_col: str) -> int:
-        """
-        Find the last valid pivot point within the consolidation duration.
-        Uses the provided pointCol which contains pre-calculated pivot points.
-        """
-        if len(df) < 2:
-            return None
-            
-        # Get valid consolidation periods (non-NaN values)
-        valid_cons = df[cons_col].notna()
-        if not valid_cons.any():
-            return None
-            
-        # Find the last valid consolidation point
-        last_cons_idx = valid_cons.last_valid_index()
-        if last_cons_idx is None:
-            return None
-            
-        # Get the start of this consolidation period
-        cons_start_idx = valid_cons.loc[:last_cons_idx].first_valid_index()
-        if cons_start_idx is None:
-            return None
-            
-        # Get pivot points within consolidation period
-        points = df[self.pointCol].loc[cons_start_idx:last_cons_idx]
-        valid_points = points[points.notna()]
-        
-        # Return last pivot point index if any exist
-        if not valid_points.empty:
-            return df.index.get_loc(valid_points.index[-1])
-            
-        return None
+
     
     def _compute_row(self, df: pd.DataFrame) -> float:
         """
@@ -2266,26 +2393,41 @@ class IsConsolidationBreakout(Signals):
         for cons_col in self.consColumns:
             if cons_col not in df.columns:
                 continue
-                
-            # Find last point within consolidation
-            pivot_idx = self._find_last_point_in_consolidation(df, cons_col)
-            if pivot_idx is None:
-                continue
-                
-            pivot_point = df[self.pointCol].iloc[pivot_idx]
-            if pd.isna(pivot_point):
-                continue
-                
-            # Get the last valid consolidation value
+
+            # see if consilidation period exists
             last_cons_idx = df[cons_col].last_valid_index()
             if last_cons_idx is None:
                 continue
-                
-            # Check if we're within the extended check period
-            curr_idx = df.index[-1]
-            periods_after_cons = len(df.loc[last_cons_idx:curr_idx]) - 1
-            if periods_after_cons > self.extendPeriods:
+
+
+            # Check now is within checking period 
+            # checking period is from the last pivot point within the consolidation period 
+            # to the end of of the consolidation plus the extendPeriods
+
+            # Cheeck if past the end of the checking period
+            end_checking_period = df[cons_col].last_valid_index() + self.extendPeriods #! dtaetime index vs int index
+            if df.index[-1] > end_checking_period:
                 continue
+            
+            # Find the last pivot point within the consolidation period and make sure we are not before it 
+            cons_start = df[cons_col].first_valid_index()
+            last_point = df.loc[cons_start:][self.pointCol].last_valid_index()
+
+            # consolidation period
+            cons_start = df[cons_col].first_valid_index()
+            cons_end = df[cons_col].last_valid_index()
+            if cons_start is None or cons_end is None:
+                continue
+
+            # Find the last pivot point within the consolidation period
+            last_point = df[self.pointCol].loc[:cons_end].last_valid_index()
+
+            # check if the last point is within the consolidation period
+            if last_point < cons_start and last_point > cons_end:
+                continue
+
+                
+
                 
             cons_level = df[cons_col].loc[last_cons_idx]
             
@@ -2336,7 +2478,7 @@ class Strategy:
 
     def add_event(self, step: int, name: str, valToCheck: Union[str, float], checkIf: str, colThreshold: str):
         """Add an event that happens once and triggers a validation."""
-        condition_name = f'{self.name}_{name}'
+        condition_name = f'{self.name}_{step}-{name}'
         self.event_tracker[condition_name] = {
             'step': step,
             'type': 'event',
@@ -2351,7 +2493,7 @@ class Strategy:
 
     def add_validation(self, step: int, name: str, valToCheck: Union[str, float], checkIf: str, colThreshold: str):
         """Add a validation that is ongoing and reversible."""
-        condition_name = f'{self.name}_{name}'
+        condition_name = f'{self.name}_{step}-{name}'
         self.event_tracker[condition_name] = {
             'step': step,
             'type': 'validation',
@@ -2366,7 +2508,7 @@ class Strategy:
 
     def add_reset(self, name: str, valToCheck: Union[str, float], checkIf: str, colThreshold: str):
         """Add a reset condition that cancels the strategy if triggered."""
-        condition_name = f'{self.name}_{name}'
+        condition_name = f'{self.name}_R_{name}'
         self.event_tracker[condition_name] = {
             'type': 'reset',
             'valToCheck': valToCheck,
@@ -2398,30 +2540,18 @@ class Strategy:
         val = condition['valToCheck']
         threshold = condition['colThreshold']
         
-        actual_val = float(row[val]) if isinstance(val, str) else val
-        
-        # Handle multiple threshold columns
-        if isinstance(threshold, list):
-            # Get first non-NaN value from the threshold columns
-            threshold_val = None
-            for col in threshold:
-                if pd.notna(row[col]):
-                    threshold_val = float(row[col])
-                    break
-            if threshold_val is None:
-                return False
-        else:
-            # Handle single threshold column as before
-            threshold_val = float(row[threshold])
-        
+        actual_valToCheck = float(row[val]) if isinstance(val, str) else val
+        actual_threshold = float(row[threshold]) if isinstance(threshold, str) else threshold
+        # print(f"{row.name} - valToCheck: {actual_valToCheck} {type(actual_valToCheck)} {condition['checkIf']} {actual_threshold} = {actual_valToCheck > actual_threshold}" )
+    
         if condition['checkIf'] == '>':
-            return actual_val > threshold_val
+            return actual_valToCheck > actual_threshold
         elif condition['checkIf'] == '<':
-            return actual_val < threshold_val
+            return actual_valToCheck < actual_threshold
         elif condition['checkIf'] == '>=':
-            return actual_val >= threshold_val
+            return actual_valToCheck >= actual_threshold
         elif condition['checkIf'] == '<=':
-            return actual_val <= threshold_val
+            return actual_valToCheck <= actual_threshold
         return False
 
     def reset_strategy(self):
@@ -2480,6 +2610,7 @@ class Strategy:
                     condition['isTrue'] = 1
                     results[name] = 100
                 elif self.evaluate_condition(current_row, condition):
+                    # print(f"{current_row.name} Event Triggered: {name}")
                     self.triggered_events.add(name)
                     condition['isTrue'] = 1
                     condition['status'] = 'completed'
@@ -2527,10 +2658,11 @@ class Strategy:
             results[name] = 100 if condition['isTrue'] else 0
                 
         return pd.Series(results)
+    
 
     def run(self, df: pd.DataFrame) -> pd.DataFrame:
         """Process strategy over lookback period maintaining proper state progression."""
-        if len(df) <= self.lookBack:
+        if len(df) < 10:
             return pd.DataFrame(0, index=df.index, columns=self.names)
 
         # Add step and total columns if not already in names
@@ -2549,7 +2681,8 @@ class Strategy:
         self.reset_strategy()
         
         # Process each row in the lookback period
-        lookback_indices = df.index[-self.lookBack:]
+        lookBack = min(self.lookBack, len(df)) - 1
+        lookback_indices = df.index[-lookBack:]
         
         for i, idx in enumerate(lookback_indices):
             current_window = df.loc[:idx]

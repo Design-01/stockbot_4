@@ -2,13 +2,15 @@ import pandas as pd
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import numpy as np
-from typing import List, Tuple, Union, Dict, Optional
+from typing import List, Tuple, Union, Dict, Optional, Any
 
 def preprocess_data(func):
     def wrapper(self, data: pd.DataFrame, *args, **kwargs):
         data = self.compute_rows_to_update(data, self.names, self.rowsToUpdate)
         return func(self, data, *args, **kwargs)
     return wrapper
+
+
 
 
 @dataclass
@@ -56,6 +58,27 @@ class TA(ABC):
         """Efficient normalization to -100 to 100 range"""
         return (series / max_value).clip(-1, 1) * 100
 
+# class is used for prebatching TA data
+@dataclass
+class TAData:
+    ta: TA
+    style: Dict[str, Any] | List[Dict[str, Any]] = field(default_factory=dict)
+    chart_type: str = "line"
+    row: int = 1
+
+@dataclass
+class Ffill:
+    """Forward fill missing values in a DataFrame"""
+    name: str = 'Ffill'
+    colToFfill: str = ''
+
+    def __post_init__(self):
+        self.name = f"FFILL_{self.colToFfill}"
+        self.names = [self.name]
+    
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        data[self.name] = data[self.colToFfill].ffill()
+        return data
 
 @dataclass
 class MA(TA):
@@ -403,7 +426,7 @@ class MansfieldRSI(TA):
     span: int = 14  # Default lookback period
     
     def __post_init__(self):
-        self.name_mrsi = f"MRSI_{self.span}"
+        self.name_mrsi = f"MRSI_{self.span}_{self.market_col[:3]}"
         self.names = [self.name_mrsi]
         self.rowsToUpdate = 200
 

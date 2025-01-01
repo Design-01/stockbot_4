@@ -15,19 +15,19 @@ class RandDataStore:
 @dataclass
 class RandomOHLCV:
     """Creates random data for testing."""
-    open_rng  : tuple = (-0.4,0.4)         # Range % change (min, max) from one bar to the next #* making min more neg than max gives a nore bias
-    close_rng : tuple = (-0.4,0.4)        # Range % change(min, max)  from one bar to the next
-    start     : str   = '2022' # start date as string ge '2022'
-    periods   : int   = 50     # length of the data
-    freq      : str   ='5 min' # eg 'H', '4H', '5 min', 'D'
-    open_val  : float = 100    # very first open price
-    head_max  : int   = 5      # max % change  of last close added to bar to get high
-    tail_max  : int   = 5      # max % change of last close subtracted from bar to get low
-    vol_rng   : tuple = (-50, 60 )# Range % change (min, max) from one bar to the next
-    vol_start : int   = 500    # starting volume
-    volatility_rng: tuple = (0, 0) # Range % change (min, max) from one bar to the next
-    volatility_freq: int = 0       # frequency of volatility change. 0 = every bar, 1 = every other bar, 2 = every 3rd bar etc
-    volatility_dur : int = 0       # duration of volatility change. 0 = 1 bar, 1 = 2 bars, 2 = 3 bars etc
+    freq      : str   ='5 min'        # eg 'H', '4H', '5 min', 'D'
+    start     : str   = '2022'        # start date as string ge '2022'
+    periods   : int   = 50            # length of the data
+    open_rng  : tuple = (-0.4, 0.4)   # Range % change (min, max) from one bar to the next #* making min more neg than max gives a nore bias
+    close_rng : tuple = (-0.4, 0.4)   # Range % change(min, max)  from one bar to the next
+    head_max  : int   = 0.3           # max % change  of last close added to bar to get high
+    tail_max  : int   = 0.3           # max % change of last close subtracted from bar to get low
+    open_val  : float = 100           # very first open price
+    vol_rng   : tuple = (-1, 1)       # Range % change (min, max) from one bar to the next
+    vol_start : int   = 500           # starting volume
+    volatility_rng: tuple = (0, 0.02) # Range % change (min, max) from one bar to the next
+    volatility_freq: int = 50         # frequency of volatility change. 0 = every bar, 1 = every other bar, 2 = every 3rd bar etc
+    volatility_dur : int = 3          # duration of volatility change. 0 = 1 bar, 1 = 2 bars, 2 = 3 bars etc
 
     
     def get_volatility(self, i, duration):
