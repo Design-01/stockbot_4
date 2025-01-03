@@ -8,8 +8,8 @@ class StockbotScanner:
         self.ib = ib
         self.scan_results_df = None
         self.daily_stockx = []
-        self.fund_reults_df = None
-        self.ta_results_df = None
+        self.fund_reults_df = pd.DataFrame()
+        self.ta_results_df = pd.DataFrame()
 
     def scan(self, 
             scan_code:str ='TOP_PERC_GAIN',
@@ -49,12 +49,14 @@ class StockbotScanner:
             price: tuple[float, float] = (1, 100),
             volume: int = 100_000,
             change_perc: float = 4,
-            market_cap: float = 100,
+            market_cap: float = 100, # millions
             limit_each_cap: int = 100):
         
         market_caps = [(market_cap, market_cap*10), (market_cap*10, market_cap*100), (market_cap*100, market_cap*1000)]
         rows = []
 
+        # uses market_caps to scan for each market cap range.
+        # this is so more stcoks can be scanned than just 50 at a time
         for cap in market_caps:
             scanData = self.scan(scan_code, price, volume, change_perc, cap)
             cap_str = f'{cap[0]}M-{cap[1]}M'
@@ -75,6 +77,9 @@ class StockbotScanner:
                     break
                 
             self.ib.sleep(60)
+        
+        if not rows:
+            return None
         
         # Create DataFrame and set column order
         df = pd.DataFrame(rows)

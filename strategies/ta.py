@@ -77,6 +77,10 @@ class Ffill:
         self.names = [self.name]
     
     def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        if self.colToFfill not in data.columns:
+            data[self.name] = np.nan
+            return data
+        
         data[self.name] = data[self.colToFfill].ffill()
         return data
 

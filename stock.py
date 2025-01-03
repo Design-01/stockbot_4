@@ -368,8 +368,6 @@ def get_stock_fundamentals(ib, ticker: str, current_volume: float = 0, max_days_
     
     return stock_info
 
-
-
 def save_fundamentals(symbol: str, data: StockFundamentals) -> None:
     """
     Save fundamental data for a stock symbol to a file.
@@ -876,3 +874,273 @@ def analyze_sector(self,
             today_metrics['ma_roc_ratio'],
             today_metrics['combined_score']
         )
+
+# ----------------------------------------------------------
+# ------- S T O C K X  -------------------------------------
+# ----------------------------------------------------------
+from frame.frame import Frame
+from dataclasses import dataclass, field
+from data import historical_data as hd
+from ib_insync import *
+from typing import Dict, Any, List
+import pandas as pd
+from data.random_data import RandomOHLCV
+import strategies.ta as ta
+import strategies.signals as sig
+import stock_fundamentals
+import strategies.preset_strats as ps
+
+@dataclass
+class TAData:
+    ta: ta.TA
+    style: Dict[str, Any] | List[Dict[str, Any]] = field(default_factory=dict)
+    chart_type: str = "line"
+    row: int = 1
+
+@dataclass
+class StatusLog:
+    item: str
+    dataType: str
+    dataRecieved: bool = False
+    dataValidated: bool = False
+    dataRows: int = 0
+    status: str = 'Not Started'
+    score: float = 0.0
+
+@dataclass
+class StockX:
+    ib: IB = None
+    symbol: str = ''
+
+    def __post_init__(self):
+        self.fundamentals = stock_fundamentals.Fundamentals(self.ib, self.symbol)
+        self.frames = {}
+        self.status = [] # list of StatusLog
+
+    def get_status_df(self):
+        return pd.DataFrame([s.__dict__ for s in self.status])
+        
+    def set_up_frame(self, timeframe, dataType:str='random', start_date:str="52 weeksAgo", end_date:str='now'):
+        name = f"{timeframe}_{dataType[:3]}" if dataType in ['primary_etf', 'secondary_etf', 'mkt'] else timeframe
+        for status in self.status:
+            if status.item == timeframe and status.dataType == dataType:
+                return
+            
+        
+        self.frames[name] = Frame(self.symbol, run_ta_on_load=True, rowHeights=[0.1, 0.1, 0.1, 0.1, 0.1, 0.5])
+        
+        if dataType == 'random':
+            df =  RandomOHLCV( 
+            freq      = timeframe, 
+            head_max  = 0.3, 
+            tail_max  = 0.3, 
+            start     = '2024',           
+            open_val  = 100.00,           
+            periods   = 400, 
+            open_rng  = (-0.4, 0.4), 
+            close_rng = (-0.4, 0.4), 
+            vol_rng   = (-1, 1),
+            volatility_rng  = (0, 0.02),
+            volatility_dur  = 3,
+            volatility_freq = 50).get_dataframe()
+
+            self.frames[timeframe].load_ohlcv(df)
+
+        elif dataType == 'ohlcv':
+             self.frames[name].load_ohlcv(hd.get_hist_data(self.symbol, start_date, end_date, timeframe))
+
+        elif dataType == 'tick':
+            # todo: implement tick data
+            pass
+
+        elif dataType == 'mkt':
+            self.frames[name].load_ohlcv(hd.get_hist_data('SPY', start_date, end_date, timeframe))
+
+        elif dataType == 'primary_etf':
+            eft_symbol = self.fundamentals.fundamentals.primary_etf
+            if eft_symbol is not None:
+                self.frames[name].load_ohlcv(hd.get_hist_data(eft_symbol[0], start_date, end_date, timeframe))
+            else:
+                print(f"Primary ETF not found for {self.symbol}")
+
+        elif dataType == 'secondary_etf':
+            eft_symbol = self.fundamentals.fundamentals.secondary_etf
+            if eft_symbol is not None:
+                self.frames[name].load_ohlcv(hd.get_hist_data(eft_symbol[0], start_date, end_date, timeframe))
+            else:
+                print(f"Secondary ETF not found for {self.symbol}")
+
+        data_validated = not self.frames[name].data.empty
+        len_df = len(self.frames[name].data)
+        self.status += [StatusLog(timeframe, dataType, True, data_validated, len_df, 'Setup', 0.0)]
+
+    def req_fundamentals(self, max_days_old=0, allowedETFs: List[str] = []):
+        self.fundamentals.req_fundamentals(max_days_old)
+        etf_is_allowed = self.fundamentals.validate_fundamental('primary_etf', 'isin', allowedETFs, description='Stocks primary sector ETF is allowed')
+        self.status += [StatusLog('Fundamentals', 'Fundamentals', True, etf_is_allowed, 1, 'Complete', self.fundamentals.validation_fundamentals_has_passed())]
+
+    def sector_ETF_is_allowed(self):
+        return self.status[0].dataValidated
+    
+    def get_score_status_by_item(self, item_name: str, dataType:str) -> float:
+        """
+        Returns the score corresponding to the given item name from the DataFrame.
+
+        Parameters:
+        df (pd.DataFrame): The DataFrame containing 'item' and 'score' columns.
+        item_name (str): The name of the item to look up.
+
+        Returns:
+        float: The score corresponding to the item name.
+        """
+        df = self.get_status_df()
+        row = df.loc[(df['item'] == item_name) & (df['dataType'] == dataType)]
+        if not row.empty:
+            return row['score'].iat[0]
+        else:
+            raise ValueError(f"Item '{item_name}' not found in the DataFrame")
+    
+    def run_daily_frame(self, lookback:int=1):
+        """setup_framees must be run first. Ech Frame is set up with the arg run_ta_on_load=True. 
+        This means every time a frame is loaded with data, the ta is run on the data automatically.
+        Therefore the items below are automatically run on the data."""
+        f_day = self.frames['1 day']
+        mktDF = self.frames['1 day_mkt'].data
+        etfDF = self.frames['1 day_pri'].data
+        # preset ta signals and scorers
+        ps.import_to_daily_df(f_day, mktDF, etfDF, RSIRow=3) #! test mansfield on real ccharts and compare to trading view
+        ps.require_ta_for_all(f_day)
+        ps.ma_ta(f_day, [50, 150, 200])
+        ps.volume_ta(f_day, ls='LONG', ma=10, scoreRow=4, lookBack=lookback)
+        ps.consolidation_ta(f_day, atrSpan=50, maSpan=50, lookBack=lookback, scoreRow=4)
+        ps.STRATEGY_daily_consolidation_bo(f_day, lookBack=lookback, scoreRow=5) # only works if consolidation has been run
+        ps.STRATEGY_pullback_to_cons(f_day, ls='LONG', lookBack=lookback, scoreRow=5) # only works if consolidation has been run
+ 
+        score = f_day.data['PBX_ALL_Scores'].iat[-1]
+        self.status += [StatusLog('1 day', 'ohlcv', True, True, len(f_day.data), 'Complete', score)]
+
+    def run_intraday_frames(self, lookback:int=1, plot:bool=False):
+        frames_run = []
+        if '1 hour' in self.frames:
+            f_1hr = self.frames['1 hour']
+            ps.require_ta_for_all(f_1hr)
+            ps.ma_ta(f_1hr, [50, 150, 200])
+            frames_run.append('1 hour')
+
+        if '5 mins' in self.frames:
+            f_5min = self.frames['5 mins']
+            ps.require_ta_for_all(f_5min)
+            ps.ma_ta(f_5min, [8, 21, 50])
+            frames_run.append('5 mins')
+
+        if '2 mins' in self.frames:
+            f_5min = self.frames['2 mins']
+            ps.require_ta_for_all(f_5min)
+            ps.ma_ta(f_5min, [8, 21])
+            frames_run.append('2 mins')
+        
+        print(f"Ran intraday frames: {frames_run}")
+
+        if plot:
+            for frame in frames_run:
+                print(f"Plotting {frame}")
+                self.frames[frame].plot()
+      
+
+
+    def req_tick_data(self, timeframe):
+        # request the tick data from the data source
+        pass
+
+    def add_ohlcv(self, timeframe, ohlcv):
+        # add the ohlcv to the data frame 
+        # can be used to add market data or other data not just the open high low close
+        pass
+
+    def add_rows(self, timeframe, rows):
+        # add the rows to the data frame.  eg if new data such as market data is added
+        pass
+
+
+            
+    def run_backtest(self, start: str | int, end: str | int, htf_imports: Dict[str, list] = None, save_snapshots: bool = False):
+        """
+        Run backtest with higher timeframe data importing.
+        
+        Args:
+            start: Start datetime or index
+            end: End datetime or index
+            htf_imports: Dict mapping timeframe to columns to import:
+                {'4H': ['close', 'volume']}
+            save_snapshots: Whether to save snapshots
+        """
+        print(f"\nInitializing backtest with parameters:")
+        print(f"Start: {start}, End: {end}")
+        
+        smallest_tf_frame = None
+        smallest_frequency = pd.Timedelta.max
+        
+        for frame_name, frame in self.frames.items():
+            if not frame.data.empty:
+                frequencies = pd.Series(frame.data.index[1:] - frame.data.index[:-1]).mode()
+                if not frequencies.empty:
+                    current_frequency = frequencies.iloc[0]
+                    if current_frequency < smallest_frequency:
+                        smallest_frequency = current_frequency
+                        smallest_tf_frame = frame
+                        smallest_tf_name = frame_name
+        
+        if smallest_tf_frame is None:
+            raise ValueError("No valid timeframes found")
+        
+        # Initialize backtests
+        smallest_tf_frame.backtest_setup(start, end, save_snapshots)
+        start_time = smallest_tf_frame.data.index[smallest_tf_frame._backtest_start_idx]
+        end_time = smallest_tf_frame.data.index[smallest_tf_frame._backtest_end_idx]
+        
+        for frame_name, frame in self.frames.items():
+            if frame_name != smallest_tf_name:
+                start_idx = frame.data.index.get_indexer([start_time])[0]
+                end_idx = frame.data.index.get_indexer([end_time])[0]
+                frame.backtest_setup(start_idx, end_idx, save_snapshots)
+        
+        running = True
+        while running:
+            # Import HTF data before running next row
+            if htf_imports:
+                for htf_name, columns in htf_imports.items():
+                    if htf_name in self.frames:
+                        htf_frame = self.frames[htf_name]
+                        smallest_tf_frame.import_data(
+                            htf_frame.backtest_data,
+                            columns,
+                            merge_to_backtest=True
+                        )
+            
+            # Update smallest timeframe with imported data
+            if not smallest_tf_frame.backtest_next_row():
+                running = False
+                continue
+                
+            current_time = smallest_tf_frame.backtest_data.index[-1]
+            
+            # Update other timeframes when needed
+            for frame_name, frame in self.frames.items():
+                if frame_name == smallest_tf_name:
+                    continue
+                    
+                if current_time > frame.backtest_data.index[-1]:
+                    # Import HTF data before running next row for intermediate timeframes
+                    if htf_imports:
+                        for htf_name, columns in htf_imports.items():
+                            if htf_name in self.frames:
+                                htf_frame = self.frames[htf_name]
+                                frame.import_data(
+                                    htf_frame.backtest_data,
+                                    columns,
+                                    merge_to_backtest=True
+                                )
+                                
+                    frame.backtest_next_row()
+
+

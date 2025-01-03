@@ -12,6 +12,11 @@ class IBMarketAnalyzer:
         self.sector_etfs = {}
         self.spy_data = None  # Store SPY dataframe
         self.sector_data = {}  # Store sector dataframes
+        self.market_report_df = pd.DataFrame()
+        self.sector_report_df = pd.DataFrame()
+        self.sector_report_df_filtered = pd.DataFrame()
+        self.sector_report_filtered_list = []
+
         
     def set_sectors(self):
         """Original set_sectors implementation"""
@@ -149,6 +154,7 @@ class IBMarketAnalyzer:
         for sector_name, contract in self.sector_etfs.items():
             df = self.get_historical_data(contract)
             if df is None:
+                print(f"Failed to fetch data for {sector_name}. Skipping...")
                 continue
                 
             self.sector_data[sector_name] = df  # Store sector dataframe
@@ -293,7 +299,6 @@ class IBMarketAnalyzer:
         Disconnect from IB
         """
         self.ib.disconnect()
-
 
     def create_analysis_report(self, printout:bool=False):
         """
@@ -453,8 +458,11 @@ class IBMarketAnalyzer:
                                     sector_df['Return Rank'] + 
                                     sector_df['Momentum Rank']) / 3)
         
+        self.market_report_df = market_df
+        self.sector_report_df = sector_df
+        
         # Sort by Overall Score
-        sector_df = sector_df.sort_values('Overall Score')
+        sector_df = sector_df.sort_values('Overall Score', inplace=True, ascending=False)
 
         if printout:
             # Format DataFrames
@@ -470,10 +478,10 @@ class IBMarketAnalyzer:
             
             print("\n=== Trading Recommendation ===")
             print(self.get_trading_signals()['recommendation'])
-        
+
         return market_df, sector_df
 
-    def filter_sectors(self, sector_df, as_list_of_sectors:False, **kwargs):
+    def filter_sectors(self, as_list_of_sectors:False, **kwargs):
         """
         Filter sector data based on multiple criteria
         
@@ -492,7 +500,11 @@ class IBMarketAnalyzer:
         Returns:
         DataFrame: Filtered sector data
         """
-        filtered_df = sector_df.copy()
+        if self.sector_report_df is None:
+            print("No Sector Report DF to Filter.")
+            return None
+        
+        filtered_df = self.sector_report_df.copy()
         
         if 'min_return' in kwargs:
             filtered_df = filtered_df[filtered_df['Return (%)'] >= kwargs['min_return']]
@@ -520,8 +532,11 @@ class IBMarketAnalyzer:
         if 'min_score' in kwargs:
             filtered_df = filtered_df[filtered_df['Overall Score'] >= kwargs['min_score']]
 
+        # always save the filtered list for easy access
+        self.sector_report_filtered_list = filtered_df['Sector'].tolist(), filtered_df['ETF'].tolist()
+
         if as_list_of_sectors:
-            return filtered_df['Sector'].tolist(), filtered_df['ETF'].tolist()
+            return self.sector_report_filtered_list
 
         return filtered_df.sort_values('Overall Score', ascending=False)
     

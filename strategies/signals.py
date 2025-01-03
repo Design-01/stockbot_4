@@ -2537,6 +2537,8 @@ class Strategy:
 
     def evaluate_condition(self, row: pd.Series, condition: dict) -> bool:
         """Evaluate a single condition against a row of data."""
+        if 'valToCheck' not in condition or 'colThreshold' not in row:
+            return False
         val = condition['valToCheck']
         threshold = condition['colThreshold']
         

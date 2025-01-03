@@ -258,7 +258,7 @@ class Chart:
             line=dict(color="white", width=2)
         )
 
-    def add_layout_and_format(self):
+    def add_layout_and_format(self, df: pd.DataFrame= pd.DataFrame()):
 
 
         self.fig.update_layout(
@@ -298,7 +298,33 @@ class Chart:
             width=self.width
         )
 
-        self.fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='rgb(50, 50, 50)')
+        # ---- Format the x-axis ----
+        # When not formatted Plotly creates a regular date axis so it ends up with large 
+        # gaps between the dates. This function will create a more readable date axis.
+        def get_smart_ticks(df, num_ticks=10, date_format='%b %d %H:%M'):
+            total_bars = len(df)
+            step = max(total_bars // num_ticks, 1)
+            
+            # Get indices at regular intervals
+            tick_positions = list(range(0, total_bars, step))
+            
+            # Format the dates
+            tick_dates = [d.strftime(date_format) for d in df.index[tick_positions]]
+    
+            return tick_positions, tick_dates
+
+        tick_positions, tick_dates = get_smart_ticks(df, num_ticks=5)
+
+        self.fig.update_xaxes(
+            type='category',
+            tickmode='array',
+            ticktext=tick_dates,
+            tickvals=tick_positions,
+            tickangle=0,  # Angle the dates for better readability
+            showgrid=True, gridwidth=1, gridcolor='rgb(50, 50, 50)'
+        )
+        # --------------------------------
+        # self.fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='rgb(50, 50, 50)')
         self.fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='rgb(50, 50, 50)')
         self.add_horizontal_lines(self.rowHeights, self.height)
         return self.fig
@@ -405,6 +431,7 @@ class Chart:
     def refesh(self, df: pd.DataFrame):
         self.set_fig()
         self.add_candles_and_volume(df)
+        self.add_layout_and_format(df)
 
     def add_ta(self, data: pd.Series | pd.DataFrame, style: Dict[str, Any] | list[Dict[str, Any]], chart_type: str, row:int=1) -> None:
         """Adds ta's to the chart

@@ -545,8 +545,10 @@ class IBHistoricalData(BaseHistoricalData):
                 # print(f"Fetching data for {start} to {end} ({duration})")
                 # print(f"End date: {end_date}")
 
-                # rth  = False if intraday
-                rth = False if delta.days < 1 else True
+                # rth  = False if not intraday
+                not_outside_rth = ['3 hours', '4 hours', '8 hours', '1 day', '1W', '1M']
+                rth = False if lowest_interval  in not_outside_rth else True
+                print(f"get_batch_historical_data :: {lowest_interval=}, {rth=}")
                 
                 bars = self.ib.reqHistoricalData(
                     contract,
@@ -554,7 +556,7 @@ class IBHistoricalData(BaseHistoricalData):
                     barSizeSetting=lowest_interval,
                     durationStr=duration,
                     whatToShow='TRADES',
-                    useRTH=rth,
+                    useRTH=False,
                     formatDate=1
                 )
                 
@@ -973,11 +975,11 @@ def get_hist_data(symbol, start_date, end_date, interval):
     file_interval = map_to_storage_interval(interval, 'ib') # eg coverts 5 mins to 1_min
     stored_data   = load_data(symbol, file_interval)
     missing_dates = get_missing_batch_dates(stored_data, start_date, end_date, batch_interval='weekly')
-    # if stored_data is not None:
-        # print(f"Stored data: {len(stored_data)} rows of data")
+    if stored_data is not None:
+        print(f"Stored data: {len(stored_data)} rows of data")
 
     if missing_dates:
-        # print(f"Processing Missing data: {len(missing_dates)} intervals")
+        print(f"Processing Missing data: {len(missing_dates)} intervals")
         ibkr = IBHistoricalData()
         missing_data, lowest_barsize   = ibkr.get_batch_historical_data(symbol, missing_dates, barsize=interval, minHourDay_only=True) # will convert bar size down to the lowest common denominator
         new_data = combine_dataframes([stored_data, missing_data])
@@ -985,7 +987,9 @@ def get_hist_data(symbol, start_date, end_date, interval):
 
     # data = hd.load_data(symbol, lowest_barsize)
     data = load_data(symbol, file_interval)
+    print(f"Data loaded: {len(data)} rows of data")
     if data is None:
+        print("No data found")
         return None
     end_date = end_date if end_date.lower() != 'now' else pd.Timestamp.now().strftime('%Y-%m-%d')
     return resample_to_interval(data, interval).loc[start_date:end_date]
