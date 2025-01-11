@@ -65,6 +65,7 @@ class TAData:
     style: Dict[str, Any] | List[Dict[str, Any]] = field(default_factory=dict)
     chart_type: str = "line"
     row: int = 1
+    nameCol: str = ''
 
 @dataclass
 class Ffill:
@@ -82,6 +83,19 @@ class Ffill:
             return data
         
         data[self.name] = data[self.colToFfill].ffill()
+        return data
+    
+@dataclass
+class AddColumn:
+    """Add new columns to a DataFrame"""
+    column: str = ''
+
+    def __post_init__(self):
+        self.name = self.column
+        self.names = [self.name]
+    
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        data[self.name] = data[self.column]
         return data
 
 @dataclass
@@ -161,6 +175,26 @@ class HPLP(TA):
         df.iloc[-3:, df.columns.get_loc(self.name_hp)] = np.nan
         df.iloc[-3:, df.columns.get_loc(self.name_lp)] = np.nan
 
+        return df[[self.name_hp, self.name_lp]]
+
+
+@dataclass
+class LowestHighest:
+    hi_col: str = 'high'
+    lo_col: str = 'low'
+    span: int = 5
+
+    def __post_init__(self):
+        self.name_hp = f"HiIst_{self.hi_col[:2]}_{self.span}"
+        self.name_lp = f"LoIst_{self.lo_col[:2]}_{self.span}"
+        self.names = [self.name_hp, self.name_lp]
+        self.rowsToUpdate = 200
+
+    def run(self, df: pd.DataFrame) -> pd.DataFrame:
+        # df = data.copy()
+        # Assign the rolling max and min to new columns
+        df[self.name_hp] = df[self.hi_col].rolling(window=self.span, min_periods=1).max()
+        df[self.name_lp] = df[self.lo_col].rolling(window=self.span, min_periods=1).min()
         return df[[self.name_hp, self.name_lp]]
 
     

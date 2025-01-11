@@ -433,7 +433,7 @@ class Chart:
         self.add_candles_and_volume(df)
         self.add_layout_and_format(df)
 
-    def add_ta(self, data: pd.Series | pd.DataFrame, style: Dict[str, Any] | list[Dict[str, Any]], chart_type: str, row:int=1) -> None:
+    def add_ta(self, data: pd.Series | pd.DataFrame, style: Dict[str, Any] | list[Dict[str, Any]], chart_type: str, row:int=1, nameCol:pd.Series=None) -> None:
         """Adds ta's to the chart
 
         args:
@@ -455,6 +455,7 @@ class Chart:
                     self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, line=stl), row=row, col=1)
 
         if chart_type == 'lines+markers':
+            
             if isinstance(data, pd.Series):
                 self.fig.add_trace(go.Scatter(x=data.index, y=data, name=data.name, line=style[0], mode=chart_type), row=row, col=1)
             elif isinstance(data, pd.DataFrame):
@@ -483,12 +484,18 @@ class Chart:
                 stl.setdefault('color', 'blue')  # Default color if not provided
                 stl.setdefault('opacity', 0.8)  # Default opacity if not provided
 
+                labels = ''
+                if isinstance(nameCol, pd.Series):
+                    labels = nameCol.to_list()
+
+
                 self.fig.add_trace(go.Scatter(
                     x=data.index,
                     y=data[column],
                     name=column,
                     mode='markers',
-                    marker=stl
+                    marker=stl,
+                    text=labels
                 ), row=row, col=1)
 
         if chart_type == 'support_resistance':

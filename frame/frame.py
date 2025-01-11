@@ -91,9 +91,9 @@ class Frame:
         self.data = updated_df[reordered_columns]
         return self.data
 
-    def add_ta(self, ta: TA, style: Dict[str, Any] | List[Dict[str, Any]] = {}, chart_type: str = "line", row: int = 1):
+    def add_ta(self, ta: TA, style: Dict[str, Any] | List[Dict[str, Any]] = {}, chart_type: str = "line", row: int = 1, nameCol:str=None):
         # Check for duplicates
-        for existing_ta, existing_style, existing_chart_type, existing_row in self.ta:
+        for existing_ta, existing_style, existing_chart_type, existing_row, existing_nameCol in self.ta:
             if (existing_ta == ta and 
                 existing_style == style and 
                 existing_chart_type == chart_type and 
@@ -105,11 +105,11 @@ class Frame:
         if self.run_ta_on_load:
             self.update_data(ta.run(self.data))
         
-        self.ta.append((ta, style, chart_type, row))
+        self.ta.append((ta, style, chart_type, row, nameCol))
 
     def add_ta_batch(self, taList:list[ta.TAData], forceRun:bool=False):
         for ta in taList:
-            self.add_ta(ta.ta, ta.style, ta.chart_type, ta.row)
+            self.add_ta(ta.ta, ta.style, ta.chart_type, ta.row, ta.nameCol)
 
     def update_ta_data(self):
         """Updates the data for all the technical indicators in the frame"""
@@ -219,7 +219,7 @@ class Frame:
         # Use existing plot logic
         self.chart.refesh(self.data)
         
-        for indicator, style, chart_type, row in self.ta:
+        for indicator, style, chart_type, row, nameCol in self.ta:
             if style == {}: 
                 continue
                 
@@ -233,7 +233,8 @@ class Frame:
             available_columns = [name for name in names if name in self.data.columns]
             if available_columns:
                 indicator_data = self.data[available_columns]
-                self.chart.add_ta(indicator_data, style, chart_type, row)
+                nameData = self.data[nameCol] if nameCol in self.data.columns else None
+                self.chart.add_ta(indicator_data, style, chart_type, row, nameData)
         
         if trading_hours:
             self.chart.add_trading_hours(self.data, self.trading_hours)
