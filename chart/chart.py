@@ -455,9 +455,23 @@ class Chart:
                     self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, line=stl), row=row, col=1)
 
         if chart_type == 'lines+markers':
+            # print(f"Adding nameCol type: {type(nameCol)} nameCol: {nameCol},  {chart_type} to chart")
             
             if isinstance(data, pd.Series):
-                self.fig.add_trace(go.Scatter(x=data.index, y=data, name=data.name, line=style[0], mode=chart_type), row=row, col=1)
+            #     labels = ''
+            #     if isinstance(nameCol, pd.Series):
+            #         print(f"Adding nameCol ... isinstance pd.Series... type: {type(nameCol)} nameCol: {nameCol},  {chart_type} to chart")
+            #         labels = nameCol.to_list()
+            #         print(labels)
+                self.fig.add_trace(go.Scatter(
+                    x=data.index, 
+                    y=data, 
+                    name=data.name, 
+                    line=style[0], 
+                    mode=chart_type,
+                    text='test'
+                    ), row=row, col=1)
+                
             elif isinstance(data, pd.DataFrame):
                 for column, stl in zip(data.columns, style):
                     self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, line=stl, mode=chart_type), row=row, col=1)
