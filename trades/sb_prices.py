@@ -242,6 +242,9 @@ class PriceX:
     
     def get_risk_reward_ratio(self):
         return self.risk.rRatio
+    
+    def get_active_stop_name(self):
+        return self.stopCurrentName
 
     def get_init_value(self, df:pd.DataFrame, initType:str):
         if initType == 'rrr':

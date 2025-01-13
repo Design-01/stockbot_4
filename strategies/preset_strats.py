@@ -184,7 +184,7 @@ def STRATEGY_pullback_to_cons(f, ls='LONG', lookBack:int=100, scoreRow:int=5, ma
 ## --------------------------------------------------------------
 ## --------------- E X I T   S T R A T E G I E S -----------------
 ## --------------------------------------------------------------
-def req_for_price_x(f, entryName, stopName, targetName, riskName):
+def req_for_price_x(f, entryName, stopName, targetName, riskName, stopNameCol='StopName'):
     f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=10), [{'color': 'green', 'size': 10}, {'color': 'red', 'size': 10}], chart_type = 'points')
     f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=3), [{'color': 'green', 'size': 10}, {'color': 'red', 'size': 10}], chart_type = 'points')
     f.add_ta(ta.ATR(span=14),{'dash': 'dot', 'color': 'red', 'width': 1}, chart_type = 'ine', row=1)
@@ -195,7 +195,7 @@ def req_for_price_x(f, entryName, stopName, targetName, riskName):
     f.add_ta(ta.LowestHighest(hi_col='high', lo_col='low', span=1), [{'color': 'green', 'size': 1}, {'color': 'red', 'size': 5}], chart_type = 'points')
 
     f.add_ta(ta.AddColumn(entryName), [{'color': 'yellow', 'size': 3}, {'color': 'red', 'size': 3}], chart_type='points', row=1)
-    f.add_ta(ta.AddColumn(stopName), [{'color': 'magenta', 'size': 5}], chart_type='points', row=1, nameCol='StopName')
+    f.add_ta(ta.AddColumn(stopName), [{'color': 'magenta', 'size': 5}], chart_type='points', row=1, nameCol=stopNameCol)
     f.add_ta(ta.AddColumn(targetName), {'dash': 'solid', 'color': 'cyan', 'width': 3}, chart_type='lines+markers', row=1)
     f.add_ta(ta.AddColumn(riskName), {'dash': 'solid', 'color': 'red', 'width': 3}, chart_type='lines+markers', row=3)
 
