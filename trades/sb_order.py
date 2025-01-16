@@ -20,6 +20,9 @@ class OrderX:
         self.bracketCount = 0
         self.stop_quotas = self.qty
         self.next_order_id = None  # Track the next available order ID
+        self.parentLimitPrice = None
+        self.parentOutsideRth = False
+        self.entry_price = None
 
     def _get_next_order_id(self):
         """Get a unique order ID from IB"""
@@ -50,14 +53,57 @@ class OrderX:
         if qtyPct is not None:
             return f"{self.name}_{order_type}_{order_num}_pct{qtyPct}"
         return f"{self.name}_{order_type}_{order_num}"
+    
+    def calculate_position_size(self, entry_price: float, stop_price: float, risk_amount: float) -> dict:
+        """
+        Calculate the position size and related metrics based on entry price, stop loss, and risk amount.
+        
+        Parameters:
+        entry_price (float): The price at which you plan to enter the trade
+        stop_price (float): Your stop loss price
+        risk_amount (float): The amount of money you're willing to risk on this trade
+        
+        Returns:
+        dict: Dictionary containing position details including:
+            - shares: Number of shares to purchase
+            - total_value: Total position value
+            - risk_percentage: Percentage drop to stop loss
+            - price_per_share: Entry price per share
+            - potential_loss: Total loss if stop is triggered
+        """
+        if entry_price <= 0 or stop_price <= 0 or risk_amount <= 0:
+            raise ValueError("All input values must be positive numbers")
+        
+        if stop_price >= entry_price:
+            raise ValueError("Stop price must be below entry price for long positions")
+        
+        # Calculate the price difference and risk percentage
+        price_difference = entry_price - stop_price
+        risk_percentage = (price_difference / entry_price) * 100
+        
+        # Calculate position size based on risk
+        shares = int(risk_amount / price_difference)
+        
+        # Calculate total position value and potential loss
+        total_position_value = shares * entry_price
+        total_loss_at_stop = shares * (entry_price - stop_price)
+        
+        return {
+            "shares": shares,
+            "total_value": round(total_position_value, 2),
+            "risk_percentage": round(risk_percentage, 2),
+            "price_per_share": entry_price,
+            "potential_loss": round(total_loss_at_stop, 2)
+        }
 
-    def set_entry(self, qty, limitPrice=None, outsideRth=False):
+    def set_entry(self, qty, limitPrice=None, entry_price=None, outsideRth=False):
         if outsideRth and limitPrice is None:
             raise ValueError("Limit price is required for outsideRth orders")
         self.qty = qty
         self.stop_quotas = qty
         self.parentLimitPrice = limitPrice
         self.parentOutsideRth = outsideRth
+        self.entry_price = entry_price
         
     def add_bracket_order(self, qtyPct, stop_price, target_price):
         if pd.isna(stop_price) :  raise ValueError(f"OrderXData.add_bracket_order: stop_price cannot be None. Got {stop_price}")
@@ -75,35 +121,47 @@ class OrderX:
         stop_order_id = self._get_next_order_id()
         target_order_id = self._get_next_order_id()
 
-        entry_order = MarketOrder(
-            orderId       = entry_order_id,
-            action        = 'BUY' if self.ls == 'LONG' else 'SELL',
-            totalQuantity = qty,
-            lmtPrice     = self.parentLimitPrice,
-            outsideRth   = self.parentOutsideRth,
-            orderRef     = self._get_order_ref('Entry', self.bracketCount),
-            transmit     = False
-        )
-        entry_order.orderType = 'MKT' if self.parentLimitPrice is None else 'LMT'
+        if not self.entry_price:
+            entry_order = MarketOrder(
+                orderId       = entry_order_id,
+                action        = 'BUY' if self.ls == 'LONG' else 'SELL',
+                totalQuantity = qty,
+                lmtPrice      = self.parentLimitPrice,
+                outsideRth    = self.parentOutsideRth,
+                orderRef      = self._get_order_ref('Entry', self.bracketCount),
+                transmit      = False
+            )
+            entry_order.orderType = 'MKT' if self.parentLimitPrice is None else 'LMT'
+
+        else: 
+            entry_order = StopOrder(
+                orderId       = entry_order_id,
+                action        = 'BUY' if self.ls == 'LONG' else 'SELL',
+                totalQuantity = qty,
+                stopPrice     = self.entry_price,
+                orderRef      = self._get_order_ref('Entry', self.bracketCount),
+                transmit      = False
+            )
+            entry_order.orderType = 'STP' if self.parentLimitPrice is None else 'STP LMT'
 
         stop_order = StopOrder(
             orderId       = stop_order_id,
-            parentId     = entry_order_id,
-            action       = 'SELL' if self.ls == 'LONG' else 'BUY',
-            stopPrice    = stop_price,
+            parentId      = entry_order_id,
+            action        = 'SELL' if self.ls == 'LONG' else 'BUY',
+            stopPrice     = stop_price,
             totalQuantity = qty,
-            orderRef     = self._get_order_ref('Stop', self.stopCount, qtyPct),
-            transmit     = False
+            orderRef      = self._get_order_ref('Stop', self.stopCount, qtyPct),
+            transmit      = False
         )
 
         target_order = LimitOrder(
-            orderId      = target_order_id,
-            parentId     = entry_order_id,
-            action       = 'SELL' if self.ls == 'LONG' else 'BUY',
+            orderId       = target_order_id,
+            parentId      = entry_order_id,
+            action        = 'SELL' if self.ls == 'LONG' else 'BUY',
             totalQuantity = qty,
-            lmtPrice     = target_price,
-            orderRef     = self._get_order_ref('Tget', self.targetCount, qtyPct),
-            transmit     = True
+            lmtPrice      = target_price,
+            orderRef      = self._get_order_ref('Tget', self.targetCount, qtyPct),
+            transmit      = True
         )
 
         self.orders.extend([entry_order, stop_order, target_order])

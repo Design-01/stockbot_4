@@ -1,5 +1,6 @@
 
 from datetime import datetime, timedelta
+import pytz
 from dateutil.relativedelta import relativedelta
 from twelvedata import TDClient
 import pandas as pd
@@ -965,25 +966,35 @@ def combine_dataframes(dfs):
     combined_df = pd.concat(dfs_reversed)
     
     # Drop duplicates based on the index, keeping the first occurrence
-    combined_df = combined_df[~combined_df.index.duplicated(keep='first')]
+    combined_df = combined_df[~combined_df.index.duplicated(keep='last')]
     
     return combined_df
 
+
+
 #! ------>>>  Main function to get historical data <<<------ #
-def get_hist_data(symbol, start_date, end_date, interval):
+def get_hist_data(symbol, start_date, end_date, interval, force_download=False):
     start_date = calculate_past_date(start_date)
     file_interval = map_to_storage_interval(interval, 'ib') # eg coverts 5 mins to 1_min
     stored_data   = load_data(symbol, file_interval)
     missing_dates = get_missing_batch_dates(stored_data, start_date, end_date, batch_interval='weekly')
-    if stored_data is not None:
+    if stored_data is not None and not force_download:
         print(f"Stored data: {len(stored_data)} rows of data")
 
-    if missing_dates:
+    if missing_dates or force_download:
+
+        if force_download:
+            end_date = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
+            missing_dates = [(start_date, end_date)]
+        
         print(f"Processing Missing data: {len(missing_dates)} intervals")
         ibkr = IBHistoricalData()
         missing_data, lowest_barsize   = ibkr.get_batch_historical_data(symbol, missing_dates, barsize=interval, minHourDay_only=True) # will convert bar size down to the lowest common denominator
+        print(f"Missing data: {len(missing_data)} rows of data")
+        # print(f"Missing data: {missing_data}")
         new_data = combine_dataframes([stored_data, missing_data])
         save_data(new_data, symbol, lowest_barsize)
+    
 
     # data = hd.load_data(symbol, lowest_barsize)
     data = load_data(symbol, file_interval)

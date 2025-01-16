@@ -11,10 +11,14 @@ class BaseX:
     priceCol: str = ''
     price:float = np.nan
     offsetVal: float = 0.0
+    offsetPct: float = 0.0
     barsAgo: int = 1
 
     def get_price(self, data:pd.DataFrame) -> float:
         pass
+
+    def set_price(self, price:float):
+        self.price = price
     
     def reset(self):
         self.price = np.nan
@@ -26,25 +30,10 @@ class BaseX:
         if self.ls == 'SHORT' and priceType == 'stop': return data['high'].iat[-1] >= self.price
         print (f"has_triggered Error: {self.ls=} {priceType=} {self.price=}")
 
+
+# todo: add a options for setting various price types
 @dataclass
 class EntryX(BaseX):
-
-    def get_price(self, data:pd.DataFrame, barsAgo:int=1) -> float:
-        if self.price > 0:
-            return self.price
-        if self.ls == 'LONG':
-            breaksPrevHigh = data['close'].iat[-barsAgo] > data['high'].iat[-barsAgo-1]
-            if breaksPrevHigh:
-                self.price = data['close'].iat[-barsAgo]
-        elif self.ls == 'SHORT':
-            breaksPrevLow = data['close'].iat[-barsAgo] < data['low'].iat[-barsAgo-1]
-            if breaksPrevLow:
-                self.price = data['close'].iat[-barsAgo]
-        return self.price
-
-
-@dataclass
-class StpX(BaseX):
     longPriceCol: str = ''
     shortPriceCol: str = ''
 
@@ -52,8 +41,34 @@ class StpX(BaseX):
         self.ls = ls
         self.priceCol = self.longPriceCol if self.ls == 'LONG' else self.shortPriceCol
 
-    def get_price(self, data:pd.DataFrame) -> float:
-        self.price = data[self.priceCol].iat[-self.barsAgo-1]
+    def get_price(self, data:pd.DataFrame=None) -> float:
+        if data is not None:
+            print(f"EntryX :: {self.priceCol=} {self.barsAgo=}")
+            self.price = round(data[self.priceCol].iat[-self.barsAgo-1],2)
+        return self.price
+    
+    def get_limit_price(self, data: pd.DataFrame, barsAgo: int = 1 ,offsetVal:float=0.0, offsetPct:float=0.0) -> float:
+        base_price = self.get_price(data, barsAgo)
+        if self.ls == 'LONG':
+            limit_price = base_price + offsetVal + (base_price * offsetPct)
+        elif self.ls == 'SHORT':
+            limit_price = base_price - offsetVal - (base_price * offsetPct)
+        self.price = max(round(limit_price,2), 0.01)
+        return self.price
+
+
+@dataclass
+class StopX(BaseX):
+    longPriceCol: str = 'close'
+    shortPriceCol: str = 'close'
+
+    def set_ls(self, ls):
+        self.ls = ls
+        self.priceCol = self.longPriceCol if self.ls == 'LONG' else self.shortPriceCol
+
+    def get_price(self, data:pd.DataFrame=None) -> float:
+        if data is not None:
+            self.price = round(data[self.priceCol].iat[-self.barsAgo-1],2)
         return self.price
 
 
@@ -67,12 +82,11 @@ class TargetX(BaseX):
         self.ls = ls
         self.priceCol = self.longPriceCol if self.ls == 'LONG' else self.shortPriceCol
 
-    def get_price(self, data:pd.DataFrame, entryPrice:float, stopPrice:float) -> float:
-        if self.price > 0:
-            return self.price
-        self.price = data[self.priceCol].iat[-self.barsAgo-1]
+    def get_price(self, data:pd.DataFrame=None, entryPrice:float=None, stopPrice:float=None) -> float:
+        if data is not None:
+            self.price = data[self.priceCol].iat[-self.barsAgo-1]
         if math.isnan(self.price):
-            self.price = data['close'].iat[-1] + (self.rrIfNoTarget * abs(entryPrice - stopPrice))
+            self.price = round(data['close'].iat[-1] + (self.rrIfNoTarget * abs(entryPrice - stopPrice)), 2)
         return self.price
     
 
@@ -92,7 +106,7 @@ class TrailX(BaseX):
         self.priceCol = self.longPriceCol if self.ls == 'LONG' else self.shortPriceCol
 
     def get_price(self, data:pd.DataFrame) -> float:
-        self.price = data[self.priceCol].iat[-self.barsAgo-1]
+        self.price = round(data[self.priceCol].iat[-self.barsAgo-1], 2)
         return self.price
     
 
@@ -120,6 +134,69 @@ class RiskX:
         self.reward = 0.0
         self.rRatio = 0.0
 
+
+@dataclass
+class QtyX:
+    qty: int = field(default=0, init=False)
+    total_value: float = field(default=0.0, init=False)
+    risk_percentage: float = field(default=0.0, init=False)
+    price_per_share: float = field(default=0.0, init=False)
+    potential_loss: float = field(default=0.0, init=False)
+
+    def compute_qty(self, entry_price: float, stop_price: float, risk_amount: float):
+        """
+        Calculate the position size and related metrics based on entry price, stop loss, and risk amount.
+        
+        Parameters:
+        entry_price (float): The price at which you plan to enter the trade
+        stop_price (float): Your stop loss price
+        risk_amount (float): The amount of money you're willing to risk on this trade
+        """
+        if entry_price <= 0 or stop_price <= 0 or risk_amount <= 0:
+            raise ValueError("All input values must be positive numbers")
+        
+        if stop_price >= entry_price:
+            raise ValueError("Stop price must be below entry price for long positions")
+        
+        # Calculate the price difference and risk percentage
+        price_difference = entry_price - stop_price
+        self.risk_percentage = (price_difference / entry_price) * 100
+        
+        # Calculate position size based on risk
+        self.qty = int(risk_amount / price_difference)
+        
+        # Calculate total position value and potential loss
+        self.total_value = self.qty * entry_price
+        self.potential_loss = self.qty * (entry_price - stop_price)
+        self.price_per_share = entry_price
+
+    def get_qty(self) -> int:
+        """
+        Get the current quantity of shares.
+        
+        Returns:
+        int: The current quantity of shares.
+        """
+        return self.qty
+
+    def set_qty(self, qty: int):
+        """
+        Set the quantity of shares.
+        
+        Parameters:
+        qty (int): The quantity of shares to set.
+        """
+        self.qty = qty
+
+    def reset(self):
+        """
+        Reset the quantity of shares and other attributes to zero.
+        """
+        self.qty = 0
+        self.total_value = 0.0
+        self.risk_percentage = 0.0
+        self.price_per_share = 0.0
+        self.potential_loss = 0.0
 
 # todo: add a way to set the trace price to a specific value
 @dataclass
@@ -173,10 +250,10 @@ class PriceX:
     ls: str = ''
     includeTarget: bool = False
     entry: EntryX = None
-    stop: StpX = None
+    stop: StopX = None
     target: TargetX = None
     trails: list = field(default_factory=list) # list of TrailX objects
-    risk: RiskX = None
+    qty: QtyX = None
     trace: TraceX = None
     accel: AccelX = None
     stopPrice: float = np.nan
@@ -189,11 +266,47 @@ class PriceX:
         self.status = PriceXStatus.ENTRY_PRICE_PENDING
         self.trails.reverse()
         self.activeTrails = []
+        self.object_count = {
+            'EntryX': 0,
+            'StopX': 0,
+            'TargetX': 0,
+            'TrailX': 0,
+            'RiskX': 0,
+            'TraceX': 0,
+            'AccelX': 0
+        }
+        self.entry = EntryX()
+        self.stop  = StopX()
+        self.target = TargetX()
+        self.risk  = RiskX()
+        self.trace = TraceX()
+        self.accel = AccelX(priceCol='ACC_close')
+        self.qty = QtyX()
+        self.entryName = ''
+        self.stopName = ''
+        self.targetName = ''
+        self.riskName = ''
         self.set_ls()
-        self.entryName  = f"{self.name}_Ent"
-        self.stopName   = f"{self.name}_Stp"
-        self.targetName = f"{self.name}_Tgt"
-        self.riskName   = f"{self.name}_Rsk"
+        self.set_names()
+
+    def new_name(self, obj):
+        csl_name = obj.__class__.__name__
+        if obj.name == '':
+            self.object_count[csl_name] += 1
+        return f"{self.name}_{csl_name[:3]}{self.object_count[csl_name]}"
+   
+    def set_names(self):
+        self.entry.name = self.new_name(self.entry)
+        self.stop.name = self.new_name(self.stop)
+        self.target.name = self.new_name(self.target)
+        self.risk.name = self.new_name(self.risk)
+        self.trace.name = self.new_name(self.trace)
+        self.accel.name = self.new_name(self.accel)
+        for t in self.trails: t.name = self.new_name(t)
+        self.entryName = self.entry.name
+        self.stopName = f"{self.name}_stop" # the current stop price even if trails are active
+        self.targetName = self.target.name
+        self.riskName = self.risk.name
 
     def set_columns(self, df:pd.DataFrame):
         df[self.entry.name] = np.nan
@@ -211,7 +324,7 @@ class PriceX:
     def set_ls(self):
         ls = self.ls
         self.ls = ls
-        self.entry.ls = ls
+        self.entry.set_ls(ls)
         self.stop.set_ls(ls)
         self.target.set_ls(ls)
         self.risk.ls = ls
@@ -225,6 +338,7 @@ class PriceX:
         self.stop.reset()
         self.target.reset()
         for t in self.trails: t.reset()
+        self.qty.reset()
         self.risk.reset()
         self.trace.reset()
         self.stopPrice = np.nan
@@ -279,7 +393,16 @@ class PriceX:
                         limit_price = df['high'].iat[-1] + 0.01
                         self.stopCurrentName = max_trail[0]
                         self.stopPrice = min(max(max_trail[1], limit_price), self.stopPrice)
-                    
+
+    def compute_qty(self, riskAmount:float):
+        self.qty.compute_qty(self.entry.price, self.stop.price, riskAmount)
+
+    def set_qty(self, qty:int):
+        self.qty.set_qty(qty)
+
+    
+
+                        
 
     def run_row(self, df:pd.DataFrame):
         # check ls is set

@@ -920,7 +920,7 @@ class StockX:
     def get_status_df(self):
         return pd.DataFrame([s.__dict__ for s in self.status])
         
-    def set_up_frame(self, timeframe, dataType:str='random', start_date:str="52 weeksAgo", end_date:str='now'):
+    def set_up_frame(self, timeframe, dataType:str='random', start_date:str="52 weeksAgo", end_date:str='now', force_download:bool=False):
         name = f"{timeframe}_{dataType[:3]}" if dataType in ['primary_etf', 'secondary_etf', 'mkt'] else timeframe
         for status in self.status:
             if status.item == timeframe and status.dataType == dataType:
@@ -947,26 +947,26 @@ class StockX:
             self.frames[timeframe].load_ohlcv(df)
 
         elif dataType == 'ohlcv':
-             self.frames[name].load_ohlcv(hd.get_hist_data(self.symbol, start_date, end_date, timeframe))
+             self.frames[name].load_ohlcv(hd.get_hist_data(self.symbol, start_date, end_date, timeframe, force_download=force_download))
 
         elif dataType == 'tick':
             # todo: implement tick data
             pass
 
         elif dataType == 'mkt':
-            self.frames[name].load_ohlcv(hd.get_hist_data('SPY', start_date, end_date, timeframe))
+            self.frames[name].load_ohlcv(hd.get_hist_data('SPY', start_date, end_date, timeframe, force_download=force_download))
 
         elif dataType == 'primary_etf':
             eft_symbol = self.fundamentals.fundamentals.primary_etf
             if eft_symbol is not None:
-                self.frames[name].load_ohlcv(hd.get_hist_data(eft_symbol[0], start_date, end_date, timeframe))
+                self.frames[name].load_ohlcv(hd.get_hist_data(eft_symbol[0], start_date, end_date, timeframe, force_download=force_download))
             else:
                 print(f"Primary ETF not found for {self.symbol}")
 
         elif dataType == 'secondary_etf':
             eft_symbol = self.fundamentals.fundamentals.secondary_etf
             if eft_symbol is not None:
-                self.frames[name].load_ohlcv(hd.get_hist_data(eft_symbol[0], start_date, end_date, timeframe))
+                self.frames[name].load_ohlcv(hd.get_hist_data(eft_symbol[0], start_date, end_date, timeframe, force_download=force_download))
             else:
                 print(f"Secondary ETF not found for {self.symbol}")
 
