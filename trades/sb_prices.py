@@ -10,33 +10,60 @@ class BaseX:
     ls: str = ''
     priceCol: str = ''
     price:float = np.nan
+    longPriceCol: str = 'high'
+    shortPriceCol: str = 'low'
+    limitPrice: float = np.nan
     offsetVal: float = 0.0
     offsetPct: float = 0.0
+    limitOffsetVal: float = 0.0
+    limitOffsetPct: float = 0.0
     barsAgo: int = 1
+    orderFilled: bool = False
+    ibId: int = 0
 
-    def get_price(self, data:pd.DataFrame) -> float:
-        pass
 
+    def set_ls(self, ls):
+        self.ls = ls
+        self.priceCol = self.longPriceCol if self.ls == 'LONG' else self.shortPriceCol
+
+    def get_price(self, data:pd.DataFrame=None) -> float:
+        if data is not None:
+            self.price = round(data[self.priceCol].iat[-self.barsAgo-1],2)
+        return self.price
+
+    def get_limit_price(self, data: pd.DataFrame=None) -> float:
+        if data is not None:
+            base_price = self.get_price(data)
+            if self.ls == 'LONG':
+                limit_price = base_price + self.limitOffsetVal + (base_price * self.limitOffsetPct)
+            elif self.ls == 'SHORT':
+                limit_price = base_price - self.limitOffsetVal - (base_price * self.limitOffsetPct)
+            self.limitPrice = max(round(limit_price,2), 0.01)
+        return self.limitPrice
+    
     def set_price(self, price:float):
         self.price = price
+    
+    def set_limit_price(self, limitPrice:float):
+        self.limitPrice = limitPrice
     
     def reset(self):
         self.price = np.nan
 
-    def has_triggered(self, data, priceType) -> bool:
-        if self.ls == 'LONG' and priceType in ['entry', 'target']: return data['high'].iat[-1] >= self.price
-        if self.ls == 'SHORT' and priceType in ['entry', 'target']: return data['low'].iat[-1] <= self.price
-        if self.ls == 'LONG' and priceType == 'stop': return data['low'].iat[-1] <= self.price
-        if self.ls == 'SHORT' and priceType == 'stop': return data['high'].iat[-1] >= self.price
-        print (f"has_triggered Error: {self.ls=} {priceType=} {self.price=}")
+    def has_triggered(self, data=None, priceType=None, forceTrigger:bool=False) -> bool:
+        if forceTrigger: self.orderFilled = True
+        if self.orderFilled: return True
+        if self.ls == 'LONG' and priceType in ['entry', 'target']: self.orderFilled =  data['high'].iat[-1] >= self.price
+        if self.ls == 'SHORT' and priceType in ['entry', 'target']: self.orderFilled = data['low'].iat[-1] <= self.price
+        if self.ls == 'LONG' and priceType == 'stop': self.orderFilled = data['low'].iat[-1] <= self.price
+        if self.ls == 'SHORT' and priceType == 'stop': self.orderFilled = data['high'].iat[-1] >= self.price
+        return self.orderFilled
 
 
 # todo: add a options for setting various price types
 @dataclass
 class EntryX(BaseX):
     orderType: str = 'STP'
-    longPriceCol: str = 'high'
-    shortPriceCol: str = 'low'
 
     def __post_init__(self):
         if self.orderType == 'MKT':
@@ -44,49 +71,23 @@ class EntryX(BaseX):
             self.shortPriceCol = 'close'
             self.barsAgo = 0
 
-    def set_ls(self, ls):
-        self.ls = ls
-        self.priceCol = self.longPriceCol if self.ls == 'LONG' else self.shortPriceCol
-
-    def get_price(self, data:pd.DataFrame=None) -> float:
-        if data is not None:
-            self.price = round(data[self.priceCol].iat[-self.barsAgo-1],2)
-        return self.price
-    
-    def get_limit_price(self, data: pd.DataFrame, barsAgo: int = 1 ,offsetVal:float=0.0, offsetPct:float=0.0) -> float:
-        base_price = self.get_price(data)
-        if self.ls == 'LONG':
-            limit_price = base_price + offsetVal + (base_price * offsetPct)
-        elif self.ls == 'SHORT':
-            limit_price = base_price - offsetVal - (base_price * offsetPct)
-        self.price = max(round(limit_price,2), 0.01)
-        return self.price
+    def set_outside_rth(self, data:pd.DataFrame):
+        if self.orderType == 'MKT':
+            self.orderType = 'LMT'
+        elif self.orderType == 'STP':
+            self.orderType = 'STP LMT'
+        self.get_limit_price(data)
 
 
 @dataclass
 class StopX(BaseX):
-    longPriceCol: str = 'close'
-    shortPriceCol: str = 'close'
-
-    def set_ls(self, ls):
-        self.ls = ls
-        self.priceCol = self.longPriceCol if self.ls == 'LONG' else self.shortPriceCol
-
-    def get_price(self, data:pd.DataFrame=None) -> float:
-        if data is not None:
-            self.price = round(data[self.priceCol].iat[-self.barsAgo-1],2)
-        return self.price
+    orderType: str = 'STP'
 
 
 @dataclass
 class TargetX(BaseX):
-    longPriceCol: str = ''
-    shortPriceCol: str = ''
+    orderType: str = 'LMT'
     rrIfNoTarget: float = 2
-
-    def set_ls(self, ls):
-        self.ls = ls
-        self.priceCol = self.longPriceCol if self.ls == 'LONG' else self.shortPriceCol
 
     def get_price(self, data:pd.DataFrame=None, entryPrice:float=None, stopPrice:float=None) -> float:
         if data is not None:
@@ -98,14 +99,8 @@ class TargetX(BaseX):
 
 @dataclass
 class TrailX(BaseX):
-    name: str = ''
-    ls: str = ''
-    price:float = np.nan
     initType: str = 'rrr'
     initTrigVal: float = 0.0
-    barsAgo: int = 1
-    longPriceCol: str = ''
-    shortPriceCol: str = ''
     
     def set_ls(self, ls):
         self.ls = ls
@@ -406,11 +401,9 @@ class PriceX:
     def set_qty(self, qty:int):
         self.qty.set_qty(qty)
 
-    
 
-                        
 
-    def run_row(self, df:pd.DataFrame):
+    def run_row(self, df:pd.DataFrame, isRth:bool):
         # check ls is set
         if self.ls == '':
             raise ValueError("ls is not set. us set_ls() to set it after all the objects have been created")
@@ -422,6 +415,8 @@ class PriceX:
         # find entry price
         if self.status == PriceXStatus.ENTRY_PRICE_PENDING:
             if self.entry.get_price(df) > 0:
+                if not isRth:
+                    self.entry.set_outside_rth(df)
                 self.status = PriceXStatus.ENTRY_PRICE_FOUND
                 self.entryIndex = df.index[-1]
 

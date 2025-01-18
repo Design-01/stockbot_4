@@ -99,8 +99,8 @@ class OrderX:
             "potential_loss": round(total_loss_at_stop, 2)
         }
 
-    def set_entry(self, entryOrderType='MKT', qty=None, limitPrice=None, entryPrice=None, outsideRth=False):
-        self.is_rth = my_ib_utils.is_within_trading_hours(self.ib, self.symbol, 'SMART')
+    def set_entry(self, isRth:bool, entryOrderType:str, qty, limitPrice=None, entryPrice=None, outsideRth=False):
+        self.is_rth = isRth
         if outsideRth and limitPrice is None and not self.is_rth:
             raise ValueError("Limit price is required for outsideRth orders")
         self.qty = qty
@@ -115,7 +115,7 @@ class OrderX:
         entry_order = None
         self.parentID = self._get_next_order_id()
 
-        if not self.entryPrice and self.entryOrderType in  ['MKT', 'LMT']:
+        if self.entryOrderType in  ['MKT', 'LMT']:
             entry_order = MarketOrder(
                 orderId       = self.parentID,
                 action        = 'BUY' if self.ls == 'LONG' else 'SELL',
@@ -127,7 +127,7 @@ class OrderX:
             )
             entry_order.orderType = 'MKT' if self.is_rth else 'LMT'
 
-        elif self.entryPrice and self.entryOrderType in ['STP', 'STP LMT']:
+        elif self.entryOrderType in ['STP', 'STP LMT']:
             entry_order = StopOrder(
                 orderId       = self.parentID,
                 action        = 'BUY' if self.ls == 'LONG' else 'SELL',
@@ -138,7 +138,7 @@ class OrderX:
                 orderRef      = self._get_order_ref('Entry', bracket_count),
                 transmit      = False
             )
-            entry_order.orderType = 'STP' if self.is_rth is None else 'STP LMT'
+            entry_order.orderType = 'STP' if self.is_rth else 'STP LMT'
         
         else:
             raise ValueError(f"Invalid entry order type: {self.entryOrderType}, entry price: {self.entryPrice}, limit price: {self.parentLimitPrice}. Check combination of entry order type and entry and/or limit price")
@@ -179,9 +179,9 @@ class OrderX:
             orderRef      = self._get_order_ref('Tget', self.targetCount, qtyPct),
             transmit      = True
         )
-
-        self.orders.extend([entry_order, stop_order, target_order])
-        return entry_order.orderId
+        bracket = [entry_order, stop_order, target_order]
+        self.orders.extend(bracket)
+        return bracket
 
 
     def add_stop_order(self, qtyPct, stop_price):
@@ -202,8 +202,9 @@ class OrderX:
             orderRef     = self._get_order_ref('Stop', self.stopCount, qtyPct),
             transmit     = True
         )
-        self.orders.extend([entry_order, stop_order])
-        return entry_order.orderId
+        bracket = [entry_order, stop_order]
+        self.orders.extend(bracket)
+        return bracket
 
     def place_orders(self, delay_between_orders=0.01):
         """
