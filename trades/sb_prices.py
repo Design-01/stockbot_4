@@ -34,8 +34,15 @@ class BaseX:
 # todo: add a options for setting various price types
 @dataclass
 class EntryX(BaseX):
-    longPriceCol: str = ''
-    shortPriceCol: str = ''
+    orderType: str = 'STP'
+    longPriceCol: str = 'high'
+    shortPriceCol: str = 'low'
+
+    def __post_init__(self):
+        if self.orderType == 'MKT':
+            self.longPriceCol = 'close'
+            self.shortPriceCol = 'close'
+            self.barsAgo = 0
 
     def set_ls(self, ls):
         self.ls = ls
@@ -43,12 +50,11 @@ class EntryX(BaseX):
 
     def get_price(self, data:pd.DataFrame=None) -> float:
         if data is not None:
-            print(f"EntryX :: {self.priceCol=} {self.barsAgo=}")
             self.price = round(data[self.priceCol].iat[-self.barsAgo-1],2)
         return self.price
     
     def get_limit_price(self, data: pd.DataFrame, barsAgo: int = 1 ,offsetVal:float=0.0, offsetPct:float=0.0) -> float:
-        base_price = self.get_price(data, barsAgo)
+        base_price = self.get_price(data)
         if self.ls == 'LONG':
             limit_price = base_price + offsetVal + (base_price * offsetPct)
         elif self.ls == 'SHORT':

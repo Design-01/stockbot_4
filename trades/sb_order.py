@@ -1,6 +1,7 @@
 import uuid
 import pandas as pd
 from ib_insync import *
+import my_ib_utils
 
 def get_id():
     return str(uuid.uuid4())[:8]
@@ -22,7 +23,9 @@ class OrderX:
         self.next_order_id = None  # Track the next available order ID
         self.parentLimitPrice = None
         self.parentOutsideRth = False
-        self.entry_price = None
+        self.entryPrice = None
+        self.entryOrderType = None
+        self.is_rth = None
 
     def _get_next_order_id(self):
         """Get a unique order ID from IB"""
@@ -96,14 +99,51 @@ class OrderX:
             "potential_loss": round(total_loss_at_stop, 2)
         }
 
-    def set_entry(self, qty, limitPrice=None, entry_price=None, outsideRth=False):
-        if outsideRth and limitPrice is None:
+    def set_entry(self, entryOrderType='MKT', qty=None, limitPrice=None, entryPrice=None, outsideRth=False):
+        self.is_rth = my_ib_utils.is_within_trading_hours(self.ib, self.symbol, 'SMART')
+        if outsideRth and limitPrice is None and not self.is_rth:
             raise ValueError("Limit price is required for outsideRth orders")
         self.qty = qty
         self.stop_quotas = qty
         self.parentLimitPrice = limitPrice
         self.parentOutsideRth = outsideRth
-        self.entry_price = entry_price
+        self.entryPrice = entryPrice
+        self.entryOrderType = entryOrderType
+
+
+    def _get_entry_order(self, qty, bracket_count):
+        entry_order = None
+        self.parentID = self._get_next_order_id()
+
+        if not self.entryPrice and self.entryOrderType in  ['MKT', 'LMT']:
+            entry_order = MarketOrder(
+                orderId       = self.parentID,
+                action        = 'BUY' if self.ls == 'LONG' else 'SELL',
+                totalQuantity = qty,
+                lmtPrice      = self.parentLimitPrice,
+                outsideRth    = self.parentOutsideRth,
+                orderRef      = self._get_order_ref('Entry', bracket_count),
+                transmit      = False
+            )
+            entry_order.orderType = 'MKT' if self.is_rth else 'LMT'
+
+        elif self.entryPrice and self.entryOrderType in ['STP', 'STP LMT']:
+            entry_order = StopOrder(
+                orderId       = self.parentID,
+                action        = 'BUY' if self.ls == 'LONG' else 'SELL',
+                totalQuantity = qty,
+                outsideRth    = self.parentOutsideRth,
+                lmtPrice      = self.parentLimitPrice,
+                stopPrice     = self.entryPrice,
+                orderRef      = self._get_order_ref('Entry', bracket_count),
+                transmit      = False
+            )
+            entry_order.orderType = 'STP' if self.is_rth is None else 'STP LMT'
+        
+        else:
+            raise ValueError(f"Invalid entry order type: {self.entryOrderType}, entry price: {self.entryPrice}, limit price: {self.parentLimitPrice}. Check combination of entry order type and entry and/or limit price")
+        
+        return entry_order
         
     def add_bracket_order(self, qtyPct, stop_price, target_price):
         if pd.isna(stop_price) :  raise ValueError(f"OrderXData.add_bracket_order: stop_price cannot be None. Got {stop_price}")
@@ -116,37 +156,13 @@ class OrderX:
         self.targetCount += 1
         qty = self._get_qty(qtyPct)
 
-        # Get unique order IDs for each order in the bracket
-        entry_order_id = self._get_next_order_id()
-        stop_order_id = self._get_next_order_id()
-        target_order_id = self._get_next_order_id()
+        # get entry order separtly as bot this barckt and the stop only barcekt will have the same parent order so saves code dupliaction
+        entry_order = self._get_entry_order(qty, self.bracketCount)
 
-        if not self.entry_price:
-            entry_order = MarketOrder(
-                orderId       = entry_order_id,
-                action        = 'BUY' if self.ls == 'LONG' else 'SELL',
-                totalQuantity = qty,
-                lmtPrice      = self.parentLimitPrice,
-                outsideRth    = self.parentOutsideRth,
-                orderRef      = self._get_order_ref('Entry', self.bracketCount),
-                transmit      = False
-            )
-            entry_order.orderType = 'MKT' if self.parentLimitPrice is None else 'LMT'
-
-        else: 
-            entry_order = StopOrder(
-                orderId       = entry_order_id,
-                action        = 'BUY' if self.ls == 'LONG' else 'SELL',
-                totalQuantity = qty,
-                stopPrice     = self.entry_price,
-                orderRef      = self._get_order_ref('Entry', self.bracketCount),
-                transmit      = False
-            )
-            entry_order.orderType = 'STP' if self.parentLimitPrice is None else 'STP LMT'
 
         stop_order = StopOrder(
-            orderId       = stop_order_id,
-            parentId      = entry_order_id,
+            orderId       = self._get_next_order_id(),
+            parentId      = entry_order.orderId,
             action        = 'SELL' if self.ls == 'LONG' else 'BUY',
             stopPrice     = stop_price,
             totalQuantity = qty,
@@ -155,8 +171,8 @@ class OrderX:
         )
 
         target_order = LimitOrder(
-            orderId       = target_order_id,
-            parentId      = entry_order_id,
+            orderId       = self._get_next_order_id(),
+            parentId      = entry_order.orderId,
             action        = 'SELL' if self.ls == 'LONG' else 'BUY',
             totalQuantity = qty,
             lmtPrice      = target_price,
@@ -165,42 +181,29 @@ class OrderX:
         )
 
         self.orders.extend([entry_order, stop_order, target_order])
-        return entry_order_id
+        return entry_order.orderId
+
 
     def add_stop_order(self, qtyPct, stop_price):
         if pd.isna(stop_price): raise ValueError(f"OrderXData.add_stop_order: stop_price cannot be None. Got {stop_price}")
 
         self.stopCount += 1
-        self.bracketCount += 1
         qty = self._get_qty(qtyPct)
-        
-        # Get unique order IDs
-        entry_order_id = self._get_next_order_id()
-        stop_order_id = self._get_next_order_id()
 
-        entry_order = MarketOrder(
-            orderId      = entry_order_id,
-            action       = 'BUY' if self.ls == 'LONG' else 'SELL',
-            totalQuantity = qty,
-            lmtPrice     = self.parentLimitPrice,
-            outsideRth   = self.parentOutsideRth,
-            orderRef     = self._get_order_ref('Entry', self.bracketCount),
-            transmit     = False
-        )
-        entry_order.orderType = 'MKT' if self.parentLimitPrice is None else 'LMT'
+        entry_order = self._get_entry_order(qty, self.bracketCount)
+        
 
         stop_order = StopOrder(
-            orderId      = stop_order_id,
-            parentId     = entry_order_id,
+            orderId      = self._get_next_order_id(),
+            parentId     = entry_order.orderId,
             action       = 'SELL' if self.ls == 'LONG' else 'BUY',
             totalQuantity = qty,
             stopPrice    = stop_price,
             orderRef     = self._get_order_ref('Stop', self.stopCount, qtyPct),
             transmit     = True
         )
-
         self.orders.extend([entry_order, stop_order])
-        return entry_order_id
+        return entry_order.orderId
 
     def place_orders(self, delay_between_orders=0.01):
         """
