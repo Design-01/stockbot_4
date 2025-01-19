@@ -245,6 +245,11 @@ class PriceXStatus:
     TARGET_HIT = 'TARGET_HIT'
 
 
+ENTERING_STATES = [PriceXStatus.ENTRY_PRICE_PENDING, PriceXStatus.ENTRY_PRICE_FOUND, PriceXStatus.INIT_STOP_PRICE_PENDING, PriceXStatus.INIT_STOP_PRICE_FOUND, PriceXStatus.TARGET_PRICE_PENDING, PriceXStatus.TARGET_PRICE_FOUND, PriceXStatus.TRAIL_PRICE_PENDING, PriceXStatus.TRAIL_PRICE_FOUND]
+TRADE_STATES = [PriceXStatus.IN_TRADE]
+EXIT_STATES = [PriceXStatus.TARGET_HIT, PriceXStatus.STOPPED_OUT, PriceXStatus.CANCELLED]
+
+
 @dataclass
 class PriceX:
     name: str = ''
@@ -403,7 +408,7 @@ class PriceX:
 
 
 
-    def run_row(self, df:pd.DataFrame, isRth:bool):
+    def run_row(self, df:pd.DataFrame, isRth:bool=None):
         # check ls is set
         if self.ls == '':
             raise ValueError("ls is not set. us set_ls() to set it after all the objects have been created")

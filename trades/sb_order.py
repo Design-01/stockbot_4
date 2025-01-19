@@ -26,6 +26,7 @@ class OrderX:
         self.entryPrice = None
         self.entryOrderType = None
         self.is_rth = None
+        self.stoploss_ids = []
 
     def _get_next_order_id(self):
         """Get a unique order ID from IB"""
@@ -179,6 +180,8 @@ class OrderX:
             orderRef      = self._get_order_ref('Tget', self.targetCount, qtyPct),
             transmit      = True
         )
+
+        self.stoploss_ids.append(stop_order.orderId)
         bracket = [entry_order, stop_order, target_order]
         self.orders.extend(bracket)
         return bracket
@@ -202,6 +205,7 @@ class OrderX:
             orderRef     = self._get_order_ref('Stop', self.stopCount, qtyPct),
             transmit     = True
         )
+        self.stoploss_ids.append(stop_order.orderId)    
         bracket = [entry_order, stop_order]
         self.orders.extend(bracket)
         return bracket
@@ -242,24 +246,26 @@ class OrderX:
     def get_orders_status_as_df(self):
         return pd.DataFrame(self.orders_status)
 
-    def modify_stop(self, stopNum, stop_price):
-        order_ref = self._get_order_ref('Stop', stopNum)  # Get the reference pattern
-        stop_order = next((order for order in self.orders 
-                        if order.orderRef.startswith(order_ref)), None)
-        if not stop_order:
-            raise ValueError(f"No stop order found with number {stopNum}")
-            
-        stop_order.auxPrice = stop_price
-        stop_order.transmit = True  # needed for immediate update
-        self.ib.placeOrder(Stock(self.symbol, 'SMART', 'USD'), stop_order)
+    def modify_order_price(self, order_id, new_price):
+        order = next((order for order in self.orders if order.orderId == order_id), None)
+        if not order:
+            raise ValueError(f"No order found with ID {order_id}")
+        
+        order.auxPrice = new_price
+        order.transmit = True  # needed for immediate update
+        self.ib.placeOrder(Stock(self.symbol, 'SMART', 'USD'), order)
 
-    def get_stop_price(self, stopNum):
-        order_ref = self._get_order_ref('Stop', stopNum)
-        stop_order = next((order for order in self.orders 
-                        if order.orderRef.startswith(order_ref)), None)
-        if not stop_order:
-            raise ValueError(f"No stop order found with number {stopNum}")
-        return stop_order.auxPrice
+    def get_order_price(self, order_id):
+        order = next((order for order in self.orders if order.orderId == order_id), None)
+        if not order:
+            raise ValueError(f"No order found with ID {order_id}")
+        return order.auxPrice
+    
+    def get_order_by_id(self, order_id):
+        for order in self.orders:
+            if order.orderId == order_id:
+                return order
+        return None
 
 # Example usage
 """
