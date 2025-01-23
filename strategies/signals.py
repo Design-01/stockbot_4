@@ -231,33 +231,31 @@ class Signals(ABC):
     def _compute_row(self, df: pd.DataFrame) -> float:
         """This method is to compute each row in the lookback period."""
         pass
-                        
-    # @abstractmethod
+
+
     def run(self, df: pd.DataFrame = pd.DataFrame()) -> pd.Series:
         """Generate signal scores for the lookback period."""
         if len(df) < 10:
-            return self.return_series(df.index[-1], self.get_score(0))
+            return self.return_series(df.index[-1:], self.get_score(0))
         
-        lookback = min(self.lookBack, len(df)) - 1
-
-        # this then gets populated with the results of the computation
+        lookback = min(self.lookBack, len(df))  # Include all rows in the lookback period
         result_series = pd.Series(np.nan, index=df.index[-lookback:])
         
         for i in range(lookback):
-            current_idx = -(lookback - i)
-            if abs(current_idx) >= len(df) :
+            current_idx = -(lookback - i) + 1
+            if abs(current_idx) > len(df):  # Skip if index out of bounds
                 continue
-            
-            #! This is where the computation is done. 
-            #! Each sub class must have a _compute_row method that does the computation
-            current_window = df.iloc[:current_idx+1]
+
+            current_window = df.iloc[: len(df) + current_idx]
             if current_window.empty:
                 continue
+            
             val = self._compute_row(current_window)
             if not pd.isna(val):
                 result_series.iloc[i] = float(val)
 
-        return self.return_series(df.index[-self.lookBack:], self.get_score(result_series))
+        return self.return_series(df.index[-lookback:], self.get_score(result_series))
+
 
 
 @dataclass
@@ -296,47 +294,36 @@ class Score(Signals):
     
     def _compute_row(self, df: pd.DataFrame) -> float:
         """Compute score for the current window of data."""
-        # Get filtered columns (using cached version if available)
         filtered_cols = self._get_filtered_columns(df)
-        
-        if len(filtered_cols) == 0:
+        if not filtered_cols:
             return np.nan
         
-        # Get rows to score
-        rows_to_score = df[filtered_cols].iloc[-1:] 
+        rows_to_score = df[filtered_cols].iloc[-1:]  # Latest row
         
-        # Handle empty or all-NaN case
-        if rows_to_score.isna().all().all():
-            return np.nan
-        
-        # Fill NaN with 0 before calculating
+        # Replace NaN with 0 to include them in calculations
         rows_to_score = rows_to_score.fillna(0)
         
         # Compute the score based on type
         if self.scoreType == 'mean':
-            val = rows_to_score.mean().mean()
+            val = rows_to_score.mean(axis=1).iloc[0]  # Mean across filtered columns, including NaNs as 0
         elif self.scoreType == 'sum':
-            val = rows_to_score.sum().sum()
+            val = rows_to_score.sum(axis=1).iloc[0]
         elif self.scoreType == 'max':
-            val = rows_to_score.max().max()
+            val = rows_to_score.max(axis=1).iloc[0]
         elif self.scoreType == 'min':
-            # For min, we might want to exclude the zeros that were NaN
-            val = rows_to_score.replace(0, np.inf).min().min()
+            val = rows_to_score.min(axis=1).iloc[0]
         elif self.scoreType == 'all_gt':
-            val = rows_to_score.gt(self.validThreshold).all().all()
+            val = rows_to_score.gt(self.validThreshold).all(axis=1).iloc[0]
         elif self.scoreType == 'all_lt':
-            val = rows_to_score.lt(self.validThreshold).all().all()
+            val = rows_to_score.lt(self.validThreshold).all(axis=1).iloc[0]
         elif self.scoreType == 'any_gt':
-            val = rows_to_score.gt(self.validThreshold).any().any()
+            val = rows_to_score.gt(self.validThreshold).any(axis=1).iloc[0]
         elif self.scoreType == 'any_lt':
-            val = rows_to_score.lt(self.validThreshold).any().any()
+            val = rows_to_score.lt(self.validThreshold).any(axis=1).iloc[0]
         else:
             val = np.nan
         
-        if pd.isna(val):
-            return np.nan
-            
-        return val * self.weight
+        return val * self.weight if not pd.isna(val) else np.nan
     
     def reset_cache(self):
         """Reset the filtered columns cache if needed (e.g., if columns change)."""
@@ -1171,6 +1158,54 @@ class VolumeROC(Signals):
         return ((vol1 - vol2) / vol2) * 100
 
 
+@dataclass
+class ROC(Signals):
+    """
+    Calculates the Rate of Change (ROC) of values between bars over a looks back preiod .
+    """
+    name: str = 'ROC'
+    metricCol: str = ''
+
+    def __post_init__(self):
+        self.name = f"Sig{self.ls[0]}_{self.name}_{self.metricCol}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame):
+        """
+        Calculate volume ROC acceleration over the lookback period.
+        """
+        # Get the volume series for the lookback period
+        val1 = df[self.metricCol].iat[-1]
+        val2 = df[self.metricCol].iat[-self.lookBack]
+        
+        # Calculate ROC
+        return ((val1 - val2) / val2) * 100
+
+
+
+@dataclass
+class PctDiff(Signals):
+    """
+    Calculates the percentage difference between two values.
+    """
+    name: str = 'PctDiff'
+    metricCol1: str = ''
+    metricCol2: str = ''
+    
+    def __post_init__(self):
+        self.name = f"Sig{self.ls[0]}_{self.name}_{self.metricCol2}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame):
+        """
+        Calculate the percentage difference between two values.
+        """
+        val1 = df[self.metricCol1].iat[-1]
+        val2 = df[self.metricCol2].iat[-1]
+        
+        # Calculate percentage difference
+        return ((val1 - val2) / val2) * 100
+
 #$ ------- Price ---------------
 @dataclass
 class RoomToMove(Signals):
@@ -1197,6 +1232,7 @@ class RoomToMove(Signals):
     def _compute_row(self, df:pd.DataFrame=pd.DataFrame(), **kwargs):
 
         val = 0
+
 
         if len(df) > 1:
             if self.ls == 'LONG':

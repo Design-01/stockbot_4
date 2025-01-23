@@ -10,14 +10,13 @@ from dataclasses import dataclass
 
 
 def require_ta_for_all(f, pointsSpan:int=10, atrSpan:int=50):
-    f.add_ta_batch([
-        TAData(ta.ATR(span=atrSpan), {'dash': 'solid', 'color': 'cyan', 'width': 1}, row=3, chart_type=''),
-        TAData(ta.HPLP(hi_col='high', lo_col='low', span=pointsSpan), [{'color': 'green', 'size': 10}, {'color': 'red', 'size': 10}], chart_type = 'points'),
-        TAData(ta.SupRes(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1),
+    f.add_ta(ta.ATR(span=atrSpan), {'dash': 'solid', 'color': 'cyan', 'width': 1}, row=3, chart_type='')
+    f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=pointsSpan), [{'color': 'green', 'size': 10}, {'color': 'red', 'size': 10}], chart_type = 'points'),
+    f.add_ta(ta.SupRes(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1),
             [{'dash': 'solid', 'color': 'green', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 2}, # support # green = rgba(0, 255, 0, 0.1)
             {'dash': 'solid', 'color': 'red', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 2}], # resistance # red = rgba(255, 0, 0, 0.1)
             chart_type = 'support_resistance')
-    ])
+    
 
 def import_to_daily_df(f, spy:pd.DataFrame=None, etf:pd.DataFrame=None, RSIRow:int=4):
     if spy is not None:
