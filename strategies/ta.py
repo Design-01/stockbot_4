@@ -455,58 +455,35 @@ class SupRes(TA):
             start_value = upper if level_type == 'res' else lower
         
         return levels
-    
+  
 
 @dataclass
 class MansfieldRSI(TA):
-    close_col: str = 'close'  # Column name for stock close price
-    market_col: str = 'index_close'  # Column name for index close price
+    stockCol: str = 'close'  # Column name for stock close price
+    marketCol: str = 'index_close'  # Column name for index close price
     span: int = 14  # Default lookback period
     
     def __post_init__(self):
-        self.name_mrsi = f"MRSI_{self.span}_{self.market_col[:3]}"
-        self.names = [self.name_mrsi]
+        self.name = f"MRSI_{self.span}_{self.marketCol}"
+        self.names = [self.name]
         self.rowsToUpdate = 200
 
-    @preprocess_data
-    def _old_run(self, data: pd.DataFrame) -> pd.DataFrame:
-        df = data.copy()
-        
-        # Step 1: Calculate raw Relative Strength (RS)
-        rs = df[self.close_col] / df[self.market_col]
-        
-        # Step 2: Smooth RS using moving average
-        rs_ma = rs.rolling(window=self.span, min_periods=1).mean()
-        
-        # Step 3: Normalize RS by subtracting its moving average
-        normalized_rs = rs - rs_ma
-        
-        # Step 4: Scale the normalized RS
-        df[self.name_mrsi] = normalized_rs * 100
-        
-        # Handle any NaN values that might occur at the beginning
-        df[self.name_mrsi] = df[self.name_mrsi].fillna(0)
-        
-        return df[[self.name_mrsi]]
-    
     @preprocess_data
     def run(self, data: pd.DataFrame) -> pd.DataFrame:
         df = data.copy()
         
         # Step 1: Calculate raw Relative Strength (RS)
-        rs = df[self.close_col] / df[self.market_col]
+        rs = df[self.stockCol] / df[self.marketCol]
         
-        # Step 2: Calculate log returns of RS
-        rs_returns = np.log(rs / rs.shift(1))
+        # Step 2: Calculate the moving average of RS
+        rs_ma = rs.rolling(window=self.span, min_periods=1).mean()
         
-        # Step 3: Calculate the moving average and standard deviation
-        rs_ma = rs_returns.rolling(window=self.span, min_periods=1).mean()
-        rs_std = rs_returns.rolling(window=self.span, min_periods=1).std()
+        # Step 3: Mansfield RSI = (Normalized RS - 1) * 100
+        rs_normalized = rs / rs_ma # extra step in trading view 
+        df[self.name] = ((rs_normalized - 1) * 10).fillna(0)       
         
-        # Step 4: Calculate standardized (z-score) RS
-        df[self.name_mrsi] = ((rs_returns - rs_ma) / rs_std).fillna(0)
-        
-        return df[[self.name_mrsi]]
+        return df[[self.name]]
+
 
 
 @dataclass

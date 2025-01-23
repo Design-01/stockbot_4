@@ -265,13 +265,14 @@ class Score(Signals):
     cols: List[str] = field(default_factory=list)
     weight: float = 1.0
     scoreType: str = 'mean'  # 'mean', 'sum', 'max', 'min'
+    validThreshold: int = 1
     containsString: str = ''
     containsAllStrings: List[str] = field(default_factory=list)
     rawName: str = ''
     
     def __post_init__(self):
         """Initialize the Score class and validate inputs."""
-        if self.scoreType not in ['mean', 'sum', 'max', 'min']:
+        if self.scoreType not in ['mean', 'sum', 'max', 'min', 'all_gt', 'all_lt', 'any_gt', 'any_lt']:
             raise ValueError(f"Invalid scoreType: {self.scoreType}")
             
         self.name = self.rawName if self.rawName else f"Score_{self.name}"
@@ -321,6 +322,14 @@ class Score(Signals):
         elif self.scoreType == 'min':
             # For min, we might want to exclude the zeros that were NaN
             val = rows_to_score.replace(0, np.inf).min().min()
+        elif self.scoreType == 'all_gt':
+            val = rows_to_score.gt(self.validThreshold).all().all()
+        elif self.scoreType == 'all_lt':
+            val = rows_to_score.lt(self.validThreshold).all().all()
+        elif self.scoreType == 'any_gt':
+            val = rows_to_score.gt(self.validThreshold).any().any()
+        elif self.scoreType == 'any_lt':
+            val = rows_to_score.lt(self.validThreshold).any().any()
         else:
             val = np.nan
         

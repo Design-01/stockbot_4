@@ -22,10 +22,10 @@ def require_ta_for_all(f, pointsSpan:int=10, atrSpan:int=50):
 def import_to_daily_df(f, spy:pd.DataFrame=None, etf:pd.DataFrame=None, RSIRow:int=4):
     if spy is not None:
         f.import_data(spy, has_columns=['close'], prefix='SPY_')
-        f.add_ta(ta.MansfieldRSI(close_col='close', market_col='SPY_close', span=14), {'dash': 'solid', 'color': 'yellow', 'width': 1}, row=RSIRow)
+        f.add_ta(ta.MansfieldRSI(stockCol='close', marketCol='SPY_close', span=14), {'dash': 'solid', 'color': 'yellow', 'width': 1}, row=RSIRow)
     if etf is not None:
         f.import_data(etf, has_columns=['close'], prefix='ETF_')
-        f.add_ta(ta.MansfieldRSI(close_col='close', market_col='ETF_close', span=14), {'dash': 'solid', 'color': 'magenta', 'width': 1}, row=RSIRow)
+        f.add_ta(ta.MansfieldRSI(stockCol='close', marketCol='ETF_close', span=14), {'dash': 'solid', 'color': 'magenta', 'width': 1}, row=RSIRow)
 
 def import_to_minute_df(f, daily:pd.DataFrame=None, hr4:pd.DataFrame=None, hr1:pd.DataFrame=None):
     if daily is not None: f.import_data(daily, columns_contain=['Sup', 'Res'], prefix='DAILY_' )

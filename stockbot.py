@@ -54,7 +54,6 @@ class StockBot:
         self.tracker_df = pd.DataFrame(index=self.scanner.scan_results_df.index)
         self.tracker_df['symbol'] = self.scanner.scan_results_df['Symbol']
         self.tracker_df['rank'] = self.scanner.scan_results_df['Rank']
-        self.allowedETFs = self.scanner.scan_results_df['Primary ETF'].to_list()
 
     def setup_stocks(self, overrideScnaedStockList:Optional[List[str]]=None):
         """Sets up the stocks if they have passed the fundamentals by looking at the scanner results."""
@@ -69,7 +68,6 @@ class StockBot:
         for symbol in stocklist:
             self.stocks[symbol] = StockX(self.ib, symbol)
 
-    
     def run_fundamentals(self, allowedETFs:Optional[List[str]]=None):
         """Checks and logs the fundamentals and sets the results to the scanner results DataFrame."""
         self.tracker_df['allowedETF'] = False
@@ -82,7 +80,6 @@ class StockBot:
                 continue
 
             self.tracker_df.loc[self.tracker_df['symbol'] == sx.symbol, 'allowedETF'] = True
-
 
     def run_daily_frames(self, dataType:str='ohlcv', mustHaveAprovedETF:bool=True):
         """Runs the daily data for the stocks in the list of symbols. 

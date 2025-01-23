@@ -14,6 +14,7 @@ class Frame:
     trading_hours: List[Tuple[str, str]] = field(default_factory=lambda: [("09:30", "16:00")])
     run_ta_on_load: bool = True
     rowHeights: List[float] = field(default_factory=lambda: [0.1, 0.2, 0.2, 0.6])
+    name: str = None
 
     def __post_init__(self):
         self.traders = []
@@ -37,8 +38,9 @@ class Frame:
             # Drop duplicate indexes, keeping the last occurrence
             self.data = combined_data[~combined_data.index.duplicated(keep='last')].sort_index()
 
-    def setup_chart(self):  
-        self.chart = Chart(title=self.symbol, rowHeights=self.rowHeights, height=800, width=800)
+    def setup_chart(self):
+        title = f"{self.symbol} ({self.name})" if self.name else self.symbol  
+        self.chart = Chart(title=title, rowHeights=self.rowHeights, height=800, width=800)
         self.chart.add_candles_and_volume(self.data)
         # self.chart.add_trading_hours(self.data, self.trading_hours)
 
@@ -116,15 +118,15 @@ class Frame:
         for ta, style, chart_type, row in self.ta:
             self.data = self.update_data(ta.run(self.data))
     
-    def import_data(self, df_high, has_columns: list[str] = None, columns_contain: list[str] = None, auto_limit=True, manual_limit=None, prefix='htf_', merge_to_backtest: bool = False):
+    def import_data(self, df_high, importCols: list[str] = None, colsContain: list[str] = None, auto_limit=True, manual_limit=None, prefix='htf_', merge_to_backtest: bool = False):
         """
         Import and merge high timeframe data into the existing low timeframe data.
 
         Parameters:
         df_high (pd.DataFrame): The high timeframe DataFrame to import.
-        has_columns (Union[str, List[str]]): The column(s) to import from the high timeframe DataFrame.
+        importCols (Union[str, List[str]]): The column(s) to import from the high timeframe DataFrame.
                                             If a single string is provided, it will be converted to a list.
-        columns_contain (Union[str, List[str]]): The text(s) to search for within the column names of the high timeframe DataFrame.
+        colsContain (Union[str, List[str]]): The text(s) to search for within the column names of the high timeframe DataFrame.
                                                 If a single string is provided, it will be converted to a list.
         auto_limit (bool): If True, automatically determine the forward fill limit based on the time delta between rows.
                         If False, use the manual_limit value.
@@ -138,24 +140,24 @@ class Frame:
         None: The method updates the data or backtest_data attribute of the Frame instance in place.
 
         Notes:
-        - The method first filters the columns of df_high based on the has_columns and columns_contain parameters.
+        - The method first filters the columns of df_high based on the importCols and colsContain parameters.
         - It then renames the filtered columns with the specified prefix.
         - The method merges the filtered and renamed columns into the low timeframe DataFrame (df_low).
         - The merged columns are forward filled based on the determined or specified fill limit.
         - The updated DataFrame is assigned back to either the data or backtest_data attribute of the Frame instance.
         """
-        if isinstance(has_columns, str):
-            has_columns = [has_columns]
-        if isinstance(columns_contain, str):
-            columns_contain = [columns_contain]
+        if isinstance(importCols, str):
+            importCols = [importCols]
+        if isinstance(colsContain, str):
+            colsContain = [colsContain]
 
         df_low = self.backtest_data if merge_to_backtest else self.data
 
         filtered_columns = []
-        if has_columns:
-            filtered_columns.extend([col for col in df_high.columns if col in has_columns])
-        if columns_contain:
-            filtered_columns.extend([col for col in df_high.columns if any(target in col for target in columns_contain)])
+        if importCols:
+            filtered_columns.extend([col for col in df_high.columns if col in importCols])
+        if colsContain:
+            filtered_columns.extend([col for col in df_high.columns if any(target in col for target in colsContain)])
 
         filtered_columns = list(set(filtered_columns))  # Remove duplicates
 

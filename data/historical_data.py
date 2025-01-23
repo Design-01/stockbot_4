@@ -516,9 +516,6 @@ class IBHistoricalData(BaseHistoricalData):
         lowest_interval = self.get_next_lower_common_denominator_as_interval(barsize, minHourDay_only=minHourDay_only)
         batch_size = self.get_batch_size(lowest_interval)
         converted_batch_dates = convert_ranges(date_ranges, batch_size)
-        # print(f"Lowest interval      : {lowest_interval}")
-        # print(f"Batch size           : {batch_size}")
-        # print(f"Converted batch dates: {converted_batch_dates}")
 
         
         def get_duration(delta):
@@ -528,7 +525,10 @@ class IBHistoricalData(BaseHistoricalData):
                 return '1 W'
             elif delta.days <= 31:
                 return '1 M'
-            else: return '1 Y'
+            elif delta.days <= 365:
+                return '1 Y'
+            else:
+                return '2 Y'  # Add support for longer durations if needed
             
         
         try:
@@ -542,14 +542,10 @@ class IBHistoricalData(BaseHistoricalData):
                 delta = end - start
                 duration = get_duration(delta)
                 end_date = self._format_datetime(end_date)
-                # print(f"delta: {delta}, duration: {duration}")
-                # print(f"Fetching data for {start} to {end} ({duration})")
-                # print(f"End date: {end_date}")
 
                 # rth  = False if not intraday
                 not_outside_rth = ['3 hours', '4 hours', '8 hours', '1 day', '1W', '1M']
                 rth = False if lowest_interval  in not_outside_rth else True
-                print(f"get_batch_historical_data :: {lowest_interval=}, {rth=}")
                 
                 bars = self.ib.reqHistoricalData(
                     contract,
@@ -791,6 +787,7 @@ def load_data(symbol, interval):
     
     return data
 
+
 def get_missing_batch_dates(data, start_date, end_date, batch_interval='weekly'):
     """
     Find missing date intervals in a DataFrame, including partial current periods.
@@ -867,11 +864,18 @@ def convert_ranges(ranges, new_interval='monthly', start_time_offset='00:00:01')
     """
     Convert a list of date ranges to a new interval (weekly, monthly, or yearly).
     Adds a time offset to start dates to avoid midnight boundary issues.
+    
+    Args:
+        ranges (list): List of (start_date, end_date) tuples
+        new_interval (str): 'weekly', 'monthly', or 'yearly'
+        start_time_offset (str): Time to offset start dates to avoid midnight issues
+    
+    Returns:
+        list: List of (start_date, end_date) tuples in the new interval
     """
     if not ranges:
         print("No ranges provided")
         return []
-        
     
     if new_interval.lower() not in ['weekly', 'monthly', 'yearly']:
         raise ValueError("new_interval must be either 'weekly', 'monthly', or 'yearly'")
@@ -886,69 +890,68 @@ def convert_ranges(ranges, new_interval='monthly', start_time_offset='00:00:01')
         
         min_date = min(all_dates)
         max_date = max(all_dates)
+
         
         # If the range is shorter than the interval period, return the original range
         if new_interval.lower() == 'weekly' and (max_date - min_date) < pd.Timedelta(days=7):
-            return [(
-                min_date.strftime('%Y-%m-%d %H:%M:%S'),
-                max_date.strftime('%Y-%m-%d %H:%M:%S')
-            )]
-            
+            return [(min_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    max_date.strftime('%Y-%m-%d %H:%M:%S'))]
+        
         if new_interval.lower() == 'monthly' and (max_date - min_date) < pd.Timedelta(days=28):
-            return [(
-                min_date.strftime('%Y-%m-%d %H:%M:%S'),
-                max_date.strftime('%Y-%m-%d %H:%M:%S')
-            )]
-            
+            return [(min_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    max_date.strftime('%Y-%m-%d %H:%M:%S'))]
+        
         if new_interval.lower() == 'yearly' and (max_date - min_date) < pd.Timedelta(days=365):
-            return [(
-                min_date.strftime('%Y-%m-%d %H:%M:%S'),
-                max_date.strftime('%Y-%m-%d %H:%M:%S')
-            )]
+            return [(min_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    max_date.strftime('%Y-%m-%d %H:%M:%S'))]
         
-        # Select frequency based on interval
-        freq_map = {
-            'weekly': ('W-MON', pd.Timedelta(days=6)),
-            'monthly': ('MS', pd.offsets.MonthEnd(1)),
-            'yearly': ('YS', pd.offsets.YearEnd(1))
-        }
+        # Generate intervals based on the type
+        if new_interval.lower() == 'weekly':
+            # Generate all weeks between start and end
+            # Use W-MON to ensure weeks start on Monday
+            dates = pd.date_range(
+                start=min_date,
+                end=max_date,
+                freq='W-MON',
+                inclusive='both'
+            )
+        elif new_interval.lower() == 'monthly':
+            # Generate all months between start and end
+            dates = pd.date_range(
+                start=min_date,
+                end=max_date,
+                freq='MS',  # Month Start
+                inclusive='both'
+            )
+        elif new_interval.lower() == 'yearly':
+            # For yearly, we want to include partial years
+            years = list(set([min_date.year, max_date.year]))  # Get unique years
+            years.sort()
+            dates = [pd.Timestamp(f"{year}-01-01") for year in years]
+            
+            # Adjust the first date to match the actual start if it's mid-year
+            if dates[0] < min_date:
+                dates[0] = min_date
         
-        freq, duration = freq_map[new_interval.lower()]
-        
-        # Generate new intervals, starting from the first date
-        intervals = pd.date_range(
-            start=min_date,
-            end=max_date,
-            freq=freq,
-            inclusive='both'
-        )
-        
-        # If no intervals were generated but we have a valid date range,
-        # return the original range
-        if len(intervals) == 0:
-            return [(
-                min_date.strftime('%Y-%m-%d %H:%M:%S'),
-                max_date.strftime('%Y-%m-%d %H:%M:%S')
-            )]
-        
-        
-        # Create new ranges
+        # Create ranges between the generated dates
         new_ranges = []
-        for interval_start in intervals:
-            interval_end = interval_start + duration
-            
-            # Ensure we don't exceed the maximum date
-            interval_end = min(interval_end, max_date)
-            
-            # Add time components
-            range_start = (interval_start + pd.Timedelta(start_time_offset))
-            range_end = (interval_end + pd.Timedelta('23:59:59'))
-            
+        for i in range(len(dates)-1):
+            range_start = dates[i]
+            # End one second before the next period starts
+            range_end = dates[i+1] - pd.Timedelta(seconds=1)
             new_ranges.append((
                 range_start.strftime('%Y-%m-%d %H:%M:%S'),
                 range_end.strftime('%Y-%m-%d %H:%M:%S')
             ))
         
+        # Add the final period
+        if len(dates) > 0:
+            final_start = dates[-1]
+            new_ranges.append((
+                final_start.strftime('%Y-%m-%d %H:%M:%S'),
+                max_date.strftime('%Y-%m-%d %H:%M:%S')
+            ))
+
         return new_ranges
         
     except ValueError as e:
@@ -975,9 +978,10 @@ def combine_dataframes(dfs):
 #! ------>>>  Main function to get historical data <<<------ #
 def get_hist_data(symbol, start_date, end_date, interval, force_download=False):
     start_date = calculate_past_date(start_date)
-    file_interval = map_to_storage_interval(interval, 'ib') # eg coverts 5 mins to 1_min
-    stored_data   = load_data(symbol, file_interval)
+    file_interval = map_to_storage_interval(interval, 'ib')
+    stored_data = load_data(symbol, file_interval)
     missing_dates = get_missing_batch_dates(stored_data, start_date, end_date, batch_interval='weekly')
+
     if stored_data is not None and not force_download:
         print(f"Stored data: {len(stored_data)} rows of data")
 
@@ -987,18 +991,14 @@ def get_hist_data(symbol, start_date, end_date, interval, force_download=False):
             end_date = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
             missing_dates = [(start_date, end_date)]
         
-        print(f"Processing Missing data: {len(missing_dates)} intervals")
         ibkr = IBHistoricalData()
         missing_data, lowest_barsize   = ibkr.get_batch_historical_data(symbol, missing_dates, barsize=interval, minHourDay_only=True) # will convert bar size down to the lowest common denominator
         print(f"Missing data: {len(missing_data)} rows of data")
-        # print(f"Missing data: {missing_data}")
         new_data = combine_dataframes([stored_data, missing_data])
         save_data(new_data, symbol, lowest_barsize)
-    
+        final_data = load_data(symbol, file_interval)
 
-    # data = hd.load_data(symbol, lowest_barsize)
     data = load_data(symbol, file_interval)
-    print(f"Data loaded: {len(data)} rows of data")
     if data is None:
         print("No data found")
         return None
