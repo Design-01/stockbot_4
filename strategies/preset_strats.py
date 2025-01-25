@@ -40,10 +40,15 @@ def SIG_volume(f, ls:str='LONG', ma:int=10, lookBack:int=100, scoreRow:int=3, ch
     ])
 
 def SIG_is_breaking_out(f, ls:str='LONG', lookBack:int=100, scoreRow:int=6, chartType:str='line'):
-    f.add_ta(sig.Breakout(f, price_column='close', direction='above', normRange=(0,1), resCols=['Res_1_Upper', 'Res_2_Upper'], lookBack=lookBack, shift=1), {'dash': 'solid', 'color': 'green', 'width': 2}, chart_type='line', row=scoreRow)
-    f.add_ta(sig.BreaksPivot(f, pointCol='HP_hi_10', direction='above', normRange=(0,1), lookBack=lookBack), {'dash': 'solid', 'color': 'cyan', 'width': 2}, chart_type='line', row=scoreRow)
-    f.add_ta(sig.Score(name='Breakout', cols=['BRKOUT_close_ab', 'BRK_ab_HP_hi_10'], scoreType='mean',  weight=1, lookBack=lookBack, normRange=(0,100)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
-        
+    f.add_ta(sig.Breakout(f, price_column='close', direction='above', normRange=(0,1), resCols=['Res_1_Upper', 'Res_2_Upper'], lookBack=lookBack, shift=1), {'dash': 'solid', 'color': 'green', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.BreaksPivot(f, pointCol='HP_hi_3', direction='above', normRange=(0,1), lookBack=lookBack), {'dash': 'solid', 'color': 'lime', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.BreaksPivot(f, pointCol='HP_hi_10', direction='above', normRange=(0,1), lookBack=lookBack), {'dash': 'solid', 'color': 'cyan', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.Score(name='Breakout', cols=['BRKOUT_close_ab', 'BRK_ab_HP_hi_3', 'BRK_ab_HP_hi_10'], scoreType='mean',  weight=1, lookBack=lookBack, normRange=(0,100)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
+
+def SIG_has_room_to_move(f, ls:str='LONG', atr:int=20, lookBack:int=100, scoreRow:int=7, chartType:str='line'):
+    f.add_ta(sig.RoomToMove(ls=ls, tgetCol='Res_1_Lower', atrCol=f'ATR_{atr}', normRange=(0,10), lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.RoomToMove(ls=ls, tgetCol='Res_2_Lower', atrCol=f'ATR_{atr}', normRange=(0,10), lookBack=lookBack), {'dash': 'solid', 'color': 'cyan', 'width': 2}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.Score(name='RoomToMove', cols=['SigL_RTM_Res_1_Lower', 'SigL_RTM_Res_2_Lower'], scoreType='mean',  weight=1, lookBack=lookBack, normRange=(0,100)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
 
 def import_to_daily_df(f, spy:pd.DataFrame=None, etf:pd.DataFrame=None, RSIRow:int=4):
     if spy is not None:

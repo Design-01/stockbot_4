@@ -831,7 +831,6 @@ class TrendlinneRightDirection:
         return self.val
 
 
-  
 
 #£ Done
 @dataclass
@@ -892,11 +891,6 @@ class ChangeOfColour(Signals):
         
         # Check last sequence
         self.val =  max(max_count, count) / (len(colors) - 1) * 100
-
-
-    
-   
-
 
 
 
@@ -1207,10 +1201,14 @@ class PctDiff(Signals):
         # Calculate percentage difference
         return ((val1 - val2) / val2) * 100
 
-#$ ------- Price ---------------
+# -----------------------------------------------------------------------
+# ---- P R I C E --------------------------------------------------------
+# -----------------------------------------------------------------------
+
+
 @dataclass
 class RoomToMove(Signals):
-    """This signal calculates the room to move based on the current price and the last pivot point.
+    """This signal calculates the room to move based on the current price and the target col which could be the last pivot point or the Res levels.
     The room to move is calculated as the distance between the current price and the last pivot point that is higher than the current price (if LONG).
     The signal returns a value for the number atr muliples the current price is away from the last pivot point.
     Account the points column having nan values.
@@ -1225,33 +1223,27 @@ class RoomToMove(Signals):
     name : str = 'RTM'
     tgetCol : str = ''
     atrCol: str = ''
+    unlimitedVal: int = 10
 
     def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}{self.tgetCol}"
+        self.name = f"Sig{self.ls[0]}_{self.name}_{self.tgetCol}"
         self.names = [self.name]
 
     def _compute_row(self, df:pd.DataFrame=pd.DataFrame(), **kwargs):
 
-        val = 0
-
-
         if len(df) > 1:
             if self.ls == 'LONG':
-                if df[self.tgetCol].iat[-1] is not None:
+                if df[self.tgetCol].iat[-1] > 0:
                     return (df[self.tgetCol].iat[-1] - df.close.iat[-1]) / df[self.atrCol].iat[-1]
-                
-                # if there is no target then return 2. meaning it has room to move so give an arbitrary high number
-                else:
-                    return 2
 
+                # if there is no target then return 2. meaning it has room to move so give an arbitrary high number
+                if pd.notna(df[self.atrCol].iat[-1]):
+                    return self.unlimitedVal
+    
             elif self.ls == 'SHORT':
-                if df[self.tgetCol].iat[-1] is not None:
+                if df[self.tgetCol].iat[-1] > 0:
                     return (df.close.iat[-1] - df[self.tgetCol].iat[-1]) / df[self.atrCol].iat[-1]
 
-                # if there is no target then return 2. meaning it has room to move so give an arbitrary high number
-                else:
-                    return 2
-   
         return 0
 
 
@@ -2294,6 +2286,30 @@ class ConsolidationPreMove(MultiSignals):
 # --------------------------------------------------------------------
 # ----- E V E N T   S I G N A L S ------------------------------------
 # --------------------------------------------------------------------
+
+@dataclass
+class IsValid(Signals):
+    """Checks if a given event is valid based on a condition."""
+    name: str = 'IS_VALID'
+    colsToValidate: list = None
+    threshold: float = 0.0
+    validType: str = 'any' # 'any' or 'all'
+
+    def __post_init__(self):
+        # self.name = f"IS_VALID_{self.event_column}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
+        if len(df) < 2:
+            return False
+        if self.validType == 'any':
+            return (df[self.colsToValidate].iloc[-1]  > self.threshold).any()
+        elif self.validType == 'all':
+            return (df[self.colsToValidate].iloc[-1]  > self.threshold).all()
+        else:
+            raise ValueError("Valid type must be 'any' or 'all'")
+
+
 @dataclass
 class Breaks(Signals):
     """Checks if price crosses above/below a metric"""
