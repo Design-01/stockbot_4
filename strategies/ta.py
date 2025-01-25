@@ -144,6 +144,7 @@ class MACD(TA):
         })
 
 
+
 @dataclass
 class HPLP(TA):
     hi_col: str = 'high'
@@ -434,6 +435,123 @@ class SupRes(TA):
                 level = all_candidates.iloc[-1] if not all_candidates.empty else np.nan
 
             # print(f'{level=}')
+            
+            if pd.isna(level):
+                levels.append((np.nan, np.nan, np.nan, df.index[-1]))
+                continue
+            
+            idx = df.index[((df[self.hi_point_col] == level) | (df[self.lo_point_col] == level))].min()
+            atr = df.loc[idx, self.atr_col]
+            
+            # Calculate initial tolerance zone
+            upper_bound = level + (self.tolerance * atr)
+            lower_bound = level - (self.tolerance * atr)
+            
+            # Find the highest and lowest points within the tolerance zone
+            zone_candidates = all_candidates[(all_candidates >= lower_bound) & (all_candidates <= upper_bound)]
+            upper = zone_candidates.max()
+            lower = zone_candidates.min()
+            
+            levels.append((level, upper, lower, idx))
+            start_value = upper if level_type == 'res' else lower
+        
+        return levels
+    
+
+@dataclass
+class SupResAllRows(TA):
+    hi_point_col: str = 'HP'
+    lo_point_col: str = 'LP'
+    atr_col: str = 'ATR'
+    tolerance: float = 0.01
+    rowsToUpdate: int = 200
+    names: list = field(init=False)
+    
+    def __post_init__(self):
+        self.name_Res_1 = "Res_1"
+        self.name_Res_1_Upper = "Res_1_Upper"
+        self.name_Res_1_Lower = "Res_1_Lower"
+        self.name_Res_2 = "Res_2"
+        self.name_Res_2_Upper = "Res_2_Upper"
+        self.name_Res_2_Lower = "Res_2_Lower"
+
+        self.name_Sup_1 = "Sup_1"
+        self.name_Sup_1_Upper = "Sup_1_Upper"
+        self.name_Sup_1_Lower = "Sup_1_Lower"
+        self.name_Sup_2 = "Sup_2"
+        self.name_Sup_2_Upper = "Sup_2_Upper"
+        self.name_Sup_2_Lower = "Sup_2_Lower"
+        self.names = [self.name_Res_1, self.name_Res_1_Upper, self.name_Res_1_Lower,
+                     self.name_Res_2, self.name_Res_2_Upper, self.name_Res_2_Lower,
+                     self.name_Sup_1, self.name_Sup_1_Upper, self.name_Sup_1_Lower,
+                     self.name_Sup_2, self.name_Sup_2_Upper, self.name_Sup_2_Lower]
+
+    def run(self, df, startwith='res'):
+        # Initialize all columns with NaN
+        for name in self.names:
+            df[name] = np.nan
+            
+        # Calculate start index for iteration
+        total_rows = len(df)
+        start_idx = max(1, total_rows - self.rowsToUpdate)
+            
+        # Process only the last rowsToUpdate rows
+        for i in range(start_idx, total_rows):
+            # Get all data up to current point for level calculation
+            current_df = df.iloc[:i+1].copy()
+            current_close = current_df['close'].iloc[-1]
+            
+            # Find levels based on all available data up to this point
+            if startwith == 'res':
+                res_levels = self._find_levels(current_df, current_close, 'res', 2)
+                sup_levels = self._find_levels(current_df, current_close, 'sup', 2)
+            else:
+                sup_levels = self._find_levels(current_df, current_close, 'sup', 2)
+                res_levels = self._find_levels(current_df, current_close, 'res', 2)
+            
+            # Update resistance levels for the current row
+            for j, (level, upper, lower, idx) in enumerate(res_levels):
+                if pd.notna(level):
+                    level_name = f"Res_{j+1}"
+                    upper_name = f"Res_{j+1}_Upper"
+                    lower_name = f"Res_{j+1}_Lower"
+                    
+                    df.loc[df.index[i], level_name] = level
+                    df.loc[df.index[i], upper_name] = upper
+                    df.loc[df.index[i], lower_name] = lower
+            
+            # Update support levels for the current row
+            for j, (level, upper, lower, idx) in enumerate(sup_levels):
+                if pd.notna(level):
+                    level_name = f"Sup_{j+1}"
+                    upper_name = f"Sup_{j+1}_Upper"
+                    lower_name = f"Sup_{j+1}_Lower"
+                    
+                    df.loc[df.index[i], level_name] = level
+                    df.loc[df.index[i], upper_name] = upper
+                    df.loc[df.index[i], lower_name] = lower
+        
+        return df
+
+    def _find_levels(self, df, start_value, level_type, num_levels):
+        levels = []
+        hp_series = df[self.hi_point_col].dropna()
+        lp_series = df[self.lo_point_col].dropna()
+
+        for i in range(num_levels):
+            if level_type == 'res':
+                hp_candidates = hp_series[hp_series > start_value]
+                lp_candidates = lp_series[lp_series > start_value]
+            else:
+                hp_candidates = hp_series[hp_series < start_value]
+                lp_candidates = lp_series[lp_series < start_value]
+            
+            all_candidates = pd.concat([hp_candidates, lp_candidates]).sort_values()
+            
+            if level_type == 'res':
+                level = all_candidates.iloc[0] if not all_candidates.empty else np.nan
+            else:
+                level = all_candidates.iloc[-1] if not all_candidates.empty else np.nan
             
             if pd.isna(level):
                 levels.append((np.nan, np.nan, np.nan, df.index[-1]))
@@ -1366,6 +1484,7 @@ from dataclasses import dataclass
 import pandas as pd
 import numpy as np
 from typing import List, Dict, Any
+
 
 @dataclass
 class MicroTrendline:

@@ -1165,6 +1165,7 @@ class ROC(Signals):
     """
     name: str = 'ROC'
     metricCol: str = ''
+    rocLookBack: int = 10
 
     def __post_init__(self):
         self.name = f"Sig{self.ls[0]}_{self.name}_{self.metricCol}"
@@ -1176,7 +1177,7 @@ class ROC(Signals):
         """
         # Get the volume series for the lookback period
         val1 = df[self.metricCol].iat[-1]
-        val2 = df[self.metricCol].iat[-self.lookBack]
+        val2 = df[self.metricCol].iat[-self.rocLookBack]
         
         # Calculate ROC
         return ((val1 - val2) / val2) * 100
@@ -2318,9 +2319,33 @@ class Breaks(Signals):
         
         else:
             raise ValueError("Direction must be 'above' or 'below'")
-  
-        
 
+
+@dataclass
+class Breakout(Signals):
+    """Checks if price crosses above/below a metric"""
+    price_column: str = ''
+    direction: str = '' # 'above' or 'below'
+    supCols: str = ''
+    resCols: str = ''
+    shift: int = 0
+
+    def __post_init__(self):
+        self.name = f"BRKOUT_{self.price_column}_{self.direction[:2]}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
+
+
+        if self.direction == 'above':
+            return (df[self.price_column].iloc[-1] > df[self.resCols].iloc[-1-self.shift].max())
+        
+        elif self.direction == 'below':
+            return (df[self.price_column].iloc[-1] < df[self.supCols].iloc[-1-self.shift].min())
+        
+        else:
+            raise ValueError("Direction must be 'above' or 'below'")
+  
 
 @dataclass
 class AboveBelow(Signals):
@@ -2343,7 +2368,85 @@ class AboveBelow(Signals):
             return  value < metric
         else:
             raise ValueError("Direction must be 'above' or 'below'")
+
+
+@dataclass
+class IsMATrending(Signals):
+    """Checks if price is trending up or down compared the MA"""
+    maCol: str = ''
+
+    def __post_init__(self):
+        self.name = f"TREND_{self.maCol}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
+        if len(df) < 2:
+            return False
         
+        if self.ls == 'LONG':
+            ma_is_up = df[self.maCol].iloc[-1] > df[self.maCol].iloc[-2] 
+            price_above_ma = df['low'].iloc[-1] > df[self.maCol].iloc[-1]
+            return ma_is_up and price_above_ma
+        
+        elif self.ls == 'SHORT':
+            ma_is_down = df[self.maCol].iloc[-1] < df[self.maCol].iloc[-2] 
+            price_below_ma = df['high'].iloc[-1] < df[self.maCol].iloc[-1]
+            return ma_is_down and price_below_ma
+
+import re
+
+@dataclass
+class IsPointsTrending(Signals):
+    """Checks if price is trending up or down compared the MA"""
+    hpCol: str = ''
+    lpCol: str = ''
+
+    def __post_init__(self):
+        point_span = re.search(r'\d+$', self.hpCol).group() # gets the last val from the points column eg HP_h_3 = 3
+        self.name = f"TREND_{self.ls}_{point_span}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:       
+        hps = df[self.hpCol].dropna()
+        lps = df[self.lpCol].dropna()
+
+        if len(hps) < 4 and len(lps) < 4:
+            return False
+        
+        if self.ls == 'LONG':
+            hp_is_up = hps.iloc[-1] > hps.iloc[-2] 
+            lp_is_up = lps.iloc[-1] > lps.iloc[-2]
+            return hp_is_up and lp_is_up
+        
+        elif self.ls == 'SHORT':
+            hp_is_down = hps.iloc[-1] < hps.iloc[-2] 
+            lp_is_down = lps.iloc[-1] < lps.iloc[-2]
+            return hp_is_down and lp_is_down
+
+
+@dataclass
+class BreaksPivot(Signals):
+    """Checks if price crosses above/below a metric"""
+    pointCol: str = ''
+    direction: str = '' # 'above' or 'below'
+
+    def __post_init__(self):
+        self.name = f"BRK_{self.direction[:2]}_{self.pointCol}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
+        point = df[self.pointCol].dropna()
+        if len(point) < 1:
+            return False
+
+        if self.direction == 'above':
+            return df['close'].iloc[-1] > point.iloc[-1] 
+        
+        elif self.direction == 'below':
+            return df['close'].iloc[-1] < point.iloc[-1]
+        
+        else:
+            raise ValueError("Direction must be 'above' or 'below'")
 
 @dataclass
 class IsPullbackBounce(Signals):

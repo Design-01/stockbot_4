@@ -9,14 +9,41 @@ from dataclasses import dataclass
 
 
 
-def require_ta_for_all(f, pointsSpan:int=10, atrSpan:int=50):
+def TA_atr_hplp_supres(f, pointsSpan:int=10, atrSpan:int=50, supresRowsToUpdate:int=10):
     f.add_ta(ta.ATR(span=atrSpan), {'dash': 'solid', 'color': 'cyan', 'width': 1}, row=3, chart_type='')
     f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=pointsSpan), [{'color': 'green', 'size': 10}, {'color': 'red', 'size': 10}], chart_type = 'points'),
-    f.add_ta(ta.SupRes(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1),
-            [{'dash': 'solid', 'color': 'green', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 2}, # support # green = rgba(0, 255, 0, 0.1)
-            {'dash': 'solid', 'color': 'red', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 2}], # resistance # red = rgba(255, 0, 0, 0.1)
+    # f.add_ta(ta.SupRes(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1),
+    #         [{'dash': 'solid', 'color': 'green', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 2}, # support # green = rgba(0, 255, 0, 0.1)
+    #         {'dash': 'solid', 'color': 'red', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 2}], # resistance # red = rgba(255, 0, 0, 0.1)
+    #         chart_type = 'support_resistance')
+    f.add_ta(ta.SupResAllRows(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1, rowsToUpdate=supresRowsToUpdate),
+            [{'dash': 'solid', 'color': 'green', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 1}, # support # green = rgba(0, 255, 0, 0.1)
+            {'dash': 'solid', 'color': 'red', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
             chart_type = 'support_resistance')
     
+
+def SIG_is_trending(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
+    f.add_ta(sig.IsMATrending(maCol=f'MA_cl_{ma}', ls=ls, lookBack=lookBack, normRange=(0,1)), {'dash': 'solid', 'color': 'green', 'width': 2}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.IsPointsTrending(hpCol='HP_hi_3', lpCol='LP_lo_3', ls=ls, lookBack=lookBack, normRange=(0,1)), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.IsPointsTrending(hpCol='HP_hi_10', lpCol='LP_lo_10', ls=ls, lookBack=lookBack, normRange=(0,1)), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.Score(name='Trend', cols=[f'TREND_MA_cl_{ma}', 'TREND_LONG_3', 'TREND_LONG_10',], scoreType='mean',  weight=1, lookBack=lookBack, normRange=(0,100)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
+        
+
+def SIG_volume(f, ls:str='LONG', ma:int=10, lookBack:int=100, scoreRow:int=3, chartType:str='line'):
+    volMACol = f'MA_vo_{ma}'
+    l_or_s = ls[0]
+    f.add_ta_batch([
+        TAData(ta.MA('volume', ma), {'dash': 'solid', 'color': 'yellow', 'width': 2}, row=2),
+        TAData(sig.VolumeSpike(ls=ls, normRange=(0, 200), volMACol=volMACol, lookBack=lookBack), {'dash': 'solid', 'color': 'blue', 'width': 1}, chart_type=chartType, row=scoreRow),
+        TAData(sig.VolumeROC(ls=ls, normRange=(0, 300), lookBack=lookBack), {'dash': 'solid', 'color': 'red', 'width': 1}, chart_type=chartType, row=scoreRow),
+        TAData(sig.Score(name=f'{l_or_s}_Vol', cols=[f'Sig{l_or_s}_VolSpike', f'Sig{l_or_s}_VolROC'], scoreType='max', weight=1, lookBack=lookBack), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type=chartType, row=scoreRow)
+    ])
+
+def SIG_is_breaking_out(f, ls:str='LONG', lookBack:int=100, scoreRow:int=6, chartType:str='line'):
+    f.add_ta(sig.Breakout(f, price_column='close', direction='above', normRange=(0,1), resCols=['Res_1_Upper', 'Res_2_Upper'], lookBack=lookBack, shift=1), {'dash': 'solid', 'color': 'green', 'width': 2}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.BreaksPivot(f, pointCol='HP_hi_10', direction='above', normRange=(0,1), lookBack=lookBack), {'dash': 'solid', 'color': 'cyan', 'width': 2}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.Score(name='Breakout', cols=['BRKOUT_close_ab', 'BRK_ab_HP_hi_10'], scoreType='mean',  weight=1, lookBack=lookBack, normRange=(0,100)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
+        
 
 def import_to_daily_df(f, spy:pd.DataFrame=None, etf:pd.DataFrame=None, RSIRow:int=4):
     if spy is not None:
@@ -26,10 +53,12 @@ def import_to_daily_df(f, spy:pd.DataFrame=None, etf:pd.DataFrame=None, RSIRow:i
         f.import_data(etf, has_columns=['close'], prefix='ETF_')
         f.add_ta(ta.MansfieldRSI(stockCol='close', marketCol='ETF_close', span=14), {'dash': 'solid', 'color': 'magenta', 'width': 1}, row=RSIRow)
 
+
 def import_to_minute_df(f, daily:pd.DataFrame=None, hr4:pd.DataFrame=None, hr1:pd.DataFrame=None):
     if daily is not None: f.import_data(daily, columns_contain=['Sup', 'Res'], prefix='DAILY_' )
     if hr4   is not None: f.import_data(hr4,   columns_contain=['Sup', 'Res'], prefix='HR4_' )
     if hr1   is not None: f.import_data(hr1,   columns_contain=['Sup', 'Res'], prefix='HR1_' )
+
 
 def ma_ta(f, periods: list[int], ma_col: str = 'close', row: int = 1):
     ma_colour_map = {
@@ -48,6 +77,7 @@ def ma_ta(f, periods: list[int], ma_col: str = 'close', row: int = 1):
     # Add the batch list to the technical analysis
     f.add_ta_batch(batch_list)
 
+
 def gaps_ta(f, ls:str='LONG', pointCol:str='HP_hi_10', atrCol:str='ATR_50', lookBack:int=1, row:int=4, chartType:str='lines+markers'):
     l_or_s = ls[0]
     f.add_ta_batch([
@@ -56,8 +86,9 @@ def gaps_ta(f, ls:str='LONG', pointCol:str='HP_hi_10', atrCol:str='ATR_50', look
         TAData(sig.GappedRetracement(ls=ls, normRange=(0,100), pointCol=pointCol, atrCol=atrCol, lookBack=lookBack), {'dash': 'solid', 'color': 'magenta', 'width': 1}, chart_type=chartType, row=row),
         TAData(sig.GappedPastPivot(ls=ls, normRange=(0,100), atrCol=atrCol, pointCol=pointCol, lookBack=lookBack, maxAtrMultiple=10), {'dash': 'solid', 'color': 'red', 'width': 1}, chart_type=chartType, row=row),
         TAData(sig.GapSize(ls=ls, normRange=(0,300), pointCol=pointCol, atrCol=atrCol, lookBack=lookBack), {'dash': 'solid', 'color': 'red', 'width': 1}, chart_type=chartType, row=row),
-        TAData(sig.Score(name=f'{ls}_Gaps', normRange=(0,100), lookBack=lookBack, cols=[f'Sig{l_or_s}_GPivs', f'Sig{l_or_s}_GRtc', f'Sig{l_or_s}_GPP', f'Sig{l_or_s}_GSiz'], scoreType='mean', weight=1), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type=chartType, row=row)
+        TAData(sig.Score(name=f'{l_or_s}_Gaps', normRange=(0,100), lookBack=lookBack, cols=[f'Sig{l_or_s}_GPivs', f'Sig{l_or_s}_GRtc', f'Sig{l_or_s}_GPP', f'Sig{l_or_s}_GSiz'], scoreType='mean', weight=1), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type=chartType, row=row)
     ])
+
 
 def consolidation_ta(f, atrSpan:int=50, consUpperCol:str='CONS_UPPER', consLowerCol:str='CONS_LOWER', maSpan:int=50, lookBack:int=1, colours:list[str]=None, chartType:str='line', scoreRow:int=4):
     colours = ['red', 'green', 'blue', 'yellow', 'magenta', 'cyan', 'orange', 'purple', 'brown', 'pink', 'grey' ] if not colours else colours
@@ -75,15 +106,31 @@ def consolidation_ta(f, atrSpan:int=50, consUpperCol:str='CONS_UPPER', consLower
         TAData(sig.Score(rawName='Cons_Score_2', normRange=(0, 100), lookBack=lookBack, containsAllStrings=['Cons', '2'], scoreType='mean', weight=1), {'dash': 'solid', 'color': 'darkgreen', 'width': 4}, chart_type=chartType, row=scoreRow)
     ])
 
-def volume_ta(f, ls:str='LONG', ma:int=10, lookBack:int=100, scoreRow:int=3, chartType:str='lines+markers'):
-    volMACol = f'MA_vo_{ma}'
-    l_or_s = ls[0]
-    f.add_ta_batch([
-        TAData(ta.MA('volume', ma), {'dash': 'solid', 'color': 'yellow', 'width': 2}, row=2),
-        TAData(sig.VolumeSpike(ls=ls, normRange=(0, 200), volMACol=volMACol, lookBack=lookBack), {'dash': 'solid', 'color': 'blue', 'width': 1}, chart_type=chartType, row=scoreRow),
-        TAData(sig.VolumeROC(ls=ls, normRange=(0, 300), lookBack=lookBack), {'dash': 'solid', 'color': 'red', 'width': 1}, chart_type=chartType, row=scoreRow),
-        TAData(sig.Score(name=f'{l_or_s}_Vol', cols=[f'Sig{l_or_s}_VolSpike', f'Sig{l_or_s}_VolROC'], scoreType='max', weight=1, lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type=chartType, row=scoreRow)
-    ])
+
+
+def trending_ta(f, ls:str='LONG', lookBack:int=100, scoreRow:int=4, chartType:str='lines+markers'):
+    f.add_ta(sig.ROC(metricCol='MA_cl_21',  rocLookBack=10, lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.ROC(metricCol='MA_cl_50',  rocLookBack=10, lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.ROC(metricCol='MA_cl_150', rocLookBack=10, lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.ROC(metricCol='MA_cl_200', rocLookBack=10, lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.Score(name='trend_ROC', cols=['SigL_ROC_MA_cl_21', 'SigL_ROC_MA_cl_50', 'SigL_ROC_MA_cl_150', 'SigL_ROC_MA_cl_200'], scoreType='mean',  weight=10, lookBack=lookBack, normRange=(0,100)), {'dash': 'solid', 'color': 'cyan', 'width': 2}, chart_type='line', row=scoreRow)
+
+    # Sector Bullish Score
+    f.add_ta(sig.PctDiff(metricCol1='close', metricCol2='MA_cl_21', lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.PctDiff(metricCol1='close', metricCol2='MA_cl_50', lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.PctDiff(metricCol1='close', metricCol2='MA_cl_150', lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.PctDiff(metricCol1='close', metricCol2='MA_cl_200', lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.Score(name='trend_PctDiff', cols=['SigL_PctDiff_MA_cl_21', 'SigL_PctDiff_MA_cl_50' ,'SigL_PctDiff_MA_cl_150', 'SigL_PctDiff_MA_cl_200', ], scoreType='mean',  weight=1, lookBack=lookBack, normRange=(0,100)), {'dash': 'solid', 'color': 'cyan', 'width': 2}, chart_type='line', row=scoreRow)
+
+    #final Score
+    f.add_ta(sig.Score(name='trend_FINAL', cols=['Score_trend_ROC', 'Score_trend_PctDiff'], scoreType='mean',  weight=2, lookBack=lookBack, normRange=(0,100)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
+
+def SIG_compare_to_market_ta(f, marketCol='SPY_close', ls:str='LONG', lookBack:int=100, scoreRow:int=4, chartType:str='line'):
+    """As long as Comp_MKT above 0 then it is tradeing positively compared to the market"""
+    f.add_ta(ta.MansfieldRSI(stockCol='close', marketCol=marketCol,   span=14), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(ta.PctChange(metric_column='MA_cl_50'), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.Score(name='Comp_MKT', cols=['MRSI_14_SPY_close', 'PCT_MA_cl_50_1'], scoreType='mean', validThreshold=0, weight=1, lookBack=lookBack, normRange=(0,1)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
+        
 
 #------------------------------------------------------------
 # ----------  S T R A T E G I E S  --------------------------
