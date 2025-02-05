@@ -1,15 +1,171 @@
-from dataclasses import dataclass, asdict, field
-from typing import Optional, Tuple, List, ClassVar, Dict
-import pandas as pd
-from datetime import datetime
-import json
-from pathlib import Path
-import os
-
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Dict, Any, ClassVar, Tuple
+from typing import Dict, Any, Optional
+import pickle
+from pathlib import Path
+from typing import ClassVar, Tuple
 import pandas as pd
+
+
+@dataclass
+class LogMarketTA:
+    """Logs market conditions and sector conditions from DataFrame analysis"""
+    symbol: str = ''
+    barsize: str = ''
+    chart_time: datetime = field(default_factory=datetime.now)
+    real_time: datetime = field(default_factory=datetime.now)
+    log_id: str = field(init=False)
+    conditions: dict = field(default_factory=dict)
+    
+    def __post_init__(self):
+        self.log_id = f"{self.symbol}_{self.barsize}_{self.chart_time}"
+
+@dataclass
+class LogProfitLoss:
+    """Simple container for P&L metrics"""
+    entry_price: float = 0.0
+    exit_price: float = 0.0
+    position_size: float = 0.0
+    stop_loss: float = 0.0
+    target_price: float = 0.0
+    risk_reward_ratio: float = 0.0
+    realized_pl: float = 0.0
+    realized_r_multiple: float = 0.0
+
+
+@dataclass
+class LogDiary:
+    """Simple trade diary entry"""
+    real_entry_time: datetime = field(default_factory=datetime.now)
+    symbol: str = ''
+    strategy_name: str = ''
+    entry_reason: str = ''
+    exit_reason: str = ''
+    condidence: float = 0 # 0-10
+    notes: str = ''
+
+
+@dataclass
+class TradeLog:
+    """Main trade logging class that combines all components"""
+    trade_id: str = None
+    entry_time: datetime = None
+    exit_time: datetime = None
+    symbol: str = ''
+    barSize: str = ''
+    strategy_name: str = ''
+    market_conditions: LogMarketTA = None
+    sector_conditions: LogMarketTA = None
+    stock_conditions: LogMarketTA = None
+    entry_strategy: Dict[str, Any] = None
+    exit_strategy: Dict[str, Any] = None
+    pnl: LogProfitLoss = None
+    notes: LogDiary = None
+    status: str = "open"  # open, closed, cancelled
+    
+    def __post_init__(self):
+        self.trade_id = f"{self.symbol}_{self.barSize}_{datetime.now().strftime('%Y-%m-%d_%H.%M.%S')}"
+    
+    def close_trade(self, exit_price: float, exit_time: datetime = None):
+        """Close the trade with exit details"""
+        self.exit_time = exit_time or datetime.now()
+        self.pnl.exit_price = exit_price
+        self.status = "closed"
+
+class TradeLogger:
+    def __init__(self, base_path: str = "trade_logs"):
+        self.base_path = Path(base_path)
+        self.base_path.mkdir(parents=True, exist_ok=True)
+    
+    def log_trade(self, trade: TradeLog) -> None:
+        """Save trade object as pickle"""
+        pickle_path = self.base_path / f"{trade.trade_id}.pkl"
+        with open(pickle_path, 'wb') as f:
+            pickle.dump(trade, f)
+    
+    def load_trade(self, trade_id: str) -> Optional[TradeLog]:
+        """Load a specific trade from pickle"""
+        pickle_path = self.base_path / f"{trade_id}.pkl"
+        if not pickle_path.exists():
+            return None
+        
+        with open(pickle_path, 'rb') as f:
+            return pickle.load(f)
+    
+    def list_trades(self) -> list:
+        """List all trade IDs"""
+        return [f.stem for f in self.base_path.glob('*.pkl')]
+    
+# Example of proper trade updating
+def example_trade_update():
+    logger = TradeLogger()
+    
+    # First create and log a new trade
+    market_conditions = LogMarketTA(
+        symbol="SPY",
+        barsize="5min",
+        conditions={'spx_above_ma': True, 'market_trend': 'bullish'}
+    )
+    
+    sector_conditions = LogMarketTA(
+        symbol="XLK",
+        barsize="5min",
+        conditions={'sector_strength': 0.85}
+    )
+    
+    stock_conditions = LogMarketTA(
+        symbol="TSLA",
+        barsize="5min",
+        conditions={'rsi': 65.5}
+    )
+    
+    # Create initial trade
+    pnl = LogProfitLoss(
+        entry_price=250.75,
+        stop_loss=245.00,
+        target_price=260.00,
+        position_size=100
+    )
+    
+    trade = TradeLog(
+        symbol="TSLA",
+        strategy_name="Breakout_Strategy",
+        market_conditions=market_conditions,
+        sector_conditions=sector_conditions,
+        stock_conditions=stock_conditions,
+        entry_strategy={"type": "breakout", "level": 250.00},
+        exit_strategy={"type": "trailing_stop", "percentage": 2.0},
+        pnl=pnl
+    )
+    
+    # Save initial trade
+    logger.log_trade(trade)
+    trade_id = trade.trade_id  # Store the ID for later use
+    
+    # Later, when we want to close the trade:
+    
+    # 1. First load the existing trade
+    trade = logger.load_trade(trade_id)
+    if trade is None:
+        raise ValueError(f"Trade {trade_id} not found")
+    
+    # 2. Update the trade
+    trade.close_trade(exit_price=258.50)
+    trade.pnl.realized_pl = 775.00  # Your calculated P&L
+    trade.pnl.realized_r_multiple = 1.5  # Your calculated R-multiple
+    
+    # 3. Save the updated trade back to pickle
+    logger.log_trade(trade)
+    
+    # We can verify the update worked
+    updated_trade = logger.load_trade(trade_id)
+    print(f"Trade status: {updated_trade.status}")
+    print(f"Exit price: {updated_trade.pnl.exit_price}")
+    print(f"Realized P&L: {updated_trade.pnl.realized_pl}")
+
+# ----------------------------------------------------
+# ------- Trade Details Dataclass --------------------
+# ----------------------------------------------------
 
 @dataclass
 class TradeDetails:
@@ -100,141 +256,3 @@ class TradeDetails:
         return cls(**{k: v for k, v in data.items() 
                      if k in cls.__dataclass_fields__})
 
-class TradeLogManager:
-    def __init__(self):
-        self.trades: List[TradeDetails] = []
-        
-    def log_trade(self, trade: TradeDetails) -> None:
-        """Add a new trade to the trade log."""
-        self.trades.append(trade)
-
-    def _organize_trades(self) -> None:
-        """
-        Organize trades by removing exact duplicates but keeping different versions
-        of the same trade (same ID, different values) sorted by chart_time.
-        """
-        # First, group trades by log_id
-        trade_groups: Dict[str, List[TradeDetails]] = {}
-        for trade in self.trades:
-            if trade.log_id not in trade_groups:
-                trade_groups[trade.log_id] = []
-            trade_groups[trade.log_id].append(trade)
-        
-        # For each group, sort by chart_time and remove exact duplicates
-        organized_trades: List[TradeDetails] = []
-        for trade_group in trade_groups.values():
-            # Sort by chart_time
-            sorted_trades = sorted(trade_group, key=lambda x: x.chart_time)
-            
-            # Remove exact duplicates while preserving order
-            unique_trades = []
-            for trade in sorted_trades:
-                # Only add if not an exact duplicate of the last trade
-                if not unique_trades or not trade.is_exact_duplicate(unique_trades[-1]):
-                    unique_trades.append(trade)
-            
-            organized_trades.extend(unique_trades)
-        
-        # Sort all trades by trade_number and then chart_time
-        organized_trades.sort(key=lambda x: (x.trade_number, x.chart_time))
-        self.trades = organized_trades
-
-    def save_csv(self, filepath: str, append: bool = True) -> None:
-        """
-        Save trade logs to a CSV file.
-        
-        Args:
-            filepath: Path to save the CSV file
-            append: If True, append to existing file, if False, overwrite
-        """
-        # If appending and file exists, load existing trades first
-        if append and os.path.exists(filepath):
-            existing_manager = TradeLogManager()
-            existing_manager.load_csv(filepath)
-            
-            # Add current trades to existing trades
-            for trade in self.trades:
-                existing_manager.trades.append(trade)
-            
-            # Organize trades (remove exact duplicates, sort by chart_time)
-            existing_manager._organize_trades()
-            
-            # Get DataFrame from combined trades
-            df = existing_manager.get_df()
-        else:
-            self._organize_trades()
-            df = self.get_df()
-        
-        # Convert datetime columns to string format
-        datetime_columns = ['chart_time', 'real_time', 'entry_time', 'exit_time']
-        for col in datetime_columns:
-            if col in df.columns:
-                df[col] = df[col].apply(lambda x: x.isoformat() if pd.notnull(x) else '')
-        
-        # Save to CSV
-        df.to_csv(filepath, index=False)
-
-    def load_csv(self, filepath: str) -> None:
-        """Load trade logs from a CSV file."""
-        if not os.path.exists(filepath):
-            return
-            
-        df = pd.read_csv(filepath)
-        
-        # Clear existing trades
-        self.trades.clear()
-        
-        # Convert string dates back to datetime objects
-        datetime_columns = ['chart_time', 'real_time', 'entry_time', 'exit_time']
-        for col in datetime_columns:
-            if col in df.columns:
-                df[col] = pd.to_datetime(df[col], errors='coerce')
-        
-        # Convert string tuples back to actual tuples
-        if 'entry_filled' in df.columns:
-            df['entry_filled'] = df['entry_filled'].apply(eval)
-        if 'exit_filled' in df.columns:
-            df['exit_filled'] = df['exit_filled'].apply(eval)
-        
-        # Convert DataFrame rows back to TradeLog objects
-        highest_trade_number = 0
-        for _, row in df.iterrows():
-            trade_dict = row.to_dict()
-            if 'trade_number' in trade_dict:
-                highest_trade_number = max(highest_trade_number, trade_dict['trade_number'])
-            trade = TradeDetails.from_dict(trade_dict)
-            self.trades.append(trade)
-        
-        # Update the TradeLog class counter
-        if highest_trade_number > 0:
-            TradeDetails.set_trade_number(highest_trade_number + 1)
-        
-        # Organize trades
-        self._organize_trades()
-
-    def get_trade_history(self, log_id: str) -> List[TradeDetails]:
-        """
-        Get all versions of a specific trade sorted by chart_time.
-        """
-        trade_versions = [trade for trade in self.trades if trade.log_id == log_id]
-        return sorted(trade_versions, key=lambda x: x.chart_time)
-
-    def get_df(self) -> pd.DataFrame:
-        """Convert all trades to a pandas DataFrame."""
-        if not self.trades:
-            return pd.DataFrame()
-        
-        # Convert trades to dictionaries
-        trade_dicts = [asdict(trade) for trade in self.trades]
-        
-        # Create DataFrame
-        df = pd.DataFrame(trade_dicts)
-        
-        # Convert tuple columns to strings for better storage
-        if not df.empty:
-            if 'entry_filled' in df.columns:
-                df['entry_filled'] = df['entry_filled'].apply(str)
-            if 'exit_filled' in df.columns:
-                df['exit_filled'] = df['exit_filled'].apply(str)
-        
-        return df

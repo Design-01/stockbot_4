@@ -806,74 +806,7 @@ import compare
 from typing import Union, Tuple
 import pandas as pd
 
-def analyze_sector(self,
-    etf_symbol: str,
-    lookback_period: str = "52 weeksAgo",
-    mansfield_period: int = 200,
-    roc_period: int = 200,
-    ma_short: int = 50,
-    ma_long: int = 200,
-    market_symbol: str = "SPY",
-    return_full_df: bool = False,
-    verbose: bool = False
-) -> Union[Tuple[float, float, float], pd.DataFrame]:
-    """
-    Analyze a sector ETF against the market using Mansfield RSI and ROC ratio.
-    
-    Parameters:
-    -----------
-    etf_symbol : str
-        Symbol of the sector ETF to analyze (e.g., 'XLF', 'XLE', etc.)
-    lookback_period : str, default "52 weeksAgo"
-        Historical data lookback period
-    mansfield_period : int, default 200
-        Period for Mansfield RSI calculation
-    roc_period : int, default 200
-        Period for Rate of Change ratio calculation
-    ma_short : int, default 50
-        Short-term moving average period
-    ma_long : int, default 200
-        Long-term moving average period
-    market_symbol : str, default "SPY"
-        Symbol to use as market benchmark
-    return_full_df : bool, default False
-        If True, returns full DataFrame; if False, returns latest values only
-    verbose : bool, default False
-        If True, prints analysis summary
-        
-    Returns:
-    --------
-    Union[Tuple[float, float, float], pd.DataFrame]
-        If return_full_df=False:
-            Returns (mansfield_rsi, ma_roc_ratio, combined_score)
-        If return_full_df=True:
-            Returns complete DataFrame with all calculations
-    """
-    # Get historical data
-    etf_data = hd.get_hist_data(etf_symbol, lookback_period, 'now', '1 day')
-    market_data = hd.get_hist_data(market_symbol, lookback_period, 'now', '1 day')
-    
-    # Initialize and run analysis
-    analysis = compare.SectorAnalysis(etf_data, market_data)
-    analysis.compute_all(
-        mansfield_period=mansfield_period,
-        roc_period=roc_period,
-        ma_short=ma_short,
-        ma_long=ma_long
-    )
-    
-    # Get results
-    result_df = analysis.get_df()
-    today_metrics = analysis.get_today(verbose=verbose)
-    
-    if return_full_df:
-        return result_df
-    else:
-        return (
-            today_metrics['mansfield_rsi'],
-            today_metrics['ma_roc_ratio'],
-            today_metrics['combined_score']
-        )
+
 
 # ----------------------------------------------------------
 # ------- S T O C K X  -------------------------------------
@@ -897,15 +830,7 @@ class TAData:
     chart_type: str = "line"
     row: int = 1
 
-@dataclass
-class StatusLog:
-    item: str
-    dataType: str
-    dataRecieved: bool = False
-    dataValidated: bool = False
-    dataRows: int = 0
-    status: str = 'Not Started'
-    score: float = 0.0
+
 
 @dataclass
 class StockX:
@@ -921,7 +846,7 @@ class StockX:
         return pd.DataFrame([s.__dict__ for s in self.status])
         
     def set_up_frame(self, timeframe, dataType:str='random', start_date:str="52 weeksAgo", end_date:str='now', force_download:bool=False):
-        name = f"{timeframe}_{dataType[:3]}" if dataType in ['primary_etf', 'secondary_etf', 'mkt'] else timeframe
+        name = timeframe
         for status in self.status:
             if status.item == timeframe and status.dataType == dataType:
                 return
@@ -953,34 +878,56 @@ class StockX:
             # todo: implement tick data
             pass
 
-        elif dataType == 'mkt':
-            self.frames[name].load_ohlcv(hd.get_hist_data('SPY', start_date, end_date, timeframe, force_download=force_download))
+    def import_market_data(self, df:pd.DataFrame, timeframe:str, prefix:str='imported_'):
+        self.frames[timeframe].import_data(df, importCols=['open', 'high', 'low', 'close', 'volume'], prefix=prefix)
 
-        elif dataType == 'primary_etf':
-            eft_symbol = self.fundamentals.fundamentals.primary_etf
-            if eft_symbol is not None:
-                self.frames[name].load_ohlcv(hd.get_hist_data(eft_symbol[0], start_date, end_date, timeframe, force_download=force_download))
-            else:
-                print(f"Primary ETF not found for {self.symbol}")
-
-        elif dataType == 'secondary_etf':
-            eft_symbol = self.fundamentals.fundamentals.secondary_etf
-            if eft_symbol is not None:
-                self.frames[name].load_ohlcv(hd.get_hist_data(eft_symbol[0], start_date, end_date, timeframe, force_download=force_download))
-            else:
-                print(f"Secondary ETF not found for {self.symbol}")
-
-        data_validated = not self.frames[name].data.empty
-        len_df = len(self.frames[name].data)
-        self.status += [StatusLog(timeframe, dataType, True, data_validated, len_df, 'Setup', 0.0)]
-
-    def req_fundamentals(self, max_days_old=0, allowedETFs: List[str] = []):
+    def req_fundamentals(self, max_days_old=0):
         self.fundamentals.req_fundamentals(max_days_old)
-        etf_is_allowed = self.fundamentals.validate_fundamental('primary_etf', 'isin', allowedETFs, description='Stocks primary sector ETF is allowed')
-        self.status += [StatusLog('Fundamentals', 'Fundamentals', True, etf_is_allowed, 1, 'Complete', self.fundamentals.validation_fundamentals_has_passed())]
 
-    def sector_ETF_is_allowed(self):
-        return self.status[0].dataValidated
+    def sector_ETF_is_allowed(self, allowed_etfs: List[str]) -> bool:
+        """
+        Determines if a stock should be traded based on its ETF composition and allowed ETFs.
+        
+        The method uses the following criteria:
+        1. If both primary and secondary ETFs are in allowed list - return True
+        2. If only primary ETF is allowed and its weight > 0.5 - return True
+        3. If only secondary ETF is allowed and combined non-allowed ETF weight < 0.5 - return True
+        4. Otherwise - return False
+        
+        Args:
+            allowed_etfs (List[str]): List of ETF ticker symbols that are allowed for trading
+            
+        Returns:
+            bool: True if the stock meets the ETF criteria for trading, False otherwise
+            
+        Example:
+            If allowed_etfs = ['XLY', 'XLK'] and stock has:
+            - primary_etf = ('XLY', 0.56)
+            - secondary_etf = ('XLI', 0.44)
+            Returns True because primary ETF is allowed and weight > 0.5
+        """
+        # Get ETF information from fundamentals
+        primary_etf, primary_weight = self.fundamentals.fundamentals.primary_etf
+        secondary_etf, secondary_weight = self.fundamentals.fundamentals.secondary_etf
+        
+        # Check if ETFs are in allowed list
+        primary_allowed = primary_etf in allowed_etfs
+        secondary_allowed = secondary_etf in allowed_etfs
+        
+        # Case 1: Both ETFs are allowed
+        if primary_allowed and secondary_allowed:
+            return True
+        
+        # Case 2: Only primary ETF is allowed but has dominant weight
+        if primary_allowed and not secondary_allowed:
+            return primary_weight > 0.5
+        
+        # Case 3: Only secondary ETF is allowed
+        if secondary_allowed and not primary_allowed:
+            return primary_weight < 0.5  # Same as secondary_weight > 0.5
+        
+        # Case 4: Neither ETF is allowed
+        return False
     
     def get_score_status_by_item(self, item_name: str, dataType:str) -> float:
         """
@@ -999,25 +946,39 @@ class StockX:
             return row['score'].iat[0]
         else:
             raise ValueError(f"Item '{item_name}' not found in the DataFrame")
+        
+    def setup_all_frames(self, dataType:str='ohlcv', force_download:bool=False):
+        self.set_up_frame('1 day',  dataType,     start_date="52 weeksAgo", end_date="now", force_download=force_download)
+        self.set_up_frame('1 hour', dataType,     start_date="3 weeksAgo",  end_date="now", force_download=force_download)
+        self.set_up_frame('5 mins', dataType,     start_date="3 daysAgo",   end_date="now", force_download=force_download)
+
+    def import_all_market_data(self, mktStockX:object):
+        """takes a different StockX object and imports all its data into this StockX object.
+
+        Args:
+            mktStockX (StockX): StockX object must match the same timeframes as this object.
+        """
+        # check if timeframes match
+        if self.frames.keys() != mktStockX.frames.keys():
+            raise ValueError("StockX::Timeframes do not match. Wehn importing market data the imported StcokX must have the same barsizes as this StockX object.")
+
+        for barsize in self.frames.keys():
+            mktDF = mktStockX.frames[barsize].data
+            self.import_market_data(mktDF, barsize, f"{mktStockX.symbol}_")
+
     
-    def run_daily_frame(self, lookback:int=1):
+    def run_daily_frame(self, mktDF:pd.DataFrame, etfDF:pd.DataFrame, lookback:int=1):
         """setup_framees must be run first. Ech Frame is set up with the arg run_ta_on_load=True. 
         This means every time a frame is loaded with data, the ta is run on the data automatically.
         Therefore the items below are automatically run on the data."""
         f_day = self.frames['1 day']
-        mktDF = self.frames['1 day_mkt'].data
-        etfDF = self.frames['1 day_pri'].data
         # preset ta signals and scorers
-        ps.import_to_daily_df(f_day, mktDF, etfDF, RSIRow=3) #! test mansfield on real ccharts and compare to trading view
-        ps.require_ta_for_all(f_day)
+        ps.import_to_daily_df(f_day, mktDF, RSIRow=3) #! test mansfield on real ccharts and compare to trading view
         ps.ma_ta(f_day, [50, 150, 200])
-        ps.volume_ta(f_day, ls='LONG', ma=10, scoreRow=4, lookBack=lookback)
         ps.consolidation_ta(f_day, atrSpan=50, maSpan=50, lookBack=lookback, scoreRow=4)
-        ps.STRATEGY_daily_consolidation_bo(f_day, lookBack=lookback, scoreRow=5) # only works if consolidation has been run
-        ps.STRATEGY_pullback_to_cons(f_day, ls='LONG', lookBack=lookback, scoreRow=5) # only works if consolidation has been run
+
  
         score = f_day.data['PBX_ALL_Scores'].iat[-1]
-        self.status += [StatusLog('1 day', 'ohlcv', True, True, len(f_day.data), 'Complete', score)]
 
     def run_intraday_frames(self, lookback:int=1, plot:bool=False):
         frames_run = []

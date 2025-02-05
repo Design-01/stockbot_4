@@ -118,19 +118,19 @@ class Frame:
         for ta, style, chart_type, row in self.ta:
             self.data = self.update_data(ta.run(self.data))
     
-    def import_data(self, df_high, importCols: list[str] = None, colsContain: list[str] = None, auto_limit=True, manual_limit=None, prefix='htf_', merge_to_backtest: bool = False):
+    def import_data(self, import_df, importCols: list[str] = None, colsContain: list[str] = None, ffillAutoLimit=True, ffillManualLimit=None, prefix='_', merge_to_backtest: bool = False):
         """
         Import and merge high timeframe data into the existing low timeframe data.
 
         Parameters:
-        df_high (pd.DataFrame): The high timeframe DataFrame to import.
+        import_df (pd.DataFrame): The high timeframe DataFrame to import.
         importCols (Union[str, List[str]]): The column(s) to import from the high timeframe DataFrame.
                                             If a single string is provided, it will be converted to a list.
         colsContain (Union[str, List[str]]): The text(s) to search for within the column names of the high timeframe DataFrame.
                                                 If a single string is provided, it will be converted to a list.
-        auto_limit (bool): If True, automatically determine the forward fill limit based on the time delta between rows.
-                        If False, use the manual_limit value.
-        manual_limit (Optional[int]): The maximum number of rows to forward fill if auto_limit is False.
+        ffillAutoLimit (bool): If True, automatically determine the forward fill limit based on the time delta between rows.
+                        If False, use the ffillManualLimit value.
+        ffillManualLimit (Optional[int]): The maximum number of rows to forward fill if ffillAutoLimit is False.
                                     If None, a default value of 4 will be used.
         prefix (str): The prefix to add to the column names from the high timeframe DataFrame when merging.
         merge_to_backtest (bool): If True, merge the data into the backtest_data attribute.
@@ -140,9 +140,9 @@ class Frame:
         None: The method updates the data or backtest_data attribute of the Frame instance in place.
 
         Notes:
-        - The method first filters the columns of df_high based on the importCols and colsContain parameters.
+        - The method first filters the columns of import_df based on the importCols and colsContain parameters.
         - It then renames the filtered columns with the specified prefix.
-        - The method merges the filtered and renamed columns into the low timeframe DataFrame (df_low).
+        - The method merges the filtered and renamed columns into the low timeframe DataFrame (self_df).
         - The merged columns are forward filled based on the determined or specified fill limit.
         - The updated DataFrame is assigned back to either the data or backtest_data attribute of the Frame instance.
         """
@@ -151,29 +151,29 @@ class Frame:
         if isinstance(colsContain, str):
             colsContain = [colsContain]
 
-        df_low = self.backtest_data if merge_to_backtest else self.data
+        self_df = self.backtest_data if merge_to_backtest else self.data
 
         filtered_columns = []
         if importCols:
-            filtered_columns.extend([col for col in df_high.columns if col in importCols])
+            filtered_columns.extend([col for col in import_df.columns if col in importCols])
         if colsContain:
-            filtered_columns.extend([col for col in df_high.columns if any(target in col for target in colsContain)])
+            filtered_columns.extend([col for col in import_df.columns if any(target in col for target in colsContain)])
 
         filtered_columns = list(set(filtered_columns))  # Remove duplicates
 
         column_mapping = {col: f"{prefix}{col}" for col in filtered_columns}
-        df_low = df_low.drop(columns=list(column_mapping.values()), errors='ignore')
+        self_df = self_df.drop(columns=list(column_mapping.values()), errors='ignore')
 
-        if auto_limit:
-            low_tf_delta = pd.Series(df_low.index).diff().mode()[0]
-            high_tf_delta = pd.Series(df_high.index).diff().mode()[0]
+        if ffillAutoLimit:
+            low_tf_delta = pd.Series(self_df.index).diff().mode()[0]
+            high_tf_delta = pd.Series(import_df.index).diff().mode()[0]
             fill_limit = max(1, int((high_tf_delta / low_tf_delta) - 1))
         else:
-            fill_limit = max(1, manual_limit if manual_limit is not None else 4)
+            fill_limit = max(1, ffillManualLimit if ffillManualLimit is not None else 4)
 
         # Pre-rename columns before merge
-        df_high_subset = df_high[filtered_columns].rename(columns=column_mapping)
-        df_merged = pd.merge_asof(df_low, df_high_subset, left_index=True, right_index=True, direction='backward')
+        import_df_subset = import_df[filtered_columns].rename(columns=column_mapping)
+        df_merged = pd.merge_asof(self_df, import_df_subset, left_index=True, right_index=True, direction='backward')
 
         # Forward fill the new columns
         for col in column_mapping.values():
@@ -191,7 +191,7 @@ class Frame:
         # result = merge_timeframes(df_1min, df_5min, ['close', 'volume'])
 
         # Manual limit
-        # result = merge_timeframes(df_1min, df_5min, 'close', auto_limit=False, manual_limit=4)
+        # result = merge_timeframes(df_1min, df_5min, 'close', auto_limit=False, ffillManualLimit=4)
 
     def plot(self, width: int = 1400, height: int = 800, trading_hours: bool = False, 
         show: bool = True, snapshot_data: pd.DataFrame = None, use_backtest_data: bool = False,

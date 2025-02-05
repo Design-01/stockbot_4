@@ -7,9 +7,20 @@ from frame import Frame
 from data.random_data import RandomOHLCV
 from dataclasses import dataclass
 
+def SIG_sentiment(f, lookBack, atr:int=20, volMA:int=10, rsiPeriod:int=14, scoreRow:int=3):
+    f.add_ta(sig.SentimentGap(normRange=(-5,5), lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.SenitmentBar(normRange=(-5,5), lookBack=lookBack), {'dash': 'solid', 'color': 'cyan', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.SentimentVolume(volMACol=f'MA_vo_{volMA}', atrCol=f'ATR_{atr}',  normRange=(-100,100), lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.RSI(rsiLookBack=rsiPeriod,  normRange=(0,100), lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.SentimentMAvsPrice(normRange=(-5,5), atrCol=f'ATR_{atr}', maCol='MA_cl_50', lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.SentimentMAvsPrice(normRange=(-5,5), atrCol=f'ATR_{atr}', maCol='MA_cl_200', lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.Score(name='SNMT', cols=['Sig_SnmtGap', 'Sig_SnmtBar', 'Sig_SnmtVol', f'Sig_RSI_{rsiPeriod}', 'Sig_SnmtMAP_MA_cl_50', 'Sig_SnmtMAP_MA_cl_200'], scoreType='mean',  weight=1, lookBack=lookBack), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
 
 
-def TA_atr_hplp_supres(f, pointsSpan:int=10, atrSpan:int=50, supresRowsToUpdate:int=10):
+
+
+def TA_atr_hplp_supres_volma(f, pointsSpan:int=10, atrSpan:int=50, volMA:int=10, supresRowsToUpdate:int=10):
+    f.add_ta(ta.MA('volume', volMA), {'dash': 'solid', 'color': 'yellow', 'width': 2}, row=2)
     f.add_ta(ta.ATR(span=atrSpan), {'dash': 'solid', 'color': 'cyan', 'width': 1}, row=3, chart_type='')
     f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=pointsSpan), [{'color': 'green', 'size': 10}, {'color': 'red', 'size': 10}], chart_type = 'points'),
     # f.add_ta(ta.SupRes(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1),
@@ -26,7 +37,9 @@ def SIG_is_trending(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
     f.add_ta(sig.IsMATrending(maCol=f'MA_cl_{ma}', ls=ls, lookBack=lookBack, normRange=(0,1)), {'dash': 'solid', 'color': 'green', 'width': 2}, chart_type='line', row=scoreRow)
     f.add_ta(sig.IsPointsTrending(hpCol='HP_hi_3', lpCol='LP_lo_3', ls=ls, lookBack=lookBack, normRange=(0,1)), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=scoreRow)
     f.add_ta(sig.IsPointsTrending(hpCol='HP_hi_10', lpCol='LP_lo_10', ls=ls, lookBack=lookBack, normRange=(0,1)), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=scoreRow)
-    f.add_ta(sig.Score(name='Trend', cols=[f'TREND_MA_cl_{ma}', 'TREND_LONG_3', 'TREND_LONG_10',], scoreType='mean',  weight=1, lookBack=lookBack, normRange=(0,100)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
+    f.add_ta(sig.AboveBelow(value='close', direction='above', metric_column=f'MA_cl_{ma}', ls=ls, lookBack=lookBack, normRange=(0,1)), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=scoreRow)
+    
+    f.add_ta(sig.Score(name='Trend', cols=[f'TREND_MA_cl_{ma}', 'TREND_LONG_3', 'TREND_LONG_10', 'AB_close_ab_MA_cl_50'], scoreType='mean',  weight=1, lookBack=lookBack, normRange=(0,100)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
         
 
 def SIG_volume(f, ls:str='LONG', ma:int=10, lookBack:int=100, scoreRow:int=3, chartType:str='line'):

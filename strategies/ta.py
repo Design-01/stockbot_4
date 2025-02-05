@@ -6,7 +6,7 @@ from typing import List, Tuple, Union, Dict, Optional, Any
 
 def preprocess_data(func):
     def wrapper(self, data: pd.DataFrame, *args, **kwargs):
-        data = self.compute_rows_to_update(data, self.names, self.rowsToUpdate)
+        data = self.compute_rows_to_update(data, self.names, self.rowsToUpdate).copy()
         return func(self, data, *args, **kwargs)
     return wrapper
 
@@ -143,6 +143,41 @@ class MACD(TA):
             self.histogram_name: histogram
         })
 
+
+@dataclass
+class RSATRMA(TA):
+    "Realtive Strength Average True Range Moving Average "
+    comparisonPrefix: str = 'SPY'
+    ma: int = 14
+    atr: int = 14
+
+    def __post_init__(self):
+        self.name_rs = f"RS_{self.comparisonPrefix}_{self.atr}"
+        self.name_atr = f"RS_MA_{self.comparisonPrefix}_{self.atr}_{self.ma}"
+        self.names = [self.name_rs, self.name_atr]
+        self.rowsToUpdate = max(self.atr, self.ma) + 1
+
+    @preprocess_data
+    def run(self, data: pd.DataFrame) -> pd.Series:
+        # compute market trading range 
+        mkt_tr = data[f"{self.comparisonPrefix}_high"] - data[f"{self.comparisonPrefix}_low"]
+        mkt_atr = mkt_tr.rolling(window=self.atr).mean()
+
+        #  compute market price change but normalise using the atr
+        mkt_change = (data[f"{self.comparisonPrefix}_close"] - data[f"{self.comparisonPrefix}_close"].shift(1)) / mkt_atr
+
+        # compute stock trading range
+        stk_tr = data['high'] - data['low']
+        stk_atr = stk_tr.rolling(window=self.atr).mean()
+
+        # compute stock price change but normalise using the atr
+        stk_change = (data['close'] - data['close'].shift(1)) / stk_atr
+
+        # compute relative strength and relative strength moving average
+        data[self.name_rs]  = stk_change - mkt_change
+        data[self.name_atr] = data[self.name_rs].rolling(window=self.ma).mean()
+
+        return data[[self.name_rs, self.name_atr]].round(2)
 
 
 @dataclass

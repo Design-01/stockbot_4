@@ -29,21 +29,42 @@ def trace(fromPrice:float, toPrice:float, priceNow:float):
     if np.size(tracePcent) == 1: return round(tracePcent.item(), 1) # return as float
     else : return tracePcent.round(1) # return as np array
 
-def normalize(val:float, minVal:float, maxVal:float, roundTo:int=2):
-    """normalizes the value between the min and max."""
-    if minVal == maxVal: return 0 # cannot divide by zero
-    if minVal < maxVal: 
-        if val <= minVal: val = minVal
-        if val >= maxVal: val = maxVal
-    else:
-        if val >= minVal: val = minVal
-        if val <= maxVal: val = maxVal
+# def normalize_old(val:float, minVal:float, maxVal:float, roundTo:int=2):
+#     """normalizes the value between the min and max."""
+#     if minVal == maxVal: return 0 # cannot divide by zero
+#     if minVal < maxVal: 
+#         if val <= minVal: val = minVal
+#         if val >= maxVal: val = maxVal
+#     else:
+#         if val >= minVal: val = minVal
+#         if val <= maxVal: val = maxVal
     
-    r = round((val - minVal) / (maxVal - minVal) * 100, roundTo)
-    # Don't return NaN
-    if r > -1: 
-        return r
-    return 0
+#     r = round((val - minVal) / (maxVal - minVal) * 100, roundTo)
+#     # Don't return NaN
+#     if r > -100: 
+#         return r
+#     return 0
+
+def normalize(value: float, min_val: float, max_val: float) -> float:
+    if min_val >= max_val:
+        raise ValueError('min_val must be less than max_val')
+    
+    if value == 0:
+        return 0
+
+    if value >= 0:
+        min_val = max(0, min_val)
+        if (max_val - min_val) == 0:
+            return 0
+        result = (value - min_val) / (max_val - min_val) * 100 
+    else:
+        max_val = min(0, max_val)
+        if (min_val - max_val) == 0:
+            return 0
+        result = (value - max_val) / (min_val - max_val) * -100 
+    
+    return max(-100, min(100, result))
+
 
 def normalize_int(val:float, minVal:float, maxVal:float):
     """normalizes the value between the min and max."""    
@@ -1075,7 +1096,7 @@ class GappedPastPivot(Signals):
 
 #£Done
 @dataclass
-class GapSize(Signals):
+class GapSizeOverPivot(Signals):
     """Measure the size of price gaps relative to the previous close."""
     name: str = 'GSiz'
     atrCol: str = ''
@@ -1102,13 +1123,161 @@ class GapSize(Signals):
             return 0.0
             
         if self.ls == 'LONG':
-            gap_points = current_open - prev_close
+            gap = current_open - prev_close
         else:  # SHORT
-            gap_points = prev_close - current_open
+            gap = prev_close - current_open
             
-        return gap_points / current_atr * 100
-        
+        return gap / current_atr * 100
 
+
+@dataclass
+class GapsSize(Signals):
+    name: str = 'GapSz'
+    atrCol: str = ''
+
+    def __post_init__(self):
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """Calculate the size of the gap relative to ATR."""
+        current_open = df['open'].iloc[-1]
+        prev_close = df['close'].iloc[-2]
+        current_atr = df[self.atrCol].iloc[-1]
+        
+        if current_atr == 0:
+            return 0.0
+            
+        gap = current_open - prev_close
+        return gap / current_atr 
+
+# -----------------------------------------------------------------------
+# ---- S E N T I M E N T ------------------------------------------------
+# -----------------------------------------------------------------------
+
+@dataclass
+class SentimentGap(Signals):
+    """Measure the sentiment of a gap based on the relationship between the gap size and price change."""
+    name: str = 'SnmtGap'
+
+
+    def __post_init__(self):
+        self.name = f"Sig_{self.name}"
+        self.names = [self.name]
+    
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        raw_val = (df['open'].iat[-1] - df['close'].iat[-2]) / df['close'].iat[-2] * 100
+
+        sentiment = max(-100, min(100, raw_val))
+        return sentiment
+
+
+@dataclass
+class SenitmentBar(Signals):
+    """Measure the sentiment of a gap based on the relationship between the gap size and price change."""
+    name: str = 'SnmtBar'
+
+    def __post_init__(self):
+        self.name = f"Sig_{self.name}"
+        self.names = [self.name]
+    
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        raw_val =  (df['close'].iat[-1] - df['open'].iat[-1]) / df['open'].iat[-1] * 100
+
+        sentiment = max(-100, min(100, raw_val))
+        return sentiment
+
+
+@dataclass
+class SentimentVolume(Signals):
+    """
+    Detects a volume spike in a pandas dataframe with a 'volume' column.
+    Returns the percent change between the current volume and the rolling average volume over 'volMA' periods.
+    """
+    name         : str = 'SnmtVol'
+    volMACol     : str = ''
+    atrCol       : str = ''
+
+
+    def __post_init__(self):
+        self.name = f"Sig_{self.name}"
+        self.names = [self.name]
+
+    def _compute_row(self, df:pd.DataFrame):
+        current_volume = df['volume'].iat[-1]
+        vol_ma = df[self.volMACol].iat[-1]
+        current_atr = df[self.atrCol].iat[-1]
+        
+        # Calculate volume change percentage
+        vol_change = ((current_volume - vol_ma) / vol_ma) * 100
+        
+        # Calculate price change relative to ATR
+        price_change = df['close'].iat[-1] - df['open'].iat[-1]
+        normalized_price_change = price_change / current_atr
+        
+        # Weight volume change by normalized price movement
+        return vol_change * normalized_price_change
+
+
+@dataclass
+class RSI(Signals):
+    """
+    Calculates the Relative Strength Index (RSI) of a given column.
+    """
+    name: str = 'RSI'
+    rsiLookBack: int = 14
+
+    def __post_init__(self):
+        self.name = f"Sig_{self.name}_{self.rsiLookBack}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        series = df['close'].iloc[-self.rsiLookBack:]
+        delta = series.diff()
+        
+        # Use RMA instead of simple mean
+        gain = delta.where(delta > 0, 0)
+        loss = -delta.where(delta < 0, 0)
+        avg_gain = gain.ewm(alpha=1/self.rsiLookBack).mean().iloc[-1]
+        avg_loss = loss.ewm(alpha=1/self.rsiLookBack).mean().iloc[-1]
+        
+        # Handle division by zero
+        if avg_loss == 0:
+            return 100
+        if avg_gain == 0:
+            return 0
+            
+        rs = avg_gain / avg_loss
+        return 100 - (100 / (1 + rs))
+
+
+@dataclass
+class SentimentMAvsPrice(Signals):
+    """
+    Detects a volume spike in a pandas dataframe with a 'volume' column.
+    Returns the percent change between the current volume and the rolling average volume over 'volMA' periods.
+    """
+    name         : str = 'SnmtMAP'
+    maCol        : str = ''
+    atrCol       : str = ''
+
+
+    def __post_init__(self):
+        self.name = f"Sig_{self.name}_{self.maCol}"
+        self.names = [self.name]
+
+    def _compute_row(self, df:pd.DataFrame):
+        current_price = df['close'].iat[-1]
+        ma_price = df[self.maCol].iat[-1]
+        current_atr = df[self.atrCol].iat[-1]
+
+        # Calculate price change percentage
+        price_change = ((current_price - ma_price) / ma_price) * 100
+
+        # Calculate price change relative to ATR
+        normalized_price_change = price_change / current_atr
+
+        return normalized_price_change
+    
 
 # -----------------------------------------------------------------------
 # ---- V O L U M E ------------------------------------------------------
@@ -1117,8 +1286,10 @@ class GapSize(Signals):
 @dataclass
 class VolumeSpike(Signals):
     """
-    Detects a volume spike in a pandas dataframe with a 'volume' column.
-    Returns the percent change between the current volume and the rolling average volume over 'volMA' periods.
+    Detects directional volume spikes normalized by ATR.
+    Returns volume intensity weighted by price movement relative to ATR:
+    - Positive: High volume with strong upward price movement
+    - Negative: High volume with strong downward price movement
     """
     name         : str = 'VolSpike'
     volMACol     : str = ''
@@ -1175,7 +1346,6 @@ class ROC(Signals):
         
         # Calculate ROC
         return ((val1 - val2) / val2) * 100
-
 
 
 @dataclass
@@ -2387,6 +2557,21 @@ class AboveBelow(Signals):
 
 
 @dataclass
+class Between(Signals):
+    """Check two values and return a boolean"""
+    metric_column: str = ''
+    betweenRange: Tuple[float, float] = (0, 0)
+
+    def __post_init__(self):
+        self.name = f"BTWN_{self.betweenRange[0]}_{self.betweenRange[1]}_{self.metric_column}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
+        metric = df[self.metric_column].iat[-1]
+        return self.betweenRange[0] <= metric <= self.betweenRange[1]
+
+
+@dataclass
 class IsMATrending(Signals):
     """Checks if price is trending up or down compared the MA"""
     maCol: str = ''
@@ -2614,6 +2799,11 @@ class IsConsolidationBreakout(Signals):
                     return 1.0
         
         return 0.0
+
+
+
+
+
 
 # --------------------------------------------------------------------
 # ----- S T R A T E G Y   S I G N A L S ------------------------------

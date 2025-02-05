@@ -544,8 +544,7 @@ class IBHistoricalData(BaseHistoricalData):
                 end_date = self._format_datetime(end_date)
 
                 # rth  = False if not intraday
-                not_outside_rth = ['3 hours', '4 hours', '8 hours', '1 day', '1W', '1M']
-                rth = False if lowest_interval  in not_outside_rth else True
+                useRTH = True if lowest_interval  in ['1 day', '1W', '1M'] else False
                 
                 bars = self.ib.reqHistoricalData(
                     contract,
@@ -553,7 +552,7 @@ class IBHistoricalData(BaseHistoricalData):
                     barSizeSetting=lowest_interval,
                     durationStr=duration,
                     whatToShow='TRADES',
-                    useRTH=False,
+                    useRTH=useRTH,
                     formatDate=1
                 )
                 
