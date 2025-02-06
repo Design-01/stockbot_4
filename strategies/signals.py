@@ -1358,7 +1358,7 @@ class PctDiff(Signals):
     metricCol2: str = ''
     
     def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}_{self.metricCol2}"
+        self.name = f"{self.name}_{self.metricCol2}"
         self.names = [self.name]
 
     def _compute_row(self, df: pd.DataFrame):
@@ -1396,7 +1396,7 @@ class RoomToMove(Signals):
     unlimitedVal: int = 10
 
     def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}_{self.tgetCol}"
+        self.name = f"{self.name}_{self.ls[0]}_{self.tgetCol}"
         self.names = [self.name]
 
     def _compute_row(self, df:pd.DataFrame=pd.DataFrame(), **kwargs):
@@ -2480,95 +2480,68 @@ class IsValid(Signals):
             raise ValueError("Valid type must be 'any' or 'all'")
 
 
+
+
 @dataclass
-class Breaks(Signals):
-    """Checks if price crosses above/below a metric"""
-    price_column: str = ''
-    direction: str = '' # 'above' or 'below'
-    metric_column: str = ''
+class Validate(Signals):
+    """
+    Checks two values and returns a boolean based on the specified operator.
+
+    Attributes:
+        val1 (str | float): The first value to compare. Can be a column name (str) or a numeric value (float).
+        val2 (str | float | tuple): The second value to compare. Can be a column name (str), a numeric value (float), or a tuple for range comparisons.
+        operator (str): The operator to use for comparison. Supported operators are:
+            - '>': Checks if val1 is greater than val2.
+            - '<': Checks if val1 is less than val2.
+            - '==': Checks if val1 is equal to val2.
+            - '><': Checks if val1 is between the two values in val2 (inclusive). val1 is the value to check and val2 is a tuple (val1, val2).
+            - '^': Checks if val1 breaks above val2 (i.e., val1 is greater than val2 and the previous value of val1 was less than or equal to val2).
+            - 'v': Checks if val1 breaks below val2 (i.e., val1 is less than val2 and the previous value of val1 was greater than or equal to val2).
+            - '^p': Checks if val1 breaks above the most recent pivot point in val2.
+            - 'vp': Checks if val1 breaks below the most recent pivot point in val2.
+    """
+    val1: str | float = ''
+    val2: str | float | tuple = ''
+    operator: str  = ''
 
     def __post_init__(self):
-        self.name = f"BRK_{self.price_column}_{self.direction[:2]}_{self.metric_column}"
+        self.name = f"VAL_{self.val1}_{self.operator}_{self.val2}"
         self.names = [self.name]
 
-    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
+    def breaks_above_pivot(self, df: pd.DataFrame) -> pd.DataFrame:
+        point = df[self.val2].dropna()
+        if len(point) < 1:return False
+        return df[self.val1].iloc[-1] > point.iloc[-1] 
         
-        curr_price = df[self.price_column].iloc[-1]
-        prev_price = df[self.price_column].iloc[-2]
-        curr_metric = df[self.metric_column].iloc[-1]
-        prev_metric = df[self.metric_column].iloc[-2]
+    def breaks_below_pivot(self, df: pd.DataFrame) -> pd.DataFrame:
+        point = df[self.val2].dropna()
+        if len(point) < 1:  return False
+        return df[self.val1].iloc[-1] < point.iloc[-1]
 
-        if self.direction == 'above':
-            return (prev_price <= prev_metric) & (curr_price > curr_metric)
-        elif self.direction == 'below':
-            return (prev_price >= prev_metric) & (curr_price < curr_metric)
-        
+    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
+        v1 = df[self.val1].iat[-1] if isinstance(self.val1, str) else self.val1
+        v2 = df[self.val2].iat[-1] if isinstance(self.val2, str) else self.val2
+
+        if self.operator == '>':
+            return v1 > v2
+        elif self.operator == '<':
+            return v1 < v2
+        elif self.operator == '==':
+            return v1 == v2
+        elif self.operator == '><':
+            return v2[0] < v1 < v2[1]
+        elif self.operator == '^':
+            return v1 > v2 and df[self.val1].iat[-2] <= df[self.val2].iat[-2]
+        elif self.operator == 'v':
+            return v1 < v2 and df[self.val1].iat[-2] >= df[self.val2].iat[-2]
+        elif self.operator == '^p':
+            return self.breaks_above_pivot(df)
+        elif self.operator == 'vp':
+            return self.breaks_below_pivot(df)
+
         else:
-            raise ValueError("Direction must be 'above' or 'below'")
+            raise ValueError("Operator must be '>', '<', '==', '><', '^', 'v', '^p', or 'vp'")
 
-
-@dataclass
-class Breakout(Signals):
-    """Checks if price crosses above/below a metric"""
-    price_column: str = ''
-    direction: str = '' # 'above' or 'below'
-    supCols: str = ''
-    resCols: str = ''
-    shift: int = 0
-
-    def __post_init__(self):
-        self.name = f"BRKOUT_{self.price_column}_{self.direction[:2]}"
-        self.names = [self.name]
-
-    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
-
-
-        if self.direction == 'above':
-            return (df[self.price_column].iloc[-1] > df[self.resCols].iloc[-1-self.shift].max())
-        
-        elif self.direction == 'below':
-            return (df[self.price_column].iloc[-1] < df[self.supCols].iloc[-1-self.shift].min())
-        
-        else:
-            raise ValueError("Direction must be 'above' or 'below'")
-  
-
-@dataclass
-class AboveBelow(Signals):
-    """Checks if price is above/below a metric"""
-    value: str | float = ''
-    direction: str  = ''# 'above' or 'below'
-    metric_column: str = ''
-
-    def __post_init__(self):
-        self.name = f"AB_{self.value}_{self.direction[:2]}_{self.metric_column}"
-        self.names = [self.name]
-
-    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
-        value =  df[self.value].iat[-1] if isinstance(self.value, str) else self.value
-        metric = df[self.metric_column].iat[-1] if isinstance(self.metric_column, str) else self.metric_column
-
-        if self.direction == 'above':
-            return  value > metric
-        elif self.direction == 'below':
-            return  value < metric
-        else:
-            raise ValueError("Direction must be 'above' or 'below'")
-
-
-@dataclass
-class Between(Signals):
-    """Check two values and return a boolean"""
-    metric_column: str = ''
-    betweenRange: Tuple[float, float] = (0, 0)
-
-    def __post_init__(self):
-        self.name = f"BTWN_{self.betweenRange[0]}_{self.betweenRange[1]}_{self.metric_column}"
-        self.names = [self.name]
-
-    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
-        metric = df[self.metric_column].iat[-1]
-        return self.betweenRange[0] <= metric <= self.betweenRange[1]
 
 
 @dataclass
