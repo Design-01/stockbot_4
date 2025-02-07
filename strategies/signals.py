@@ -125,9 +125,9 @@ def is_gap_pivot_crossover(df: pd.DataFrame, pivot_col: str, ls: str) -> bool:
     except (KeyError, IndexError):
         return False
 
-def get_valid_pb(ls, df, pointCol:str, toCol:str, atrCol:str, minLen:int=3, atrMultiple:int=1):
+def get_valid_pb(ls, df, pointCol:str, minLen:int=3):
     # check if names exists in df
-    if not all([pointCol in df.columns, toCol in df.columns, atrCol in df.columns]):
+    if not pointCol in df.columns:
         return None
     
     # print(f'{ls} {pointCol=} {toCol=} {atrCol} {minLen} {atrMultiple}')
@@ -143,42 +143,16 @@ def get_valid_pb(ls, df, pointCol:str, toCol:str, atrCol:str, minLen:int=3, atrM
     if len(w0) < minLen:
         return None
     
-    # important to check if the value are ok at the point and not after the point
-    toVal = w0[toCol].iat[0]
-    atr = w0[atrCol].iat[0]
-
-    # print(f'{toVal=} {atr=}')
-
-    if any([pd.isna(toVal), pd.isna(atr)]):
-        return None
-    
     if ls == 'LONG':
-        hp_bar_low = w0.low.iat[0]
-
         #check if high < two previous high ago
         if not w0.high.iat[-1] < w0.high.iat[-3] :
             return None
         
-        # Check if the distance between high point and toCol is at least n ATRs
-        distance = hp_bar_low - toVal
-        if distance <= 0:
-            return None
-        
-        if distance < (atrMultiple * atr):
-            return None
-
-        # print(f'{atr=} {hp_bar_low=} {toVal=} {distance=} ')
         return w0
     
     if ls == 'SHORT':       
-        lp_bar_high = w0.high.iat[0]
-        
-        # Check if the distance between high point and toCol is at least n ATRs
-        distance = toVal - lp_bar_high
-        if distance <= 0:
-            return None
-        
-        if distance < (atrMultiple * atr):
+        #check if low > two previous low ago
+        if not w0.low.iat[-1] > w0.low.iat[-3] :
             return None
         
         return w0
@@ -415,12 +389,11 @@ class PBPctHLLH(Signals):
     Vice versa for BEAR case. So this is only for pullbacks not overall trends. """
     name: str = 'PB_HLLH'
     pointCol: str = ''
-    toCol  : str = ''
     atrCol: str = ''
     atrMultiple: float = 1.0 # minimum number of ATRs required between pointCol low and toCol
     
     def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}"
+        self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]   
    
 
@@ -429,14 +402,7 @@ class PBPctHLLH(Signals):
         """Computes the % of bars that have a lower highs (BULL pullback, so downward)
         Vice versa for BEAR case. So this is only for pullbacks not overall trends. """
 
-        window  = get_valid_pb(
-            ls=self.ls, 
-            df=df, 
-            pointCol=self.pointCol, 
-            toCol=self.toCol, 
-            atrCol=self.atrCol, 
-            minLen=3, 
-            atrMultiple=1)
+        window  = get_valid_pb( ls=self.ls, df=df, pointCol=self.pointCol, minLen=4)
         
         if window is None:
             return 0.0
@@ -468,8 +434,6 @@ class PBAllSameColour(Signals):
     """
     name: str = 'PB_ASClr'
     pointCol: str = ''
-    toCol  : str = ''
-    atrCol: str = ''
     atrMultiple: float = 1.0 # minimum number of ATRs required between pointCol low and toCol
     
     
@@ -477,16 +441,8 @@ class PBAllSameColour(Signals):
         self.name = f"Sig{self.ls[0]}_{self.name}"
         self.names = [self.name]
 
-    # def run(self,longshort:str='', fromHP:pd.DataFrame=pd.DataFrame(), fromLP:pd.DataFrame=pd.DataFrame(), **kwargs):
     def _compute_row(self, df:pd.DataFrame=pd.DataFrame()):
-        window  = get_valid_pb(
-            ls=self.ls, 
-            df=df, 
-            pointCol=self.pointCol, 
-            toCol=self.toCol, 
-            atrCol=self.atrCol, 
-            minLen=3, 
-            atrMultiple=1)
+        window  = get_valid_pb( ls=self.ls, df=df, pointCol=self.pointCol, minLen=4)
         
         if window is None:
             return 0.0
@@ -502,7 +458,61 @@ class PBAllSameColour(Signals):
                 return  (same_colour_bars / total_bars) * 100
 
         return 0.0
+    
 
+@dataclass
+class PBCoCByCountOpBars(Signals):
+    name: str = 'PB_CoC_OpBars'
+    pointCol: str = ''
+    
+    def __post_init__(self):
+        self.name = f"Sig{self.ls[0]}_{self.name}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame = pd.DataFrame()):
+        
+        def convert_candles_to_reverse_list(window):
+            candles = []
+            for _, row in window.iterrows():
+                candles.append({
+                    'open': row['open'],
+                    'close': row['close'],
+                    'is_green': row['close'] > row['open']
+                })
+            return candles[::-1] 
+        
+
+        window = get_valid_pb(ls=self.ls, df=df, pointCol=self.pointCol, minLen=4)
+        if window is None:
+            return 0.0
+        
+        last_candle_is_green = window['close'].iat[-1] > window['open'].iat[-1]
+        consecutive_count = 0
+        
+        if self.ls == 'LONG':
+            if not last_candle_is_green:
+                return 0.0
+
+            for c in convert_candles_to_reverse_list(window):
+                if c['is_green']:
+                    break
+                consecutive_count += 1
+            
+        if self.ls == 'SHORT':
+            if last_candle_is_green:
+                return 0.0
+
+            for c in convert_candles_to_reverse_list(window):
+                if not c['is_green']:
+                    break
+                consecutive_count += 1
+
+        return consecutive_count / (len(window) - 1) * 100
+    
+
+
+
+    
 
 #£ Done
 @dataclass
@@ -511,25 +521,14 @@ class PBOverlap(Signals):
     Then gets the mean % of all overlaps. Works very well to give a good guide for a smooth pullback
     if the mean % is 50%. so the nearer to 50% the better """
     name  : str = 'Olap'
-    pointCol: str = ''
-    toCol  : str = ''
-    atrCol: str = ''
-    atrMultiple: float = 1.0 # minimum number of ATRs required between pointCol low and toCol
-    
+    pointCol: str = ''    
 
     def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}"
+        self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]
 
     def _compute_row(self, df:pd.DataFrame):
-        window  = get_valid_pb(
-            ls=self.ls, 
-            df=df, 
-            pointCol=self.pointCol, 
-            toCol=self.toCol, 
-            atrCol=self.atrCol, 
-            minLen=3, 
-            atrMultiple=1)
+        window  = get_valid_pb( ls=self.ls, df=df, pointCol=self.pointCol, minLen=4)
         
         if window is None:
             return 0.0
@@ -622,64 +621,101 @@ class Trace(Signals):
 # ------- R E V E R S A L   S I G N A L S ----------------------
 # --------------------------------------------------------------
 
+@dataclass
+class TouchWithBar(Signals):
+    """
+    TouchWithBar is a signal class that computes the value of a bar at a given offset based on the direction ('up' or 'down') 
+    and compares it to a specified value column. It also converts the computed distance to ATR (Average True Range) multiples.
+
+    Attributes:
+        name (str): The name of the signal. Default is 'BarOff'. It is modified in the __post_init__ method to include the direction.
+        valCol (str): The column name in the DataFrame that contains the value to compare against. Default is an empty string.
+        atrCol (int): The column index in the DataFrame that contains the ATR values. Default is 1.
+        direction (str): The direction of the signal, either 'up' or 'down'. Default is 'down'.
+
+    Methods:
+        __post_init__(): Initializes the name attribute to include the direction and sets the names attribute.
+        _compute_row(df: pd.DataFrame) -> float: Computes the value of a bar at a given offset and converts the distance to ATR multiples.
+    """
+
+    name: str = 'Touch'
+    valCol: str = ''
+    atrCol: int = 1
+    direction: str = 'down'
+
+    def __post_init__(self):
+        """
+        Post-initialization method to modify the name attribute to include the direction and set the names attribute.
+        """
+        self.name = f"Sig{self.direction}_{self.name}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        if len(df) < 10:
+            return 0.0
+        
+        bar_val = 0.0
+
+        if self.direction == 'down':
+            # If the bar low > val, use the low value, because this is as close as it gets from above
+            if df.low.iat[-1] > df[self.valCol].iat[-1]:
+                bar_val = df.low.iat[-1]
+
+            # If the bar close < val, use the close value, because this is an overshoot so the close is now important
+            if df.close.iat[-1] < df[self.valCol].iat[-1]:
+                bar_val = df.close.iat[-1]
+
+            # Compute the distance between the bar value and the val and convert to ATR multiples
+            return (df[self.valCol].iat[-1] - bar_val) / df[self.atrCol].iat[-1]
+        
+        if self.direction == 'up':
+            # If the bar high < val, use the high value, because this is as close as it gets from below
+            if df.high.iat[-1] < df[self.valCol].iat[-1]:
+                bar_val = df.high.iat[-1]
+
+            # If the bar close > val, use the close value, because this is an overshoot so the close is now important
+            if df.close.iat[-1] > df[self.valCol].iat[-1]:
+                bar_val = df.close.iat[-1]
+
+            # Compute the distance between the bar value and the val and convert to ATR multiples
+            return (bar_val - df[self.valCol].iat[-1]) / df[self.atrCol].iat[-1]
+        
+        return 0.0
+
+
+
+
+
+
 #£ Done
 @dataclass
-class Tail(Signals):
-    name: str = 'Tail'    
-    tailExceedsNthBarsAgo: int = 0
+class BarSW(Signals):
+    name: str = 'BarSW'  # Bar Strength Weakness 
+    atrCol: str = ''
 
-    def _compute_row(self, df:pd.DataFrame):
-        """Top Tail / Bottom Tail is the ratio of the top and the bottom. 
-        The top is low of the body to the high.
-        The bottom is the high of the body to the low. 
-              ___
-          | 
-         _|_  Top   ___
-        |   |  
-        |   |
-        |___| ___   Bottom
-          |
-          |         ___
-        """   
-        
-        if len(df) < self.tailExceedsNthBarsAgo+2:
-            return 0
-    
-        x = df.iloc[-1] # get the last bar 
+    def __post_init__(self):
+        self.name = f"{self.name}"
+        self.names = [self.name]
 
-        # top of body is the max of open and close
-        top = max(x.open, x.close)
+    def _compute_row(self, df: pd.DataFrame):
+        # Extract the most recent open, high, low, and close values
+        open = df['open'].iloc[-1]
+        high = df['high'].iloc[-1]
+        low = df['low'].iloc[-1]
+        close = df['close'].iloc[-1]
+        atr = df[self.atrCol].iloc[-1]
 
-        # bottom of body is the min of open and close
-        bottom = min(x.open, x.close)
+        # top = high - max(open, close)
+        top = (high - max(open, close)) / 2 # give tails less weight
+        body = (close - open) / 2
+        # bot = min(open, close) - low
+        bot = (min(open, close) - low) / 2 # give tails less weight
 
-        # body length is the difference between open and close
-        body_len = abs(x.open - x.close)
+        score = (bot - top + body) / atr
+        print(f"open: {open}, close: {close}, score: {score} ... ({top=} - {bot=} + {body=}) / ({high=} - {low=})")
 
-        # get the length of the top of body to low and bottom of body to high
-        # 0.05 is 5% of body length. This is to avoid div by zero and to give a 
-        # min value to keep extream values in check as this is used to divide by.
-        top_len    = max(x.high - bottom, body_len * 0.05) 
-        bottom_len = max(top - x.low, body_len * 0.05)
-
-        # ratio of top to bottom
-        # 25 is to help scale the value to be between 0 and 100
-        # 100 is the best value as it means the top is 4 times the bottom
-        # lots of visula checks have been done to make sure 25 is a good value
-        
-        if self.ls == 'LONG': 
-            # get the lowest low of the last n bars
-            lowest  = min(df.low.iloc[-self.tailExceedsNthBarsAgo-1:-2])
-            if top_len > 0 and df.low.iat[-1] <= lowest: 
-                return  round(bottom_len / top_len *25, 2) # gives higher number the longer the bottom is (signals a bullish reversal)
-  
-        else: 
-            # get the highest high of the last n bars
-            highest = max(df.high.iloc[-self.tailExceedsNthBarsAgo-1:-2])
-            if bottom_len > 0 and df.high.iat[-1] >= highest:
-                return round(top_len / bottom_len *25, 2) # gives higher number the longer the top is (signals a bearish reversal)
-
-        return 0
+        return score
+ 
 
 
 #£ Done
@@ -1415,6 +1451,8 @@ class RoomToMove(Signals):
                     return (df.close.iat[-1] - df[self.tgetCol].iat[-1]) / df[self.atrCol].iat[-1]
 
         return 0
+    
+
 
 
 @dataclass
@@ -2503,24 +2541,29 @@ class Validate(Signals):
     val1: str | float = ''
     val2: str | float | tuple = ''
     operator: str  = ''
+    val1Idx: int = -1 # index of the val1 column . eg -1  is the last value
+    val2Idx: int = -1
+    ls: str = 'LONG'
 
     def __post_init__(self):
-        self.name = f"VAL_{self.val1}_{self.operator}_{self.val2}"
+        self.name = f"VAL_{self.ls[:1]}_{self.val1}_{self.operator}_{self.val2}"
         self.names = [self.name]
 
     def breaks_above_pivot(self, df: pd.DataFrame) -> pd.DataFrame:
         point = df[self.val2].dropna()
-        if len(point) < 1:return False
-        return df[self.val1].iloc[-1] > point.iloc[-1] 
+        max_len = max(abs(self.val1Idx), abs(self.val2Idx))
+        if len(point) < max_len: return False
+        return df[self.val1].iloc[self.val1Idx] > point.iloc[self.val2Idx] 
         
     def breaks_below_pivot(self, df: pd.DataFrame) -> pd.DataFrame:
         point = df[self.val2].dropna()
-        if len(point) < 1:  return False
-        return df[self.val1].iloc[-1] < point.iloc[-1]
+        max_len = max(abs(self.val1Idx), abs(self.val2Idx))
+        if len(point) < max_len: return False
+        return df[self.val1].iloc[self.val1Idx] < point.iloc[self.val2Idx]
 
     def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
-        v1 = df[self.val1].iat[-1] if isinstance(self.val1, str) else self.val1
-        v2 = df[self.val2].iat[-1] if isinstance(self.val2, str) else self.val2
+        v1 = df[self.val1].iat[self.val1Idx] if isinstance(self.val1, str) else self.val1
+        v2 = df[self.val2].iat[self.val1Idx] if isinstance(self.val2, str) else self.val2
 
         if self.operator == '>':
             return v1 > v2
@@ -2529,7 +2572,7 @@ class Validate(Signals):
         elif self.operator == '==':
             return v1 == v2
         elif self.operator == '><':
-            return v2[0] < v1 < v2[1]
+            return v2[0] <= v1 <= v2[1]
         elif self.operator == '^':
             return v1 > v2 and df[self.val1].iat[-2] <= df[self.val2].iat[-2]
         elif self.operator == 'v':
@@ -2542,6 +2585,19 @@ class Validate(Signals):
         else:
             raise ValueError("Operator must be '>', '<', '==', '><', '^', 'v', '^p', or 'vp'")
 
+
+@dataclass
+class ValidatePoints(Signals):
+    pnt1: str = ''
+    pnt2: str = ''
+    operator: str = ''
+    pnt1idx: int = 0
+    pnt2idx: int = 0
+    ls: str = 'LONG'
+
+    def __post_init__(self):
+        self.name = f"VAL_{self.ls[:1]}_{self.pnt1}_{self.operator}_{self.pnt2}"
+        self.names = [self.name]
 
 
 @dataclass
@@ -2781,7 +2837,101 @@ class IsConsolidationBreakout(Signals):
 # --------------------------------------------------------------------
 # ----- S T R A T E G Y   S I G N A L S ------------------------------
 # --------------------------------------------------------------------
+
+@dataclass
+class TBP(Signals):
+    name: str = 'TBP' # Three Bar Play
+    atrCol: str = ''
+    barsToPlay: int = 3
+
+    def __post_init__(self):
+        self.name = f"{self.name}_{self.barsToPlay}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame):
+        if len(df) < self.barsToPlay:
+            return 0
+            
+        bars = df.iloc[-self.barsToPlay:]
+        ranges = bars['high'] - bars['low']
+        bodies = abs(bars['close'] - bars['open'])
+        atr = df[self.atrCol].iloc[-1]
+        
+        # Bar 1 (igniting bar) scoring
+        bar1_range = ranges.iloc[0]
+        bar1_body = bodies.iloc[0]
+        bar1_score = (bar1_range / atr) * (bar1_body / bar1_range)
+        
+        # Get consolidation bars (between igniting and trigger)
+        consol_bars = ranges.iloc[1:-1]
+        
+        if self.ls == 'LONG':
+            # For longs, check if bars are in upper 50% of igniting bar's range
+            bar1_midpoint = bars['low'].iloc[0] + (bar1_range / 2)
+            consol_lows = bars['low'].iloc[1:-1]
+            zone_score = sum(consol_lows > bar1_midpoint) / len(consol_lows)
+            # Check high alignment
+            highs = bars['high'].iloc[:-1]
+            alignment_score = 1 - (highs.std() / bar1_range)
+        else:  # SHORT
+            # For shorts, check if bars are in lower 50% of igniting bar's range
+            bar1_midpoint = bars['high'].iloc[0] - (bar1_range / 2)
+            consol_highs = bars['high'].iloc[1:-1]
+            zone_score = sum(consol_highs < bar1_midpoint) / len(consol_highs)
+            # Check low alignment
+            lows = bars['low'].iloc[:-1]
+            alignment_score = 1 - (lows.std() / bar1_range)
+        
+        # Tightness scoring (same for both long/short)
+        tightness_score = 1 - (consol_bars.mean() / bar1_range)
+        
+        score = (
+            bar1_score * 0.4 +
+            zone_score * 0.3 +
+            tightness_score * 0.3
+        ) * 100
+
+        return score if not pd.isna(score) else 0
     
+
+@dataclass
+class TurnBar(Signals):
+    name: str = 'TURNBAR'
+    atrCol: str = 'atr'  # Column name for Average True Range
+    
+    def __post_init__(self):
+        self.name = f"{self.name}_{self.ls}"
+        self.names = [self.name]
+    
+    def _compute_row(self, df: pd.DataFrame = pd.DataFrame()):
+            
+        score = 0
+        if self.ls == 'LONG':
+            # Get initial down move
+            down_move = df.high.iat[-2] - df.low.iat[-2]
+            move_strength = min(down_move / df[self.atrCol].iat[-2] / 2, 1) * 50
+            
+            # Check recovery
+            recovery = df.high.iat[-1] - df.low.iat[-2]
+            total_move = df.high.iat[-2] - df.low.iat[-2]
+            recovery_score = min(recovery / total_move, 1) * 50
+            
+            score = move_strength + recovery_score
+            
+        elif self.ls == 'SHORT':
+            # Get initial up move
+            up_move = df.high.iat[-2] - df.low.iat[-2]
+            move_strength = min(up_move / df[self.atrCol].iat[-2] / 2, 1) * 50
+            
+            # Check reversal
+            reversal = df.high.iat[-2] - df.low.iat[-1]
+            total_move = df.high.iat[-2] - df.low.iat[-2]
+            reversal_score = min(reversal / total_move, 1) * 50
+            
+            score = move_strength + reversal_score
+            
+        return round(score, 2)
+
 @dataclass
 class Strategy:
     name: str = ''

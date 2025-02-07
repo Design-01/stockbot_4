@@ -101,13 +101,18 @@ class Frame:
                 existing_chart_type == chart_type and 
                 existing_row == row):
                 # Duplicate found, do not add
-                return
+                return ta
         
         # No duplicates found, add the new TA
         if self.run_ta_on_load:
             self.update_data(ta.run(self.data))
         
         self.ta.append((ta, style, chart_type, row, nameCol))
+        # returning the ta object to allow it to be assigend and therefor access the name vaialbe in the ta object
+        # eg 
+        # ta1 = frame.add_ta(ta('close'), style, chart_type, row, nameCol)
+        # ta2 = frame.add_ta(ta(ta1.name), style, chart_type, row, nameCol)
+        return ta
 
     def add_ta_batch(self, taList:list[ta.TAData], forceRun:bool=False):
         for ta in taList:

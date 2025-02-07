@@ -836,6 +836,7 @@ class TAData:
 class StockX:
     ib: IB = None
     symbol: str = ''
+    intradaySizes: List[str] = field(default_factory=list)
 
     def __post_init__(self):
         self.fundamentals = stock_fundamentals.Fundamentals(self.ib, self.symbol)
@@ -852,7 +853,7 @@ class StockX:
                 return
             
         
-        self.frames[name] = Frame(self.symbol, run_ta_on_load=True, rowHeights=[0.1, 0.1, 0.1, 0.1, 0.1, 0.5])
+        self.frames[name] = Frame(self.symbol, name=name, run_ta_on_load=True, rowHeights=[0.1, 0.1, 0.1, 0.1, 0.1, 0.5])
         
         if dataType == 'random':
             df =  RandomOHLCV( 
@@ -949,8 +950,17 @@ class StockX:
         
     def setup_all_frames(self, dataType:str='ohlcv', force_download:bool=False):
         self.set_up_frame('1 day',  dataType,     start_date="52 weeksAgo", end_date="now", force_download=force_download)
-        self.set_up_frame('1 hour', dataType,     start_date="3 weeksAgo",  end_date="now", force_download=force_download)
-        self.set_up_frame('5 mins', dataType,     start_date="3 daysAgo",   end_date="now", force_download=force_download)
+        barsize_start_dates = {
+            '1 week': "200 weeksAgo",
+            '1 day': "52 daysAgo",
+            '4 hours': "6 weeksAgo",
+            '1 hour': "3 weeksAgo",
+            '5 mins': "3 daysAgo"
+        }
+        for barsize in self.intradaySizes:
+            start_date = barsize_start_dates[barsize]
+            self.set_up_frame(barsize, dataType, start_date=start_date, end_date="now", force_download=force_download)
+
 
     def import_all_market_data(self, mktStockX:object):
         """takes a different StockX object and imports all its data into this StockX object.
@@ -967,18 +977,46 @@ class StockX:
             self.import_market_data(mktDF, barsize, f"{mktStockX.symbol}_")
 
     
-    def run_daily_frame(self, mktDF:pd.DataFrame, etfDF:pd.DataFrame, lookback:int=1):
-        """setup_framees must be run first. Ech Frame is set up with the arg run_ta_on_load=True. 
-        This means every time a frame is loaded with data, the ta is run on the data automatically.
-        Therefore the items below are automatically run on the data."""
-        f_day = self.frames['1 day']
-        # preset ta signals and scorers
-        ps.import_to_daily_df(f_day, mktDF, RSIRow=3) #! test mansfield on real ccharts and compare to trading view
-        ps.ma_ta(f_day, [50, 150, 200])
-        ps.consolidation_ta(f_day, atrSpan=50, maSpan=50, lookBack=lookback, scoreRow=4)
+    def run_day_frame(self, ls, lookBack, atrSpan, sigRow=3, validationRow=4):
+        f = self.frames['1 day']
+        pointsSpan = 10
+        ps.ma_ta(f, [50, 150, 200])
+        f.add_ta(ta.ATR(span=atrSpan), {'dash': 'solid', 'color': 'cyan', 'width': 1}, row=3, chart_type='')
+        f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=3), [{'color': 'green', 'size': 3}, {'color': 'red', 'size': 10}], chart_type = 'points')
+        f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=pointsSpan), [{'color': 'green', 'size': 10}, {'color': 'red', 'size': 4}], chart_type = 'points')
+        f.add_ta(ta.SupResAllRows(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1, rowsToUpdate=lookBack),
+            [{'dash': 'solid', 'color': 'green', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 1}, # support # green = rgba(0, 255, 0, 0.1)
+            {'dash': 'solid', 'color': 'red', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
+            chart_type = 'support_resistance')
+        f.add_ta(sig.RoomToMove(ls=ls, tgetCol='Res_1_Lower', atrCol=f'ATR_{atrSpan}', unlimitedVal=10, normRange=(0,100), lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
+        f.add_ta(sig.GapsSize( atrCol=f'ATR_{atrSpan}', normRange=(0,100), lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
+        f.add_ta(sig.PctDiff(metricCol1='close', metricCol2='MA_cl_50', lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=sigRow)
+        ta_rs = f.add_ta(ta.RSATRMA(comparisonPrefix='SPY', ma=14, atr=atrSpan), 
+                [{'dash': 'solid', 'color': 'yellow', 'width': 1},
+                {'dash': 'solid', 'color': 'cyan', 'width': 1}], 
+                chart_type='line', row=sigRow)
+        
+        ta_rs_name = ta_rs.names[0]
 
- 
-        score = f_day.data['PBX_ALL_Scores'].iat[-1]
+        # -- Validations --  
+        if ls == 'LONG':
+            validations = [
+                sig.Validate(f, val1='close',             operator='>',  val2='MA_cl_50', normRange=(0,1), lookBack=lookBack), # close > MA50
+                sig.Validate(f, val1='PctDiff_MA_cl_50',  operator='>',  val2=0,          normRange=(0,1), lookBack=lookBack), # MA50_PCT_Cahnge  > 0
+                sig.Validate(f, val1='close',             operator='^p', val2='HP_hi_3',  normRange=(0,1), lookBack=lookBack), # close breaks HP_hi_3
+                sig.Validate(f, val1='close',             operator='^p', val2='HP_hi_10', normRange=(0,1), lookBack=lookBack), # close breaks HP_hi_10
+                sig.Validate(f, val1='GapSz',             operator='><', val2=(2,10),     normRange=(0,1), lookBack=lookBack), # GapSz between 2 and 10
+                sig.Validate(f, val1='RTM_L_Res_1_Lower', operator='>',  val2=2,          normRange=(0,1), lookBack=lookBack), # Room to move > 2 (measured by ATR units)
+                sig.Validate(f, val1=ta_rs_name,          operator='>',  val2=2,          normRange=(0,1), lookBack=lookBack)  # RS > 2 (measured by ATR units)
+            ]
+            
+            for v in validations:
+                f.add_ta(v, {'dash': 'solid', 'color': 'lime', 'width': 1}, chart_type='line', row=validationRow)
+
+
+        # --- Final Score ---
+        cols=[v.name for v in validations]
+        f.add_ta(sig.Score(name=f'{ls[0]}_VALIDATION', cols=cols, scoreType='mean', weight=1, lookBack=lookBack), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=validationRow)
 
     def run_intraday_frames(self, lookback:int=1, plot:bool=False):
         frames_run = []

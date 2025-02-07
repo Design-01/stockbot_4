@@ -98,6 +98,7 @@ class AddColumn:
         data[self.name] = data[self.column]
         return data
 
+
 @dataclass
 class MA(TA):
     period: int = 20
@@ -110,6 +111,35 @@ class MA(TA):
     @preprocess_data
     def run(self, data: pd.DataFrame) -> pd.Series:
         return data[self.column].rolling(window=self.period).mean().rename(self.name)
+
+
+@dataclass
+class VWAP(TA):
+
+    def post_init(self):
+        self.name = f"VWAP_{self.period}"
+        self.names = self.name
+        self.rowsToUpdate = self.period
+
+    @preprocess_data
+    def run(self, data: pd.DataFrame) -> pd.Series:
+        # Add datetime index if not present
+        if not isinstance(data.index, pd.DatetimeIndex):
+            data.index = pd.to_datetime(data.index)
+            
+        # Create session labels using date
+        data['session'] = data.index.date
+        
+        typical_price = data[self.column]
+        volume = data['volume']
+        
+        # Group by session and calculate VWAP (ie resets every day)
+        cumulative_pv = (typical_price * volume).groupby(data['session']).cumsum()
+        cumulative_volume = volume.groupby(data['session']).cumsum()
+        
+        vwap = (cumulative_pv / cumulative_volume).rename(self.name)
+        return vwap
+
 
 
 @dataclass
@@ -174,7 +204,7 @@ class RSATRMA(TA):
         stk_change = (data['close'] - data['close'].shift(1)) / stk_atr
 
         # compute relative strength and relative strength moving average
-        data[self.name_rs]  = stk_change - mkt_change
+        data[self.name_rs]  = stk_change - abs(mkt_change) # mkt can be negative so 3 - 2 = 1 ..  but alos want 3- -2 = 1
         data[self.name_atr] = data[self.name_rs].rolling(window=self.ma).mean()
 
         return data[[self.name_rs, self.name_atr]].round(2)
