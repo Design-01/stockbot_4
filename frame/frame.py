@@ -128,7 +128,7 @@ class Frame:
         Import and merge high timeframe data into the existing low timeframe data.
 
         Parameters:
-        import_df (pd.DataFrame): The high timeframe DataFrame to import.
+        import_df (pd.DataFrame): The higher timeframe DataFrame to import.
         importCols (Union[str, List[str]]): The column(s) to import from the high timeframe DataFrame.
                                             If a single string is provided, it will be converted to a list.
         colsContain (Union[str, List[str]]): The text(s) to search for within the column names of the high timeframe DataFrame.

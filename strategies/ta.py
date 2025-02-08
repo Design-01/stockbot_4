@@ -100,6 +100,69 @@ class AddColumn:
 
 
 @dataclass
+class Levels(TA):
+    """Add horizontal levels to a DataFrame"""
+    level: str = '' # pre_mkt_high, pre_mkt_low, pre_mkt_close, pre_mkt_open, pre_mkt_volume
+    daysAgo: int = 0
+
+    def __post_init__(self):
+        self.name = f"Level_{self.level}" 
+        self.names = [self.name]
+    
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        # Ensure the DataFrame has a datetime index
+        if not isinstance(data.index, pd.DatetimeIndex):
+            raise ValueError("DataFrame index must be a DatetimeIndex")
+
+        # Get the unique dates in the DataFrame
+        unique_dates = data.index.normalize().unique()
+
+        # Determine the target date based on daysAgo
+        if self.daysAgo >= len(unique_dates):
+            raise ValueError("daysAgo is out of range")
+
+        target_date = unique_dates[-(self.daysAgo + 1)]
+
+        # Filter the DataFrame to include only the rows for the target date
+        data = data[data.index.normalize() == target_date]
+
+        if 'pre_mkt' in self.level:
+            df = data.between_time('00:00:00', '09:30:00')
+            if   self.level == 'pre_mkt_high':   data[self.name] = df['high'].expanding().max()
+            elif self.level == 'pre_mkt_low':    data[self.name] = df['low'].expanding().min()
+            elif self.level == 'pre_mkt_close':  data[self.name] = df['close'].iloc[-1]
+            elif self.level == 'pre_mkt_open':   data[self.name] = df['open'].iloc[0]
+            elif self.level == 'pre_mkt_volume': data[self.name] = df['volume'].sum()
+
+        if 'regular' in self.level:
+            df = data.between_time('09:30:00', '16:00:00')
+            if   self.level == 'regular_high':   data[self.name] = df['high'].expanding().max()
+            elif self.level == 'regular_low':    data[self.name] = df['low'].expanding().min()
+            elif self.level == 'regular_close':  data[self.name] = df['close'].iloc[-1]
+            elif self.level == 'regular_open':   data[self.name] = df['open'].iloc[0]
+            elif self.level == 'regular_volume': data[self.name] = df['volume'].sum()
+
+        if 'post_mkt' in self.level:
+            df = data.between_time('16:00:00', '23:59:59')
+            if   self.level == 'post_mkt_high':   data[self.name] = df['high'].expanding().max()
+            elif self.level == 'post_mkt_low':    data[self.name] = df['low'].expanding().min()
+            elif self.level == 'post_mkt_close':  data[self.name] = df['close'].iloc[-1]
+            elif self.level == 'post_mkt_open':   data[self.name] = df['open'].iloc[0]
+            elif self.level == 'post_mkt_volume': data[self.name] = df['volume'].sum()
+
+        if 'prev_day' in self.level:
+            prev_date = unique_dates[-(self.daysAgo + 2)]
+            df = data[data.index.normalize() == prev_date]
+            if   self.level == 'prev_day_high':   data[self.name] = df['high'].expanding().max()
+            elif self.level == 'prev_day_low':    data[self.name] = df['low'].expanding().min()
+            elif self.level == 'prev_day_close':  data[self.name] = df['close'].iloc[-1]
+            elif self.level == 'prev_day_open':   data[self.name] = df['open'].iloc[0]
+            elif self.level == 'prev_day_volume': data[self.name] = df['volume'].sum()
+
+        return data
+
+
+@dataclass
 class MA(TA):
     period: int = 20
 

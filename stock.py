@@ -976,6 +976,11 @@ class StockX:
             mktDF = mktStockX.frames[barsize].data
             self.import_market_data(mktDF, barsize, f"{mktStockX.symbol}_")
 
+    def import_HTF_data(self, fromBarsize:str, toBarsize:str, fromCols:List[str], prefix:str='imported_'):
+        """Import the 1 Hour data to the 5 min data etc """
+        prefix  = fromBarsize.replace(' ', '_') + '_'
+        self.frames[toBarsize].import_data(self.frames[fromBarsize].data, importCols=fromCols, prefix=prefix)
+
     
     def run_day_frame(self, ls, lookBack, atrSpan, sigRow=3, validationRow=4):
         f = self.frames['1 day']

@@ -2560,6 +2560,20 @@ class Validate(Signals):
         max_len = max(abs(self.val1Idx), abs(self.val2Idx))
         if len(point) < max_len: return False
         return df[self.val1].iloc[self.val1Idx] < point.iloc[self.val2Idx]
+    
+    def pre_mkt_high(self, df: pd.DataFrame) -> float:
+        return df['high'].iloc[-1] > df['premkt_high'].iloc[-1]
+    
+    def pre_mkt_low(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df['low'].iloc[-1] < df['premkt_low'].iloc[-1]
+    
+    def day_high(self, df: pd.DataFrame, daysAgo=0) -> pd.DataFrame:
+        return df['high'].iloc[-1] > df['day_high'].iloc[-1]
+    
+    def day_low(self, df: pd.DataFrame, daysAgo=0) -> pd.DataFrame:
+        return df['low'].iloc[-1] < df['day_low'].iloc[-1]
+    
+
 
     def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
         v1 = df[self.val1].iat[self.val1Idx] if isinstance(self.val1, str) else self.val1
