@@ -102,62 +102,53 @@ class AddColumn:
 @dataclass
 class Levels(TA):
     """Add horizontal levels to a DataFrame"""
-    level: str = '' # pre_mkt_high, pre_mkt_low, pre_mkt_close, pre_mkt_open, pre_mkt_volume
-    daysAgo: int = 0
+    level: str = '' # pre_mkt_high, pre_mkt_low, pre_mkt_close, pre_mkt_open, pre_mkt_volume, regular_high, regular_low, regular_close, regular_open, regular_volume, post_mkt_high, post_mkt_low, post_mkt_close, post_mkt_open, post_mkt_volume, prev_day_high, prev_day_low, prev_day_close, prev_day_open, prev_day_volume
 
     def __post_init__(self):
         self.name = f"Level_{self.level}" 
         self.names = [self.name]
     
     def run(self, data: pd.DataFrame) -> pd.DataFrame:
-        # Ensure the DataFrame has a datetime index
-        if not isinstance(data.index, pd.DatetimeIndex):
-            raise ValueError("DataFrame index must be a DatetimeIndex")
 
-        # Get the unique dates in the DataFrame
-        unique_dates = data.index.normalize().unique()
+        # Apply levels to each day
+        for date in data.index.normalize().unique():
+            day_data = data[data.index.normalize() == date]
 
-        # Determine the target date based on daysAgo
-        if self.daysAgo >= len(unique_dates):
-            raise ValueError("daysAgo is out of range")
+            if 'pre_mkt' in self.level:
+                df = day_data.between_time('00:00:00', '09:30:00')
+                if   self.level == 'pre_mkt_high':   data.loc[df.index, self.name] = df['high'].expanding().max()
+                elif self.level == 'pre_mkt_low':    data.loc[df.index, self.name] = df['low'].expanding().min()
+                elif self.level == 'pre_mkt_close':  data.loc[df.index, self.name] = df['close'].iloc[-1]
+                elif self.level == 'pre_mkt_open':   data.loc[df.index, self.name] = df['open'].iloc[0]
+                elif self.level == 'pre_mkt_volume': data.loc[df.index, self.name] = df['volume'].sum()
 
-        target_date = unique_dates[-(self.daysAgo + 1)]
+            if 'intraday' in self.level:
+                df = day_data.between_time('09:30:00', '16:00:00')
+                if   self.level == 'intraday_high':   data.loc[df.index, self.name] = df['high'].expanding().max()
+                elif self.level == 'intraday_low':    data.loc[df.index, self.name] = df['low'].expanding().min()
+                elif self.level == 'intraday_close':  data.loc[df.index, self.name] = df['close'].iloc[-1]
+                elif self.level == 'intraday_open':   data.loc[df.index, self.name] = df['open'].iloc[0]
+                elif self.level == 'intraday_volume': data.loc[df.index, self.name] = df['volume'].sum()
 
-        # Filter the DataFrame to include only the rows for the target date
-        data = data[data.index.normalize() == target_date]
+            if 'post_mkt' in self.level:
+                df = day_data.between_time('16:00:00', '23:59:59')
+                if   self.level == 'post_mkt_high':   data.loc[df.index, self.name] = df['high'].expanding().max()
+                elif self.level == 'post_mkt_low':    data.loc[df.index, self.name] = df['low'].expanding().min()
+                elif self.level == 'post_mkt_close':  data.loc[df.index, self.name] = df['close'].iloc[-1]
+                elif self.level == 'post_mkt_open':   data.loc[df.index, self.name] = df['open'].iloc[0]
+                elif self.level == 'post_mkt_volume': data.loc[df.index, self.name] = df['volume'].sum()
 
-        if 'pre_mkt' in self.level:
-            df = data.between_time('00:00:00', '09:30:00')
-            if   self.level == 'pre_mkt_high':   data[self.name] = df['high'].expanding().max()
-            elif self.level == 'pre_mkt_low':    data[self.name] = df['low'].expanding().min()
-            elif self.level == 'pre_mkt_close':  data[self.name] = df['close'].iloc[-1]
-            elif self.level == 'pre_mkt_open':   data[self.name] = df['open'].iloc[0]
-            elif self.level == 'pre_mkt_volume': data[self.name] = df['volume'].sum()
-
-        if 'regular' in self.level:
-            df = data.between_time('09:30:00', '16:00:00')
-            if   self.level == 'regular_high':   data[self.name] = df['high'].expanding().max()
-            elif self.level == 'regular_low':    data[self.name] = df['low'].expanding().min()
-            elif self.level == 'regular_close':  data[self.name] = df['close'].iloc[-1]
-            elif self.level == 'regular_open':   data[self.name] = df['open'].iloc[0]
-            elif self.level == 'regular_volume': data[self.name] = df['volume'].sum()
-
-        if 'post_mkt' in self.level:
-            df = data.between_time('16:00:00', '23:59:59')
-            if   self.level == 'post_mkt_high':   data[self.name] = df['high'].expanding().max()
-            elif self.level == 'post_mkt_low':    data[self.name] = df['low'].expanding().min()
-            elif self.level == 'post_mkt_close':  data[self.name] = df['close'].iloc[-1]
-            elif self.level == 'post_mkt_open':   data[self.name] = df['open'].iloc[0]
-            elif self.level == 'post_mkt_volume': data[self.name] = df['volume'].sum()
-
+        # Apply previous day levels
         if 'prev_day' in self.level:
-            prev_date = unique_dates[-(self.daysAgo + 2)]
-            df = data[data.index.normalize() == prev_date]
-            if   self.level == 'prev_day_high':   data[self.name] = df['high'].expanding().max()
-            elif self.level == 'prev_day_low':    data[self.name] = df['low'].expanding().min()
-            elif self.level == 'prev_day_close':  data[self.name] = df['close'].iloc[-1]
-            elif self.level == 'prev_day_open':   data[self.name] = df['open'].iloc[0]
-            elif self.level == 'prev_day_volume': data[self.name] = df['volume'].sum()
+            for i, date in enumerate(data.index.normalize().unique()[1:], start=1):
+                prev_date = data.index.normalize().unique()[i-1]
+                prev_day_data = data[data.index.normalize() == prev_date]
+                df = prev_day_data.between_time('09:30:00', '16:00:00')
+                if   self.level == 'prev_day_high':   data.loc[data.index.normalize() == date, self.name] = df['high'].max()
+                elif self.level == 'prev_day_low':    data.loc[data.index.normalize() == date, self.name] = df['low'].min()
+                elif self.level == 'prev_day_close':  data.loc[data.index.normalize() == date, self.name] = df['close'].iloc[-1]
+                elif self.level == 'prev_day_open':   data.loc[data.index.normalize() == date, self.name] = df['open'].iloc[0]
+                elif self.level == 'prev_day_volume': data.loc[data.index.normalize() == date, self.name] = df['volume'].sum()
 
         return data
 

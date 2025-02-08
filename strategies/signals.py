@@ -2946,248 +2946,167 @@ class TurnBar(Signals):
             
         return round(score, 2)
 
+
 @dataclass
-class Strategy:
+class Condition:
+    step: Union[int, str]
+    name: str
+    val1: Union[str, float, int]
+    operator: str
+    val2: Union[str, float, int]
+    
+    def _get_value(self, row: pd.Series, val: Union[str, float, int]) -> float:
+        """Extract value from either a row column or direct value"""
+        if isinstance(val, str):
+            return row[val]
+        return val
+    
+    def evaluate(self, row: pd.Series) -> bool:
+        val1 = self._get_value(row, self.val1)
+        val2 = self._get_value(row, self.val2)
+        
+        if   self.operator == '>':  return val1 >  val2
+        elif self.operator == '<':  return val1 <  val2
+        elif self.operator == '>=': return val1 >= val2
+        elif self.operator == '<=': return val1 <= val2
+        elif self.operator == '==': return val1 == val2
+        return False
+
+
+
+@dataclass
+class Strategy(Signals):
     name: str = ''
-    ls: str = 'LONG'
-    lookBack: int = 20
+
+    
+    # Initialize collections to store conditions
+    steps: Dict = field(default_factory=dict)
+    global_reset_conditions: List[Condition] = field(default_factory=list)
+    buy_conditions: List[Condition] = field(default_factory=list)
+    price_conditions: List[Condition] = field(default_factory=list)
 
     def __post_init__(self):
         self.name = f'Stgy_{self.name}'
-        self.event_tracker = {}
-        self.steps = set()
-        self.current_step = 1
-        self.triggered_events = set()
         
-        # Track conditions by type
-        self.reset_conditions = set()
-        self.reset_after_validation_conditions = set()
-        self.true_counts = {}  # Track periods true for each reset-after condition
-        
-        # Initialize names list - will be populated as conditions are added
-        self.names = []
+    def _ensure_step_exists(self, step: int):
+        """Ensure the step exists in self.steps with proper structure"""
+        if step not in self.steps:
+            self.steps[step] = {
+                'valid_conditions': [],
+                'reset_conditions': [],
+                'status': False,
+                'last_true_index': None
+            }
 
-    def add_event(self, step: int, name: str, valToCheck: Union[str, float], checkIf: str, colThreshold: str):
-        """Add an event that happens once and triggers a validation."""
-        condition_name = f'{self.name}_{step}-{name}'
-        self.event_tracker[condition_name] = {
-            'step': step,
-            'type': 'event',
-            'status': 'pending',
-            'valToCheck': valToCheck,
-            'checkIf': checkIf,
-            'colThreshold': colThreshold,
-            'isTrue': 0
-        }
-        self.steps.add(step)
-        self.names.append(condition_name)
+    def valid_if(self, step: int, name: str, val1: str, operator: str, val2: float):
+        """Add a validation condition for a specific step"""
+        self._ensure_step_exists(step)
+        condition = Condition(step=step, name=name, val1=val1, operator=operator, val2=val2)
+        self.steps[step]['valid_conditions'].append(condition)
 
-    def add_validation(self, step: int, name: str, valToCheck: Union[str, float], checkIf: str, colThreshold: str):
-        """Add a validation that is ongoing and reversible."""
-        condition_name = f'{self.name}_{step}-{name}'
-        self.event_tracker[condition_name] = {
-            'step': step,
-            'type': 'validation',
-            'status': 'pending',
-            'valToCheck': valToCheck,
-            'checkIf': checkIf,
-            'colThreshold': colThreshold,
-            'isTrue': 0
-        }
-        self.steps.add(step)
-        self.names.append(condition_name)
+    def reset_if(self, step: Union[int, str], name: str, val1: str, operator: str, val2: float):
+        """Add a reset condition. If step='all', it's a global reset condition"""
+        condition = Condition(step=step, name=name, val1=val1, operator=operator, val2=val2)
+        if step == 'all':
+            self.global_reset_conditions.append(condition)
+        else:
+            self._ensure_step_exists(step)
+            self.steps[step]['reset_conditions'].append(condition)
 
-    def add_reset(self, name: str, valToCheck: Union[str, float], checkIf: str, colThreshold: str):
-        """Add a reset condition that cancels the strategy if triggered."""
-        condition_name = f'{self.name}_R_{name}'
-        self.event_tracker[condition_name] = {
-            'type': 'reset',
-            'valToCheck': valToCheck,
-            'checkIf': checkIf,
-            'colThreshold': colThreshold,
-            'isTrue': 0
-        }
-        self.reset_conditions.add(condition_name)
-        self.names.append(condition_name)
+    def buy_if(self, step: int, name: str, val1: str, operator: str, val2: float):
+        """Add a buy condition"""
+        condition = Condition(step=step, name=name, val1=val1, operator=operator, val2=val2)
+        self.buy_conditions.append(condition)
 
-    def add_reset_after_validation(self, name: str, valToCheck: Union[str, float], 
-                                 checkIf: str, colThreshold: str, periods: int = 5):
-        """Add a condition that resets the strategy after being valid for N periods."""
-        condition_name = f'{self.name}_{name}'
-        self.event_tracker[condition_name] = {
-            'type': 'reset_after_validation',
-            'valToCheck': valToCheck,
-            'checkIf': checkIf,
-            'colThreshold': colThreshold,
-            'isTrue': 0,
-            'periods': periods
-        }
-        self.reset_after_validation_conditions.add(condition_name)
-        self.true_counts[condition_name] = 0
-        self.names.append(condition_name)
-
-    def evaluate_condition(self, row: pd.Series, condition: dict) -> bool:
-        """Evaluate a single condition against a row of data."""
-        if 'valToCheck' not in condition or 'colThreshold' not in row:
-            return False
-        val = condition['valToCheck']
-        threshold = condition['colThreshold']
-        
-        actual_valToCheck = float(row[val]) if isinstance(val, str) else val
-        actual_threshold = float(row[threshold]) if isinstance(threshold, str) else threshold
-        # print(f"{row.name} - valToCheck: {actual_valToCheck} {type(actual_valToCheck)} {condition['checkIf']} {actual_threshold} = {actual_valToCheck > actual_threshold}" )
-    
-        if condition['checkIf'] == '>':
-            return actual_valToCheck > actual_threshold
-        elif condition['checkIf'] == '<':
-            return actual_valToCheck < actual_threshold
-        elif condition['checkIf'] == '>=':
-            return actual_valToCheck >= actual_threshold
-        elif condition['checkIf'] == '<=':
-            return actual_valToCheck <= actual_threshold
-        return False
-
-    def reset_strategy(self):
-        """Reset all strategy state."""
-        self.current_step = 1
-        self.triggered_events.clear()
-        for event in self.event_tracker.values():
-            event['isTrue'] = 0
-            event['status'] = 'pending'
-        for condition in self.true_counts:
-            self.true_counts[condition] = 0
-
-    def check_step_completion(self, step: int) -> float:
-        """Calculate completion percentage for a given step."""
-        step_items = {k: v for k, v in self.event_tracker.items() 
-                     if v.get('step') == step}
-        if not step_items:
-            return 0.0
-        
-        completed = 0
-        for name, condition in step_items.items():
-            if condition['type'] == 'event' and name in self.triggered_events:
-                completed += 1
-            elif condition['type'] == 'validation' and condition['isTrue'] == 1:
-                completed += 1
-                
-        return completed / len(step_items) if step_items else 0.0
+    def buy_price(self, step: int, name: str, val1: str, operator: str, val2: float):
+        """Add a price condition for buy signal"""
+        condition = Condition(step=step, name=name, val1=val1, operator=operator, val2=val2)
+        self.price_conditions.append(condition)
 
     def _compute_row(self, df: pd.DataFrame) -> pd.Series:
-        """Compute strategy values for the current row."""
-        if len(df) < 2:
-            return pd.Series(0, index=self.names)
-            
+        """Compute strategy values for a single row"""
+        row = pd.Series(dtype=float)
         current_row = df.iloc[-1]
-        results = {}
         
-        # Check reset conditions first
-        for name in self.reset_conditions:
-            condition = self.event_tracker[name]
-            if self.evaluate_condition(current_row, condition):
-                condition['isTrue'] = 1
-                results[name] = 100  # Signal the reset condition that triggered
-                self.reset_strategy()
-                return pd.Series(results)
-            condition['isTrue'] = 0
-            results[name] = 0
-        
-        # Process events and validations for current step
-        step_items = {k: v for k, v in self.event_tracker.items() 
-                     if v.get('step', 0) == self.current_step}
-        
-        # Update events (permanent until reset)
-        for name, condition in step_items.items():
-            if condition['type'] == 'event':
-                if name in self.triggered_events:
-                    condition['isTrue'] = 1
-                    results[name] = 100
-                elif self.evaluate_condition(current_row, condition):
-                    # print(f"{current_row.name} Event Triggered: {name}")
-                    self.triggered_events.add(name)
-                    condition['isTrue'] = 1
-                    condition['status'] = 'completed'
-                    results[name] = 100
-                else:
-                    results[name] = 0
+        # Check global reset conditions first
+        global_reset = False
+        for condition in self.global_reset_conditions:
+            result = condition.evaluate(current_row)
+            row[f'{self.name}_reset_{condition.name}'] = int(result)
+            if result:
+                global_reset = True
 
-        # Update validations (can change each row)
-        for name, condition in step_items.items():
-            if condition['type'] == 'validation':
-                condition['isTrue'] = 1 if self.evaluate_condition(current_row, condition) else 0
-                results[name] = 100 if condition['isTrue'] else 0
+        if global_reset:
+            # Reset all steps
+            for step_data in self.steps.values():
+                step_data['status'] = False
+                step_data['last_true_index'] = None
         
-        # Calculate step completions
-        for step in sorted(self.steps):
-            completion = self.check_step_completion(step)
-            results[f'{self.name}_step{step}'] = completion * 100
+        # Process each step in sequence
+        sequence_still_valid = True  # Track if the sequence of validations remains intact
+        for step in sorted(self.steps.keys()):
+            step_data = self.steps[step]
             
-            # Progress to next step if current is complete
-            if step == self.current_step and completion == 1.0:
-                if step < max(self.steps):
-                    self.current_step += 1
-        
-        # Calculate total completion
-        if self.steps:
-            total_completion = sum(self.check_step_completion(step) 
-                                 for step in range(1, self.current_step + 1)) / len(self.steps)
-            results[f'{self.name}_total'] = total_completion * 100
-        else:
-            results[f'{self.name}_total'] = 0
+            # Check step-specific reset conditions
+            step_reset = False
+            for condition in step_data['reset_conditions']:
+                result = condition.evaluate(current_row)
+                row[f'{self.name}_reset_{step}_{condition.name}'] = int(result)
+                if result:
+                    step_reset = True
             
-        # Handle reset after validation conditions
-        for name in self.reset_after_validation_conditions:
-            condition = self.event_tracker[name]
-            if self.evaluate_condition(current_row, condition):
-                condition['isTrue'] = 1
-                self.true_counts[name] += 1
-                if self.true_counts[name] >= condition['periods']:
-                    results[name] = 100  # Signal which reset-after condition triggered
-                    self.reset_strategy()
-                    return pd.Series(results)
-            else:
-                condition['isTrue'] = 0
-                self.true_counts[name] = 0
-            results[name] = 100 if condition['isTrue'] else 0
-                
-        return pd.Series(results)
-    
-
-    def run(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Process strategy over lookback period maintaining proper state progression."""
-        if len(df) < 10:
-            return pd.DataFrame(0, index=df.index, columns=self.names)
-
-        # Add step and total columns if not already in names
-        for step in sorted(self.steps):
-            step_col = f'{self.name}_step{step}'
-            if step_col not in self.names:
-                self.names.append(step_col)
-        total_col = f'{self.name}_total'
-        if total_col not in self.names:
-            self.names.append(total_col)
-
-        # Initialize results DataFrame
-        results = pd.DataFrame(0, index=df.index, columns=self.names)
-        
-        # Reset strategy state at start of run
-        self.reset_strategy()
-        
-        # Process each row in the lookback period
-        lookBack = min(self.lookBack, len(df)) - 1
-        lookback_indices = df.index[-lookBack:]
-        
-        for i, idx in enumerate(lookback_indices):
-            current_window = df.loc[:idx]
-            if current_window.empty:
+            if step_reset:
+                step_data['status'] = False
+                step_data['last_true_index'] = None
+            
+            # Only proceed with validation if the sequence is still valid
+            if not sequence_still_valid:
                 continue
                 
-            row_results = self._compute_row(current_window)
+            # Check validation conditions
+            step_valid = True
+            for condition in step_data['valid_conditions']:
+                result = condition.evaluate(current_row)
+                row[f'{self.name}_valid_{step}_{condition.name}'] = int(result)
+                if not result:
+                    step_valid = False
             
-            # Ensure row_results has all the columns in the correct order
-            row_results = row_results.reindex(results.columns, fill_value=0)
+            step_data['status'] = step_valid
+            if step_valid:
+                step_data['last_true_index'] = len(df) - 1
             
-            # Use the index location for setting values
-            results.loc[idx] = row_results
+            sequence_still_valid = sequence_still_valid and step_valid
+        
+        # Process buy conditions if entire sequence is valid
+        buy_signal = False
+        if sequence_still_valid:
+            buy_signal = True
+            for condition in self.buy_conditions:
+                result = condition.evaluate(current_row)
+                row[f'{self.name}_buy_{condition.name}'] = int(result)
+                if not result:
+                    buy_signal = False
+        
+        # If we have a buy signal, calculate the buy price
+        if buy_signal:
+            for condition in self.price_conditions:
+                if condition.evaluate(current_row):
+                    row[f'{self.name}_price'] = current_row[condition.val1]
+                    break
+        else:
+            row[f'{self.name}_price'] = np.nan
             
-        return results
+        return row
+
+    def compute(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Compute strategy values for entire DataFrame
+        Returns a new DataFrame with strategy columns added
+        """
+        results = []
+        for i in range(self.lookBack, len(df)):
+            window = df.iloc[i-self.lookBack:i+1]
+            row = self._compute_row(window)
+            results.append(row)
+        
+        return pd.DataFrame(results, index=df.index[self.lookBack:])
