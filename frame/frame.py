@@ -123,7 +123,7 @@ class Frame:
         for ta, style, chart_type, row in self.ta:
             self.data = self.update_data(ta.run(self.data))
     
-    def import_data(self, import_df, importCols: list[str] = None, colsContain: list[str] = None, ffillAutoLimit=True, ffillManualLimit=None, prefix='_', merge_to_backtest: bool = False):
+    def import_data(self, import_df, importCols: list[str] = None, colsContain: list[str] = None, ffill:bool=False, prefix='_', merge_to_backtest: bool = False):
         """
         Import and merge high timeframe data into the existing low timeframe data.
 
@@ -166,23 +166,23 @@ class Frame:
 
         filtered_columns = list(set(filtered_columns))  # Remove duplicates
 
+        if not filtered_columns:
+                raise ValueError("No columns found matching the specified criteria")
+
+        # Create column mapping and drop any existing columns
         column_mapping = {col: f"{prefix}{col}" for col in filtered_columns}
         self_df = self_df.drop(columns=list(column_mapping.values()), errors='ignore')
 
-        if ffillAutoLimit:
-            low_tf_delta = pd.Series(self_df.index).diff().mode()[0]
-            high_tf_delta = pd.Series(import_df.index).diff().mode()[0]
-            fill_limit = max(1, int((high_tf_delta / low_tf_delta) - 1))
-        else:
-            fill_limit = max(1, ffillManualLimit if ffillManualLimit is not None else 4)
-
         # Pre-rename columns before merge
         import_df_subset = import_df[filtered_columns].rename(columns=column_mapping)
+        
+        # Merge the data frames
         df_merged = pd.merge_asof(self_df, import_df_subset, left_index=True, right_index=True, direction='backward')
 
-        # Forward fill the new columns
-        for col in column_mapping.values():
-            df_merged[col] = df_merged[col].fillna(method='ffill', limit=fill_limit)
+        # Forward fill the new columns until the next actual value
+        if ffill:
+            for col in column_mapping.values():
+                df_merged[col] = df_merged[col].fillna(method='ffill')
 
         if merge_to_backtest:
             self.backtest_data = df_merged

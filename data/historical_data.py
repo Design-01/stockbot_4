@@ -71,76 +71,60 @@ def map_to_storage_interval(interval: str, source: str = 'ib') -> str:
     raise ValueError(f"Invalid interval '{interval}' for source '{source}'")
 
 
-def calculate_past_date(input_date):
+def calculate_past_date(start_date, end_date):
     """
-    Calculate a past date based on either a date object, date string, or a relative time string.
-    For 'daysAgo', rounds to 00:00:01 on the day
-    For 'weeksAgo', rounds to Monday 00:00:01 of that week
+    Calculate a past date relative to a specified end date.
     
     Args:
-        input_date: Can be either:
+        start_date: Can be either:
             - datetime object
-            - string in format '%Y-%m-%d %H:%M:%S' (e.g., '2024-11-24 14:30:00')
-            - string in format '%Y-%m-%d' (e.g., '2024-11-24')
+            - string in format 'YYYY-MM-DD'
             - string in format '5 daysAgo' or '3 weeksAgo'
+        end_date: Required reference date:
+            - string 'now' for current datetime
+            - string in format 'YYYY-MM-DD'
     
     Returns:
-        str: Formatted date string in '%Y-%m-%d %H:%M:%S' format
-    
-    Examples:
-        >>> calculate_past_date('5 daysAgo')  # if current date is Monday
-        Returns previous Monday at 00:00:01
-        >>> calculate_past_date('2 weeksAgo')  # if lands on Wednesday
-        Returns Monday of that week at 00:00:01
+        str: Formatted date string in 'YYYY-MM-DD HH:MM:SS' format
     """
-    # Handle datetime object
-    if isinstance(input_date, datetime):
-        return input_date.strftime('%Y-%m-%d %H:%M:%S')
-    
-    if not isinstance(input_date, str):
-        raise ValueError("Input must be either a datetime object or a string")
-    
-    # Try parsing as datetime string with different formats
-    date_formats = [
-        '%Y-%m-%d %H:%M:%S',
-        '%Y-%m-%d'
-    ]
-    
-    for date_format in date_formats:
+    # Set reference date (end_date)
+    if end_date == 'now':
+        reference_date = datetime.now()
+    else:
         try:
-            parsed_date = datetime.strptime(input_date, date_format)
-            return parsed_date.strftime('%Y-%m-%d %H:%M:%S')
+            reference_date = datetime.strptime(end_date, '%Y-%m-%d')
         except ValueError:
-            continue
+            raise ValueError("end_date must be 'now' or in 'YYYY-MM-DD' format")
+
+    # Handle start_date as datetime object
+    if isinstance(start_date, datetime):
+        return start_date.strftime('%Y-%m-%d %H:%M:%S')
     
-    # Parse relative time string
+    # Handle relative time string (e.g., '5 daysAgo')
     pattern = r'(\d+)\s*(days?Ago|weeks?Ago)'
-    match = re.match(pattern, input_date, re.IGNORECASE)
+    match = re.match(pattern, start_date, re.IGNORECASE)
     
-    if not match:
-        raise ValueError("String must be in format 'YYYY-MM-DD HH:MM:SS', 'YYYY-MM-DD', or 'X daysAgo/weeksAgo'")
-    
-    number = int(match.group(1))
-    unit = match.group(2).lower()
-    
-    current_date = datetime.now()
-    
-    if 'week' in unit:
-        # First go back the specified number of weeks
-        past_date = current_date - timedelta(weeks=number)
-        # Then find Monday of that week (weekday() returns 0 for Monday)
-        days_since_monday = past_date.weekday()
-        # Adjust to Monday of that week
-        past_date = past_date - timedelta(days=days_since_monday)
-        # Set time to 00:00:01
+    if match:
+        number = int(match.group(1))
+        unit = match.group(2).lower()
+        
+        if 'week' in unit:
+            # Go back specified weeks and find Monday
+            past_date = reference_date - timedelta(weeks=number)
+            days_since_monday = past_date.weekday()
+            past_date = past_date - timedelta(days=days_since_monday)
+        else:  # days
+            past_date = reference_date - timedelta(days=number)
+            
         past_date = past_date.replace(hour=0, minute=0, second=1, microsecond=0)
-    else:  # days
-        # Go back the specified number of days
-        past_date = current_date - timedelta(days=number)
-        # Set time to 00:00:01
-        past_date = past_date.replace(hour=0, minute=0, second=1, microsecond=0)
+        return past_date.strftime('%Y-%m-%d %H:%M:%S')
     
-    return past_date.strftime('%Y-%m-%d %H:%M:%S')
+    # Try parsing as regular date string
+    try:
+        parsed_date = datetime.strptime(start_date, '%Y-%m-%d')
+        return parsed_date.strftime('%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        raise ValueError("start_date must be a datetime, 'YYYY-MM-DD', or 'X daysAgo/weeksAgo'")
 
 class IntervalHandler:
     # Define standard mappings
@@ -976,7 +960,7 @@ def combine_dataframes(dfs):
 
 #! ------>>>  Main function to get historical data <<<------ #
 def get_hist_data(symbol, start_date, end_date, interval, force_download=False):
-    start_date = calculate_past_date(start_date)
+    start_date = calculate_past_date(start_date, end_date)
     file_interval = map_to_storage_interval(interval, 'ib')
     stored_data = load_data(symbol, file_interval)
     missing_dates = get_missing_batch_dates(stored_data, start_date, end_date, batch_interval='weekly')
@@ -995,7 +979,7 @@ def get_hist_data(symbol, start_date, end_date, interval, force_download=False):
         print(f"Missing data: {len(missing_data)} rows of data")
         new_data = combine_dataframes([stored_data, missing_data])
         save_data(new_data, symbol, lowest_barsize)
-        final_data = load_data(symbol, file_interval)
+        data = load_data(symbol, file_interval)
 
     data = load_data(symbol, file_interval)
     if data is None:

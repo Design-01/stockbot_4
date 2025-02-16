@@ -843,6 +843,16 @@ class StockX:
         self.frames = {}
         self.status = [] # list of StatusLog
 
+    def get_frame(self, timeframe:str):
+        if timeframe not in self.frames:
+            return None
+        return self.frames[timeframe]
+    
+    def get_frame_data(self, timeframe:str):
+        if timeframe not in self.frames:
+            return None
+        return self.frames[timeframe].data
+
     def get_status_df(self):
         return pd.DataFrame([s.__dict__ for s in self.status])
         
@@ -873,7 +883,9 @@ class StockX:
             self.frames[timeframe].load_ohlcv(df)
 
         elif dataType == 'ohlcv':
-             self.frames[name].load_ohlcv(hd.get_hist_data(self.symbol, start_date, end_date, timeframe, force_download=force_download))
+             df = hd.get_hist_data(self.symbol, start_date, end_date, timeframe, force_download=force_download)
+             print(f"StockX::set_up_frame: {self.symbol} {timeframe} {dataType} {start_date} {end_date} {force_download} : {df.shape}")
+             self.frames[name].load_ohlcv(df)
 
         elif dataType == 'tick':
             # todo: implement tick data
@@ -948,22 +960,22 @@ class StockX:
         else:
             raise ValueError(f"Item '{item_name}' not found in the DataFrame")
         
-    def setup_all_frames(self, dataType:str='ohlcv', force_download:bool=False):
-        self.set_up_frame('1 day',  dataType,     start_date="52 weeksAgo", end_date="now", force_download=force_download)
+    def setup_all_frames(self, dataType:str='ohlcv', end_date="now", force_download:bool=False):
+        self.set_up_frame('1 day', dataType, start_date="52 weeksAgo", end_date=end_date, force_download=force_download)
         barsize_start_dates = {
-            '1 week': "200 weeksAgo",
+            '1 week': "200 daysAgo",
             '1 day': "52 daysAgo",
             '4 hours': "6 weeksAgo",
             '1 hour': "3 weeksAgo",
             '5 mins': "3 daysAgo"
         }
         for barsize in self.intradaySizes:
-            start_date = barsize_start_dates[barsize]
-            self.set_up_frame(barsize, dataType, start_date=start_date, end_date="now", force_download=force_download)
-
+            sd = barsize_start_dates[barsize]
+            self.set_up_frame(barsize, dataType, start_date=sd, end_date=end_date, force_download=force_download)
 
     def import_all_market_data(self, mktStockX:object):
-        """takes a different StockX object and imports all its data into this StockX object.
+        """takes a different StockX object such as SPY and imports all its data (OHLCV) into this StockX object.
+        Ttime frames are match from object to object and the data is imported with a prefix of the symbol of the imported StockX object.
 
         Args:
             mktStockX (StockX): StockX object must match the same timeframes as this object.
@@ -980,6 +992,35 @@ class StockX:
         """Import the 1 Hour data to the 5 min data etc """
         prefix  = fromBarsize.replace(' ', '_') + '_'
         self.frames[toBarsize].import_data(self.frames[fromBarsize].data, importCols=fromCols, prefix=prefix)
+
+    def import_all_HTF_data(self):
+        # only imports if the HTF is availble in the frames. so most of the time it will only import 1 day, 1 hour to 5 mins
+        import_map = {
+                '1 min'  : ['1 day', '4 hours', '1 hour', '15 mins', '5 mins'], 
+                '2 mins' : ['1 day', '4 hours', '1 hour', '15 mins', '5 mins'],
+                '3 mins' : ['1 day', '4 hours', '1 hour', '15 mins'],
+                '5 mins' : ['1 day', '4 hours', '1 hour', '15 mins'],
+                '15 mins': ['1 day', '4 hours', '1 hour'],
+                '1 hour' : ['1 day', '4 hours'],
+            }
+        
+        column_map = {
+            '1 day'  : ['Res_1_Lower', 'Sup_1_Upper', 'MA_cl_50', 'MA_cl_200'],
+            '4 hours': ['Res_1_Lower', 'Sup_1_Upper',],
+            '1 hour' : ['Res_1_Lower', 'Sup_1_Upper',],
+            '15 mins': ['Res_1_Lower', 'Sup_1_Upper',],
+            '5 mins' : ['Res_1_Lower', 'Sup_1_Upper',],
+        }
+        
+        for barsize in self.intradaySizes:
+            f = self.get_frame(barsize)
+            for fromBarsize in import_map[barsize]:
+                if self.get_frame(fromBarsize):
+                    from_f = self.get_frame(fromBarsize)
+                    # print(f'Importing {fromBarsize} to {barsize}')
+                    importCols = column_map[fromBarsize]
+                    f.import_data(from_f.data, importCols=importCols, prefix=fromBarsize+'_')
+                    print(f.data.columns)
 
     
     def run_day_frame(self, ls, lookBack, atrSpan, sigRow=3, validationRow=4):
@@ -1006,13 +1047,13 @@ class StockX:
         # -- Validations --  
         if ls == 'LONG':
             validations = [
-                sig.Validate(f, val1='close',             operator='>',  val2='MA_cl_50', normRange=(0,1), lookBack=lookBack), # close > MA50
-                sig.Validate(f, val1='PctDiff_MA_cl_50',  operator='>',  val2=0,          normRange=(0,1), lookBack=lookBack), # MA50_PCT_Cahnge  > 0
-                sig.Validate(f, val1='close',             operator='^p', val2='HP_hi_3',  normRange=(0,1), lookBack=lookBack), # close breaks HP_hi_3
-                sig.Validate(f, val1='close',             operator='^p', val2='HP_hi_10', normRange=(0,1), lookBack=lookBack), # close breaks HP_hi_10
-                sig.Validate(f, val1='GapSz',             operator='><', val2=(2,10),     normRange=(0,1), lookBack=lookBack), # GapSz between 2 and 10
-                sig.Validate(f, val1='RTM_L_Res_1_Lower', operator='>',  val2=2,          normRange=(0,1), lookBack=lookBack), # Room to move > 2 (measured by ATR units)
-                sig.Validate(f, val1=ta_rs_name,          operator='>',  val2=2,          normRange=(0,1), lookBack=lookBack)  # RS > 2 (measured by ATR units)
+                sig.Validate(f, val1='close',             operator='>',  val2='MA_cl_50', lookBack=lookBack), # close > MA50
+                sig.Validate(f, val1='PctDiff_MA_cl_50',  operator='>',  val2=0,          lookBack=lookBack), # MA50_PCT_Cahnge  > 0
+                sig.Validate(f, val1='close',             operator='^p', val2='HP_hi_3',  lookBack=lookBack), # close breaks HP_hi_3
+                sig.Validate(f, val1='close',             operator='^p', val2='HP_hi_10', lookBack=lookBack), # close breaks HP_hi_10
+                sig.Validate(f, val1='GapSz',             operator='><', val2=(2,10),     lookBack=lookBack), # GapSz between 2 and 10
+                sig.Validate(f, val1='RTM_L_Res_1_Lower', operator='>',  val2=2,          lookBack=lookBack), # Room to move > 2 (measured by ATR units)
+                sig.Validate(f, val1=ta_rs_name,          operator='>',  val2=2,          lookBack=lookBack)  # RS > 2 (measured by ATR units)
             ]
             
             for v in validations:

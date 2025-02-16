@@ -16,6 +16,8 @@ def preprocess_data(func):
 @dataclass
 class TA(ABC):
     column: str = None
+    name: str = None
+    names: List[str] = field(default_factory=list)
 
     @abstractmethod
     def run(self, data: pd.DataFrame) -> pd.Series | pd.DataFrame:
@@ -105,38 +107,40 @@ class Levels(TA):
     level: str = '' # pre_mkt_high, pre_mkt_low, pre_mkt_close, pre_mkt_open, pre_mkt_volume, regular_high, regular_low, regular_close, regular_open, regular_volume, post_mkt_high, post_mkt_low, post_mkt_close, post_mkt_open, post_mkt_volume, prev_day_high, prev_day_low, prev_day_close, prev_day_open, prev_day_volume
 
     def __post_init__(self):
-        self.name = f"Level_{self.level}" 
+        self.name = self.level
         self.names = [self.name]
     
     def run(self, data: pd.DataFrame) -> pd.DataFrame:
-
         # Apply levels to each day
         for date in data.index.normalize().unique():
             day_data = data[data.index.normalize() == date]
 
             if 'pre_mkt' in self.level:
                 df = day_data.between_time('00:00:00', '09:30:00')
-                if   self.level == 'pre_mkt_high':   data.loc[df.index, self.name] = df['high'].expanding().max()
-                elif self.level == 'pre_mkt_low':    data.loc[df.index, self.name] = df['low'].expanding().min()
-                elif self.level == 'pre_mkt_close':  data.loc[df.index, self.name] = df['close'].iloc[-1]
-                elif self.level == 'pre_mkt_open':   data.loc[df.index, self.name] = df['open'].iloc[0]
-                elif self.level == 'pre_mkt_volume': data.loc[df.index, self.name] = df['volume'].sum()
+                if not df.empty:
+                    if   self.level == 'pre_mkt_high':   data.loc[df.index, self.name] = df['high'].cummax()
+                    elif self.level == 'pre_mkt_low':    data.loc[df.index, self.name] = df['low'].cummin()
+                    elif self.level == 'pre_mkt_close':  data.loc[df.index, self.name] = df['close'].iloc[-1]
+                    elif self.level == 'pre_mkt_open':   data.loc[df.index, self.name] = df['open'].iloc[0]
+                    elif self.level == 'pre_mkt_volume': data.loc[df.index, self.name] = df['volume'].cumsum()
 
             if 'intraday' in self.level:
                 df = day_data.between_time('09:30:00', '16:00:00')
-                if   self.level == 'intraday_high':   data.loc[df.index, self.name] = df['high'].expanding().max()
-                elif self.level == 'intraday_low':    data.loc[df.index, self.name] = df['low'].expanding().min()
-                elif self.level == 'intraday_close':  data.loc[df.index, self.name] = df['close'].iloc[-1]
-                elif self.level == 'intraday_open':   data.loc[df.index, self.name] = df['open'].iloc[0]
-                elif self.level == 'intraday_volume': data.loc[df.index, self.name] = df['volume'].sum()
+                if not df.empty:
+                    if   self.level == 'intraday_high':   data.loc[df.index, self.name] = df['high'].cummax()
+                    elif self.level == 'intraday_low':    data.loc[df.index, self.name] = df['low'].cummin()
+                    elif self.level == 'intraday_close':  data.loc[df.index, self.name] = df['close'].iloc[-1]
+                    elif self.level == 'intraday_open':   data.loc[df.index, self.name] = df['open'].iloc[0]
+                    elif self.level == 'intraday_volume': data.loc[df.index, self.name] = df['volume'].cumsum()
 
             if 'post_mkt' in self.level:
                 df = day_data.between_time('16:00:00', '23:59:59')
-                if   self.level == 'post_mkt_high':   data.loc[df.index, self.name] = df['high'].expanding().max()
-                elif self.level == 'post_mkt_low':    data.loc[df.index, self.name] = df['low'].expanding().min()
-                elif self.level == 'post_mkt_close':  data.loc[df.index, self.name] = df['close'].iloc[-1]
-                elif self.level == 'post_mkt_open':   data.loc[df.index, self.name] = df['open'].iloc[0]
-                elif self.level == 'post_mkt_volume': data.loc[df.index, self.name] = df['volume'].sum()
+                if not df.empty:
+                    if   self.level == 'post_mkt_high':   data.loc[df.index, self.name] = df['high'].cummax()
+                    elif self.level == 'post_mkt_low':    data.loc[df.index, self.name] = df['low'].cummin()
+                    elif self.level == 'post_mkt_close':  data.loc[df.index, self.name] = df['close'].iloc[-1]
+                    elif self.level == 'post_mkt_open':   data.loc[df.index, self.name] = df['open'].iloc[0]
+                    elif self.level == 'post_mkt_volume': data.loc[df.index, self.name] = df['volume'].cumsum()
 
         # Apply previous day levels
         if 'prev_day' in self.level:
@@ -144,42 +148,48 @@ class Levels(TA):
                 prev_date = data.index.normalize().unique()[i-1]
                 prev_day_data = data[data.index.normalize() == prev_date]
                 df = prev_day_data.between_time('09:30:00', '16:00:00')
-                if   self.level == 'prev_day_high':   data.loc[data.index.normalize() == date, self.name] = df['high'].max()
-                elif self.level == 'prev_day_low':    data.loc[data.index.normalize() == date, self.name] = df['low'].min()
-                elif self.level == 'prev_day_close':  data.loc[data.index.normalize() == date, self.name] = df['close'].iloc[-1]
-                elif self.level == 'prev_day_open':   data.loc[data.index.normalize() == date, self.name] = df['open'].iloc[0]
-                elif self.level == 'prev_day_volume': data.loc[data.index.normalize() == date, self.name] = df['volume'].sum()
+                if not df.empty:
+                    if   self.level == 'prev_day_high':   data.loc[data.index.normalize() == date, self.name] = df['high'].max()
+                    elif self.level == 'prev_day_low':    data.loc[data.index.normalize() == date, self.name] = df['low'].min()
+                    elif self.level == 'prev_day_close':  data.loc[data.index.normalize() == date, self.name] = df['close'].iloc[-1]
+                    elif self.level == 'prev_day_open':   data.loc[data.index.normalize() == date, self.name] = df['open'].iloc[0]
+                    elif self.level == 'prev_day_volume': data.loc[data.index.normalize() == date, self.name] = df['volume'].sum()
 
         return data
 
 
 @dataclass
 class MA(TA):
+    maCol: str = 'close'
     period: int = 20
 
     def __post_init__(self):
-        self.name = f"MA_{self.column[:2]}_{self.period}"
-        self.names = f"MA_{self.column[:2]}_{self.period}"
+        self.name = f"MA_{self.maCol[:2]}_{self.period}"
+        self.names = f"MA_{self.maCol[:2]}_{self.period}"
         self.rowsToUpdate = self.period 
 
     @preprocess_data
     def run(self, data: pd.DataFrame) -> pd.Series:
-        return data[self.column].rolling(window=self.period).mean().rename(self.name)
+        return data[self.maCol].rolling(window=self.period).mean().rename(self.name)
+
+
 
 
 @dataclass
 class VWAP(TA):
+    interval: str = 'Session' # 'Session', 'Day', 'Week', 'Month', 'Year'
 
-    def post_init(self):
-        self.name = f"VWAP_{self.period}"
+
+    def __post_init__(self):
+        self.name = f"VWAP"
         self.names = self.name
-        self.rowsToUpdate = self.period
+        self.rowsToUpdate = 10
 
     @preprocess_data
     def run(self, data: pd.DataFrame) -> pd.Series:
-        # Add datetime index if not present
-        if not isinstance(data.index, pd.DatetimeIndex):
-            data.index = pd.to_datetime(data.index)
+        # # Add datetime index if not present
+        # if not isinstance(data.index, pd.DatetimeIndex):
+        #     data.index = pd.to_datetime(data.index)
             
         # Create session labels using date
         data['session'] = data.index.date
@@ -194,6 +204,84 @@ class VWAP(TA):
         vwap = (cumulative_pv / cumulative_volume).rename(self.name)
         return vwap
 
+
+@dataclass
+class VWAP(TA):
+    interval: str = 'Session'  # 'Session', 'Day', 'Week', 'Month', 'Year'
+
+    def __post_init__(self):
+        self.validate_inputs()
+        self.name = f"VWAP_{self.interval}"
+        self.names = self.name
+        self.rowsToUpdate = 10
+
+    def _get_period_label(self, index: pd.DatetimeIndex) -> pd.Series:
+        """
+        Generate period labels based on the specified interval.
+        
+        Args:
+            index (pd.DatetimeIndex): The datetime index of the data
+            
+        Returns:
+            pd.Series: Period labels for grouping
+        """
+        if not isinstance(index, pd.DatetimeIndex):
+            raise ValueError("Index must be a DatetimeIndex")
+
+        if self.interval.lower() == 'session':
+            return pd.Series(index.date, index=index)
+        elif self.interval.lower() == 'day':
+            return pd.Series(index.date, index=index)
+        elif self.interval.lower() == 'week':
+            return pd.Series(index.isocalendar().week.astype(str) + 
+                           index.isocalendar().year.astype(str), index=index)
+        elif self.interval.lower() == 'month':
+            return pd.Series(index.strftime('%Y-%m'), index=index)
+        elif self.interval.lower() == 'year':
+            return pd.Series(index.year, index=index)
+        else:
+            raise ValueError(f"Invalid interval: {self.interval}. Must be one of: "
+                           "'Session', 'Day', 'Week', 'Month', 'Year'")
+
+    @preprocess_data
+    def run(self, data: pd.DataFrame) -> pd.Series:
+        """
+        Calculate VWAP for the specified interval.
+        
+        Args:
+            data (pd.DataFrame): DataFrame with price and volume data
+            
+        Returns:
+            pd.Series: VWAP values
+        """
+        # Ensure we have a datetime index
+        if not isinstance(data.index, pd.DatetimeIndex):
+            data.index = pd.to_datetime(data.index)
+
+        # Get period labels based on the interval
+        period_labels = self._get_period_label(data.index)
+        
+        typical_price = data[self.column]
+        volume = data['volume']
+        
+        # Calculate cumulative values within each period
+        cumulative_pv = (typical_price * volume).groupby(period_labels).cumsum()
+        cumulative_volume = volume.groupby(period_labels).cumsum()
+        
+        # Calculate VWAP
+        vwap = (cumulative_pv / cumulative_volume).rename(self.name)
+        
+        # Handle edge cases where volume is zero
+        vwap = vwap.fillna(method='ffill')
+        
+        return vwap
+
+    def validate_inputs(self) -> None:
+        """Validate the input parameters."""
+        valid_intervals = {'session', 'day', 'week', 'month', 'year'}
+        if self.interval.lower() not in valid_intervals:
+            raise ValueError(f"Invalid interval: {self.interval}. "
+                           f"Must be one of: {', '.join(valid_intervals)}")
 
 
 @dataclass

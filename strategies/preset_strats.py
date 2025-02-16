@@ -17,8 +17,6 @@ def SIG_sentiment(f, lookBack, atr:int=20, volMA:int=10, rsiPeriod:int=14, score
     f.add_ta(sig.Score(name='SNMT', cols=['Sig_SnmtGap', 'Sig_SnmtBar', 'Sig_SnmtVol', f'Sig_RSI_{rsiPeriod}', 'Sig_SnmtMAP_MA_cl_50', 'Sig_SnmtMAP_MA_cl_200'], scoreType='mean',  weight=1, lookBack=lookBack), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
 
 
-
-
 def TA_atr_hplp_supres_volma(f, pointsSpan:int=10, atrSpan:int=50, volMA:int=10, supresRowsToUpdate:int=10):
     f.add_ta(ta.MA('volume', volMA), {'dash': 'solid', 'color': 'yellow', 'width': 2}, row=2)
     f.add_ta(ta.ATR(span=atrSpan), {'dash': 'solid', 'color': 'cyan', 'width': 1}, row=3, chart_type='')
@@ -52,16 +50,19 @@ def SIG_volume(f, ls:str='LONG', ma:int=10, lookBack:int=100, scoreRow:int=3, ch
         TAData(sig.Score(name=f'{l_or_s}_Vol', cols=[f'Sig{l_or_s}_VolSpike', f'Sig{l_or_s}_VolROC'], scoreType='max', weight=1, lookBack=lookBack), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type=chartType, row=scoreRow)
     ])
 
+
 def SIG_is_breaking_out(f, ls:str='LONG', lookBack:int=100, scoreRow:int=6, chartType:str='line'):
     f.add_ta(sig.Breakout(f, price_column='close', direction='above', normRange=(0,1), resCols=['Res_1_Upper', 'Res_2_Upper'], lookBack=lookBack, shift=1), {'dash': 'solid', 'color': 'green', 'width': 1}, chart_type='line', row=scoreRow)
     f.add_ta(sig.BreaksPivot(f, pointCol='HP_hi_3', direction='above', normRange=(0,1), lookBack=lookBack), {'dash': 'solid', 'color': 'lime', 'width': 1}, chart_type='line', row=scoreRow)
     f.add_ta(sig.BreaksPivot(f, pointCol='HP_hi_10', direction='above', normRange=(0,1), lookBack=lookBack), {'dash': 'solid', 'color': 'cyan', 'width': 1}, chart_type='line', row=scoreRow)
     f.add_ta(sig.Score(name='Breakout', cols=['BRKOUT_close_ab', 'BRK_ab_HP_hi_3', 'BRK_ab_HP_hi_10'], scoreType='mean',  weight=1, lookBack=lookBack, normRange=(0,100)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
 
+
 def SIG_has_room_to_move(f, ls:str='LONG', atr:int=20, lookBack:int=100, scoreRow:int=7, chartType:str='line'):
     f.add_ta(sig.RoomToMove(ls=ls, tgetCol='Res_1_Lower', atrCol=f'ATR_{atr}', normRange=(0,10), lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=scoreRow)
     f.add_ta(sig.RoomToMove(ls=ls, tgetCol='Res_2_Lower', atrCol=f'ATR_{atr}', normRange=(0,10), lookBack=lookBack), {'dash': 'solid', 'color': 'cyan', 'width': 2}, chart_type='line', row=scoreRow)
     f.add_ta(sig.Score(name='RoomToMove', cols=['SigL_RTM_Res_1_Lower', 'SigL_RTM_Res_2_Lower'], scoreType='mean',  weight=1, lookBack=lookBack, normRange=(0,100)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
+
 
 def import_to_daily_df(f, spy:pd.DataFrame=None, etf:pd.DataFrame=None, RSIRow:int=4):
     if spy is not None:
@@ -86,14 +87,14 @@ def ma_ta(f, periods: list[int], ma_col: str = 'close', row: int = 1):
         21: {'colour': 'hotpink', 'size': 2},
         13: {'colour': 'deepskyblue', 'size': 1},
         8: {'colour': 'khaki', 'size': 1}}
-    # Create the batch list with the correct color and size
-    batch_list = [
-        TAData(ta.MA(ma_col, period), {'dash': 'solid', 'color': ma_colour_map[period]['colour'], 'width': ma_colour_map[period]['size']}, row=row)
-        for period in periods if period in ma_colour_map
-    ]
     
-    # Add the batch list to the technical analysis
-    f.add_ta_batch(batch_list)
+    for period in periods:
+        if period in ma_colour_map:
+            f.add_ta(ta.MA(maCol=ma_col, period=period), 
+                    {'dash': 'solid', 
+                     'color': ma_colour_map[period]['colour'], 
+                     'width': ma_colour_map[period]['size']}, 
+                    row=row)
 
 
 def gaps_ta(f, ls:str='LONG', pointCol:str='HP_hi_10', atrCol:str='ATR_50', lookBack:int=1, row:int=4, chartType:str='lines+markers'):
@@ -125,7 +126,6 @@ def consolidation_ta(f, atrSpan:int=50, consUpperCol:str='CONS_UPPER', consLower
     ])
 
 
-
 def trending_ta(f, ls:str='LONG', lookBack:int=100, scoreRow:int=4, chartType:str='lines+markers'):
     f.add_ta(sig.ROC(metricCol='MA_cl_21',  rocLookBack=10, lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
     f.add_ta(sig.ROC(metricCol='MA_cl_50',  rocLookBack=10, lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
@@ -142,6 +142,7 @@ def trending_ta(f, ls:str='LONG', lookBack:int=100, scoreRow:int=4, chartType:st
 
     #final Score
     f.add_ta(sig.Score(name='trend_FINAL', cols=['Score_trend_ROC', 'Score_trend_PctDiff'], scoreType='mean',  weight=2, lookBack=lookBack, normRange=(0,100)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
+
 
 def SIG_compare_to_market_ta(f, marketCol='SPY_close', ls:str='LONG', lookBack:int=100, scoreRow:int=4, chartType:str='line'):
     """As long as Comp_MKT above 0 then it is tradeing positively compared to the market"""
@@ -165,7 +166,6 @@ def STRATEGY_daily_goat(f, ls:str='LONG', lookBack:int=1, scoreRow:int=5):
     strat.add_event(step=1, name='VolSco > 50',    valToCheck='Score_L_Vol',  checkIf='>', colThreshold=50)
 
 
-
 def STRATEGY_daily_consolidation_bo(f, lookBack:int=100, scoreRow:int=5):
     """Strategies are mainly triggers and validations (YES or NO). for additional nuance use seprate scores"""
     strat = sig.Strategy('BO', lookBack=lookBack)
@@ -185,6 +185,7 @@ def STRATEGY_daily_consolidation_bo(f, lookBack:int=100, scoreRow:int=5):
         TAData(sig.Breaks(price_column='close', direction='above', metric_column='MA_cl_50', normRange=(0,1), lookBack=lookBack), {}, '', 0),
         TAData(strat, [{'dash': 'solid', 'color': color, 'width': 1} for color in colours], chart_type = 'lines+markers', row=scoreRow),
     ])
+
 
 def STRATEGY_pullback_to_cons(f, ls='LONG', lookBack:int=100, scoreRow:int=5, majorPointSpan:int=10, minorPointSpan:int=2, atrSpan:int=50, minScores=50, chartType:str='line'):
     """Must happen for a pullback to be valid"""
@@ -243,7 +244,27 @@ def STRATEGY_pullback_to_cons(f, ls='LONG', lookBack:int=100, scoreRow:int=5, ma
     else:
         print('STRATEGY_pullback_to_cons :: SHORT STRATEGY NOT IMPLEMENTED YET')
 
+#------------------------------------------------------------
+# ----------  V A L I D A T I O N S  ------------------------
+#------------------------------------------------------------
 
+def VALIDATE_pullback(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
+    pass
+
+def VALIDATE_touches(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
+    pass
+
+def VALIDATE_RTM(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
+    pass
+
+def VALIDATE_buy(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
+    pass
+
+def VALIDATE_sell(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
+    pass
+
+def VALIDATE_bonus(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
+    pass 
 
 ## --------------------------------------------------------------
 ## --------------- E X I T   S T R A T E G I E S -----------------

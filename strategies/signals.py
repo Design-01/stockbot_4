@@ -624,62 +624,100 @@ class Trace(Signals):
 @dataclass
 class TouchWithBar(Signals):
     """
-    TouchWithBar is a signal class that computes the value of a bar at a given offset based on the direction ('up' or 'down') 
-    and compares it to a specified value column. It also converts the computed distance to ATR (Average True Range) multiples.
+    TouchWithBar is a signal class that computes a normalized score (0-100) based on how close
+    price is to a specified level, scaled by ATR. Different scales are used for approaching vs
+    overshooting the level.
 
     Attributes:
-        name (str): The name of the signal. Default is 'BarOff'. It is modified in the __post_init__ method to include the direction.
-        valCol (str): The column name in the DataFrame that contains the value to compare against. Default is an empty string.
-        atrCol (int): The column index in the DataFrame that contains the ATR values. Default is 1.
-        direction (str): The direction of the signal, either 'up' or 'down'. Default is 'down'.
-
-    Methods:
-        __post_init__(): Initializes the name attribute to include the direction and sets the names attribute.
-        _compute_row(df: pd.DataFrame) -> float: Computes the value of a bar at a given offset and converts the distance to ATR multiples.
+        name (str): The name of the signal. Default is 'Touch'.
+        valCol (str): The column name containing the level to touch.
+        atrCol (int): The column index containing ATR values.
+        direction (str): The direction of approach ('up' or 'down').
+        toTouchAtrScale (float): Maximum ATR distance when approaching (score=0 at this distance).
+        pastTouchAtrScale (float): Maximum ATR distance when overshooting (score=0 at this distance).
     """
-
     name: str = 'Touch'
     valCol: str = ''
     atrCol: int = 1
     direction: str = 'down'
-
+    toTouchAtrScale: float = 10.0    # Max ATR distance for approaching
+    pastTouchAtrScale: float = 2.0    # Max ATR distance for overshooting
+    
     def __post_init__(self):
-        """
-        Post-initialization method to modify the name attribute to include the direction and set the names attribute.
-        """
-        self.name = f"Sig{self.direction}_{self.name}"
+        """Post-initialization to set up the signal name."""
+        self.name = f"{self.name}_{self.direction}_{self.valCol}"
         self.names = [self.name]
 
+    def _normalize_score(self, atr_distance: float, max_atr: float) -> float:
+        """
+        Normalize ATR distance to a score between 0 and 100.
+        
+        Args:
+            atr_distance (float): Distance from level in ATR units
+            max_atr (float): Maximum ATR distance (score will be 0 beyond this)
+            
+        Returns:
+            float: Normalized score between 0 and 100
+        """
+        abs_distance = abs(atr_distance)
+        if abs_distance >= max_atr:
+            return 0.0
+        
+        return (1 - (abs_distance / max_atr)) * 100
+
     def _compute_row(self, df: pd.DataFrame) -> float:
+        """
+        Compute the score for the current row based on price's distance from the level.
+        
+        Args:
+            df (pd.DataFrame): DataFrame containing price and ATR data
+            
+        Returns:
+            float: Score between 0 and 100
+        """
         if len(df) < 10:
             return 0.0
         
-        bar_val = 0.0
-
         if self.direction == 'down':
-            # If the bar low > val, use the low value, because this is as close as it gets from above
-            if df.low.iat[-1] > df[self.valCol].iat[-1]:
-                bar_val = df.low.iat[-1]
+            level = df[self.valCol].iat[-1]
+            bar_low = df.low.iat[-1]
+            bar_close = df.close.iat[-1]
+            atr = df[self.atrCol].iat[-1]
 
-            # If the bar close < val, use the close value, because this is an overshoot so the close is now important
-            if df.close.iat[-1] < df[self.valCol].iat[-1]:
-                bar_val = df.close.iat[-1]
+            # Perfect touch (low crosses but close recovers)
+            if bar_low <= level <= bar_close:
+                return 100.0
 
-            # Compute the distance between the bar value and the val and convert to ATR multiples
-            return (df[self.valCol].iat[-1] - bar_val) / df[self.atrCol].iat[-1]
+            # Calculate ATR distance
+            if bar_low > level:
+                # Approaching from above
+                atr_distance = (bar_low - level) / atr
+                return self._normalize_score(atr_distance, self.toTouchAtrScale)
+            else:
+                # Overshooting
+                atr_distance = (level - bar_close) / atr
+                return self._normalize_score(atr_distance, self.pastTouchAtrScale)
         
-        if self.direction == 'up':
-            # If the bar high < val, use the high value, because this is as close as it gets from below
-            if df.high.iat[-1] < df[self.valCol].iat[-1]:
-                bar_val = df.high.iat[-1]
+        elif self.direction == 'up':
+            level = df[self.valCol].iat[-1]
+            bar_high = df.high.iat[-1]
+            bar_close = df.close.iat[-1]
+            atr = df[self.atrCol].iat[-1]
 
-            # If the bar close > val, use the close value, because this is an overshoot so the close is now important
-            if df.close.iat[-1] > df[self.valCol].iat[-1]:
-                bar_val = df.close.iat[-1]
+            # Perfect touch (high crosses but close recovers)
+            if bar_high >= level >= bar_close:
+                return 100.0
 
-            # Compute the distance between the bar value and the val and convert to ATR multiples
-            return (bar_val - df[self.valCol].iat[-1]) / df[self.atrCol].iat[-1]
-        
+            # Calculate ATR distance
+            if bar_high < level:
+                # Approaching from below
+                atr_distance = (level - bar_high) / atr
+                return self._normalize_score(atr_distance, self.toTouchAtrScale)
+            else:
+                # Overshooting
+                atr_distance = (bar_close - level) / atr
+                return self._normalize_score(atr_distance, self.pastTouchAtrScale)
+
         return 0.0
 
 
@@ -712,7 +750,7 @@ class BarSW(Signals):
         bot = (min(open, close) - low) / 2 # give tails less weight
 
         score = (bot - top + body) / atr
-        print(f"open: {open}, close: {close}, score: {score} ... ({top=} - {bot=} + {body=}) / ({high=} - {low=})")
+        # print(f"open: {open}, close: {close}, score: {score} ... ({top=} - {bot=} + {body=}) / ({high=} - {low=})")
 
         return score
  
@@ -2524,80 +2562,69 @@ class IsValid(Signals):
 class Validate(Signals):
     """
     Checks two values and returns a boolean based on the specified operator.
-
-    Attributes:
-        val1 (str | float): The first value to compare. Can be a column name (str) or a numeric value (float).
-        val2 (str | float | tuple): The second value to compare. Can be a column name (str), a numeric value (float), or a tuple for range comparisons.
-        operator (str): The operator to use for comparison. Supported operators are:
-            - '>': Checks if val1 is greater than val2.
-            - '<': Checks if val1 is less than val2.
-            - '==': Checks if val1 is equal to val2.
-            - '><': Checks if val1 is between the two values in val2 (inclusive). val1 is the value to check and val2 is a tuple (val1, val2).
-            - '^': Checks if val1 breaks above val2 (i.e., val1 is greater than val2 and the previous value of val1 was less than or equal to val2).
-            - 'v': Checks if val1 breaks below val2 (i.e., val1 is less than val2 and the previous value of val1 was greater than or equal to val2).
-            - '^p': Checks if val1 breaks above the most recent pivot point in val2.
-            - 'vp': Checks if val1 breaks below the most recent pivot point in val2.
+    val1 and val2 can be: tuple(column_name, index), column_name (uses index -1), or float value
     """
-    val1: str | float = ''
+    val1: str | float | tuple = ''
     val2: str | float | tuple = ''
-    operator: str  = ''
-    val1Idx: int = -1 # index of the val1 column . eg -1  is the last value
-    val2Idx: int = -1
+    operator: str = ''
     ls: str = 'LONG'
+    
 
     def __post_init__(self):
         self.name = f"VAL_{self.ls[:1]}_{self.val1}_{self.operator}_{self.val2}"
         self.names = [self.name]
+        if self.operator not in ['>', '<', 'p>p', 'p<p', '^p', 'vp', '>p', '<p', '^', 'v', '><', '==']:
+            raise ValueError("Invalid operator: must be one of '>', '<', 'p>p', 'p<p', '^p', 'vp', '>p', '<p', '^', 'v', '><', '==' ")
+        self.normRange = (0,1)
 
-    def breaks_above_pivot(self, df: pd.DataFrame) -> pd.DataFrame:
-        point = df[self.val2].dropna()
-        max_len = max(abs(self.val1Idx), abs(self.val2Idx))
-        if len(point) < max_len: return False
-        return df[self.val1].iloc[self.val1Idx] > point.iloc[self.val2Idx] 
-        
-    def breaks_below_pivot(self, df: pd.DataFrame) -> pd.DataFrame:
-        point = df[self.val2].dropna()
-        max_len = max(abs(self.val1Idx), abs(self.val2Idx))
-        if len(point) < max_len: return False
-        return df[self.val1].iloc[self.val1Idx] < point.iloc[self.val2Idx]
-    
-    def pre_mkt_high(self, df: pd.DataFrame) -> float:
-        return df['high'].iloc[-1] > df['premkt_high'].iloc[-1]
-    
-    def pre_mkt_low(self, df: pd.DataFrame) -> pd.DataFrame:
-        return df['low'].iloc[-1] < df['premkt_low'].iloc[-1]
-    
-    def day_high(self, df: pd.DataFrame, daysAgo=0) -> pd.DataFrame:
-        return df['high'].iloc[-1] > df['day_high'].iloc[-1]
-    
-    def day_low(self, df: pd.DataFrame, daysAgo=0) -> pd.DataFrame:
-        return df['low'].iloc[-1] < df['day_low'].iloc[-1]
-    
+    def _get_value(self, df: pd.DataFrame, val_spec, prev:bool=False) -> float:
+        """Get value from dataframe based on specification."""
+        offset = 1 if prev else 0 
+        if isinstance(val_spec, tuple): 
+            if isinstance(val_spec[0], str): return df[val_spec[0]].iat[val_spec[1]-offset]          
+            return val_spec
+        elif isinstance(val_spec, str): return df[val_spec].iat[-1-offset]
+        return val_spec
+
+    def _get_pivot(self, df: pd.DataFrame, val_spec) -> float:
+        """Get pivot value from dataframe, handling NaN values."""
+        col = val_spec[0] if isinstance(val_spec, tuple) else val_spec
+        idx = val_spec[1] if isinstance(val_spec, tuple) else -1
+        valid_points = df[col].dropna()
+        if len(valid_points) < abs(idx): return None
+        return None if valid_points.empty else valid_points.iloc[idx]
+
+    def _compute_row(self, df: pd.DataFrame) -> bool:
+        """Compute the comparison result for a single row."""
+        if len(df) < 2: return False
 
 
-    def _compute_row(self, df: pd.DataFrame) -> pd.DataFrame:
-        v1 = df[self.val1].iat[self.val1Idx] if isinstance(self.val1, str) else self.val1
-        v2 = df[self.val2].iat[self.val1Idx] if isinstance(self.val2, str) else self.val2
 
-        if self.operator == '>':
-            return v1 > v2
-        elif self.operator == '<':
-            return v1 < v2
-        elif self.operator == '==':
-            return v1 == v2
-        elif self.operator == '><':
-            return v2[0] <= v1 <= v2[1]
-        elif self.operator == '^':
-            return v1 > v2 and df[self.val1].iat[-2] <= df[self.val2].iat[-2]
-        elif self.operator == 'v':
-            return v1 < v2 and df[self.val1].iat[-2] >= df[self.val2].iat[-2]
-        elif self.operator == '^p':
-            return self.breaks_above_pivot(df)
-        elif self.operator == 'vp':
-            return self.breaks_below_pivot(df)
+        v1_as_pivot = ['p>p', 'p<p']
+        v2_as_pivot = ['p>p', 'p<p', '^p', 'vp', '>p', '<p']
 
-        else:
-            raise ValueError("Operator must be '>', '<', '==', '><', '^', 'v', '^p', or 'vp'")
+        v1 = self._get_value(df, self.val1) if self.operator not in v1_as_pivot else self._get_pivot(df, self.val1)
+        v2 = self._get_value(df, self.val2) if self.operator not in v2_as_pivot else self._get_pivot(df, self.val2)
+
+        if self.operator == 'p>p': return v1 > v2
+        if self.operator == 'p<p': return v1 < v2
+        if self.operator == '>p' : return v1 > v2
+        if self.operator == '>'  : return v1 > v2
+        if self.operator == '<p' : return v1 < v2
+        if self.operator == '<'  : return v1 < v2
+        if self.operator == '==' : return v1 == v2
+
+        v1_prev = self._get_value(df, self.val1, prev=True)
+        v2_prev = self._get_value(df, self.val2, prev=True) if self.operator not in v2_as_pivot else self._get_pivot(df, self.val2)
+
+        if self.operator == '^p': return v1 > v2 and v1_prev <= v2_prev
+        if self.operator == 'vp': return v1 < v2 and v1_prev >= v2_prev
+        if self.operator == '^' : return v1 > v2 and v1_prev <= v2_prev
+        if self.operator == 'v' : return v1 < v2 and v1_prev >= v2_prev
+
+        if self.operator == '><': return self.val2[0] <= v1 <= self.val2[1] if isinstance(v2, tuple) else False
+
+        raise ValueError("Invalid operator")
 
 
 @dataclass

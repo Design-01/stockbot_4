@@ -37,7 +37,10 @@ def calculate_position_size(entry_price: float, stop_price: float, risk_amount: 
         "total_value": round(total_position_value, 2),
         "risk_percentage": round(risk_percentage, 2),
         "price_per_share": entry_price,
-        "potential_loss": round(total_loss_at_stop, 2)
+        "potential_loss": round(total_loss_at_stop, 2),
+        "entry_price": entry_price,
+        "stop_price": stop_price,
+        "risk_amount": risk_amount
     }
 
 def print_position_summary(symbol, position_details: dict,  notes:str='') -> None:
@@ -51,6 +54,10 @@ def print_position_summary(symbol, position_details: dict,  notes:str='') -> Non
     print(f"Total position value         : ${position_details['total_value']:,.2f}")
     print(f"Risk percentage to stop      : {position_details['risk_percentage']}%")
     print(f"Potential loss at stop       : ${position_details['potential_loss']:,.2f}")
+    print(" -------------------------------------------------")
+    print(f"Entry Price                 : {position_details['entry_price']}")
+    print(f"Stop Price                  : {position_details['stop_price']}")
+    print(f"Risk Amount                 : {position_details['risk_amount']}")
     print(" -------------------------------------------------")
     print(f"Notes                        : {notes}")
     print("=====================")
