@@ -884,7 +884,7 @@ class StockX:
 
         elif dataType == 'ohlcv':
              df = hd.get_hist_data(self.symbol, start_date, end_date, timeframe, force_download=force_download)
-             print(f"StockX::set_up_frame: {self.symbol} {timeframe} {dataType} {start_date} {end_date} {force_download} : {df.shape}")
+             print(f"StockX::set_up_frame: {self.symbol} {timeframe} {dataType} {start_date} {end_date} {force_download=} : {df.shape}")
              self.frames[name].load_ohlcv(df)
 
         elif dataType == 'tick':

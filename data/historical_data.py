@@ -690,6 +690,7 @@ def resample_data(data, interval):
     }).dropna()
 
 
+
 def save_data(data, symbol, interval):
     """
     Save data to CSV with consistent datetime index handling.
@@ -756,7 +757,6 @@ def load_data(symbol, interval):
     """
     interval = interval.lower().replace(' ', '_')
     file_path = get_project_path('data', 'historical_data_store', f'{symbol}_{interval}.csv')
-    print(f"Loading data from {file_path}")
     if not os.path.exists(file_path):
         print(f"File not found : {file_path}")
         return None
@@ -773,74 +773,90 @@ def load_data(symbol, interval):
 
 def get_missing_batch_dates(data, start_date, end_date, batch_interval='weekly'):
     """
-    Find missing date intervals in a DataFrame, including partial current periods.
+    Find truly missing date intervals in market data, handling:
+    - Non-overlapping date ranges
+    - Market closures (partial data in a batch is considered complete)
+    - Current week needing updates
     
     Parameters:
-    data (pd.DataFrame): DataFrame with datetime index (can be empty)
-    start_date (str): Start date in 'YYYY-MM-DD' format
-    end_date (str): End date in 'YYYY-MM-DD' format or 'now' for current date
+    data (pd.DataFrame): DataFrame with datetime index
+    start_date (str): Start date 'YYYY-MM-DD' or relative date like '3 daysAgo'
+    end_date (str): End date 'YYYY-MM-DD' or 'now'
     batch_interval (str): 'weekly' or 'monthly'
-    
-    Returns:
-    list of tuples: (start_date, end_date) pairs for missing intervals
     """
-    def get_freq_and_duration(interval):
-        """Helper function to get frequency and duration for intervals"""
-        if interval == 'weekly':
-            return 'W-MON', pd.Timedelta(days=6)
-        return 'MS', pd.offsets.MonthEnd(1)
-    
-    try:
-        # Handle 'now' as end_date and convert dates
-        start = pd.to_datetime(start_date).normalize()
-        end = (pd.Timestamp.now() if end_date.lower() == 'now' 
-               else pd.to_datetime(end_date)).normalize()
+    def parse_dates(start_str, end_str):
+        """Convert and validate date strings, handling relative dates"""
+        def parse_relative_date(date_str):
+            if isinstance(date_str, str) and 'daysAgo' in date_str:
+                days = int(date_str.split()[0])
+                return pd.Timestamp.now() - pd.Timedelta(days=days)
+            return pd.to_datetime(date_str)
         
-        # Validate interval
-        if batch_interval.lower() not in ['weekly', 'monthly']:
+        start = parse_relative_date(start_str).normalize()
+        end = (pd.Timestamp.now() if isinstance(end_str, str) and end_str.lower() == 'now' 
+               else parse_relative_date(end_str)).normalize()
+        return start, end
+
+    def get_batch_config(interval):
+        """Get frequency and duration for given interval"""
+        configs = {
+            'weekly': ('W-MON', pd.Timedelta(days=6)),
+            'monthly': ('MS', pd.offsets.MonthEnd(1))
+        }
+        if interval.lower() not in configs:
             raise ValueError("batch_interval must be 'weekly' or 'monthly'")
-            
-        freq, duration = get_freq_and_duration(batch_interval.lower())
-        
-        # Generate intervals
-        intervals = pd.date_range(start=start, end=end, freq=freq)
-        
-        # Handle empty or None data explicitly
+        return configs[interval.lower()]
+
+    try:
+        # Parse dates and get batch configuration
+        start, end = parse_dates(start_date, end_date)
+        freq, duration = get_batch_config(batch_interval)
+
+        # Handle empty data case
         if data is None or (isinstance(data, pd.DataFrame) and data.empty):
-            # Ensure we return at least one interval even if intervals is empty
-            if len(intervals) == 0:
-                return [(start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d'))]
-            
-            interval_pairs = []
-            for interval_start in intervals:
-                interval_end = min(interval_start + duration, end)
-                interval_pair = (
-                    interval_start.strftime('%Y-%m-%d'),
-                    interval_end.strftime('%Y-%m-%d')
-                )
-                interval_pairs.append(interval_pair)
-            
-            return interval_pairs
-        
-        # Rest of the function remains the same...
+            return [(start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d'))]
+
         if not isinstance(data.index, pd.DatetimeIndex):
             raise TypeError("DataFrame index must be DatetimeIndex")
-        
+
+        # Get data range
+        data_start = data.index.min()
+        data_end = data.index.max()
+
+        # Check for non-overlapping ranges
+        if data_start > end or data_end < start:
+            print(f"No overlap between requested dates ({start} to {end}) "
+                  f"and stored dates ({data_start} to {data_end})")
+            return [(start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d'))]
+
+        # Generate batch intervals
         missing_intervals = []
-        for interval_start in intervals:
-            interval_end = min(interval_start + duration, end)
+        batch_starts = pd.date_range(start=start, end=end, freq=freq)
+
+        for batch_start in batch_starts:
+            batch_end = min(batch_start + duration, end)
             
-            mask = (data.index >= interval_start) & (data.index <= interval_end)
-            if not data[mask].size > 0:
+            # Check for data in this batch
+            mask = (data.index >= batch_start) & (data.index <= batch_end)
+            has_data = data[mask].size > 0
+            
+            # Consider batch missing if:
+            # 1. No data at all in batch
+            # 2. OR batch overlaps with current period and is more recent than stored data
+            if (not has_data or 
+                (batch_end >= data_end and batch_end <= pd.Timestamp.now())):
                 missing_intervals.append(
-                    (interval_start.strftime('%Y-%m-%d'),
-                     interval_end.strftime('%Y-%m-%d'))
+                    (batch_start.strftime('%Y-%m-%d'),
+                     batch_end.strftime('%Y-%m-%d'))
                 )
-                
+
         return missing_intervals
+
+    except Exception as e:
+        print(f"Error in get_missing_batch_dates: {str(e)}")
+        return [(start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d'))]
         
-    except ValueError as e:
-        raise ValueError(f"Invalid date format. Use 'YYYY-MM-DD' or 'now'. Error: {e}")
+
 
 
 def convert_ranges(ranges, new_interval='monthly', start_time_offset='00:00:01'):
@@ -959,14 +975,24 @@ def combine_dataframes(dfs):
 
 
 #! ------>>>  Main function to get historical data <<<------ #
-def get_hist_data(symbol, start_date, end_date, interval, force_download=False):
+def get_hist_data(symbol, start_date, end_date, interval, force_download=False, print_info=True):
     start_date = calculate_past_date(start_date, end_date)
     file_interval = map_to_storage_interval(interval, 'ib')
     stored_data = load_data(symbol, file_interval)
     missing_dates = get_missing_batch_dates(stored_data, start_date, end_date, batch_interval='weekly')
 
-    if stored_data is not None and not force_download:
-        print(f"Stored data: {len(stored_data)} rows of data")
+    if print_info:
+        start, end, rows = None , None, None
+        if stored_data is not None:
+            start, end, rows = stored_data.index[0], stored_data.index[-1], len(stored_data)
+        print('-------------------------------------------------------------------------------------------------')
+        print(f"get_hist_data            : {symbol} {interval} ({file_interval=})")
+        print(f"Data Path                : {get_project_path('data', 'historical_data_store')}")
+        print(f"Data Stored    - Start   : {start}, End: {end}, Rows: {rows}")
+        print(f"Data Requested - Start   : {start_date}, End: {end_date}")
+        print(f"Missing dates            : {len(missing_dates)}")
+        print(f"Getting missing data     : {missing_dates or force_download}")
+        print('-------------------------------------------------------------------------------------------------')
 
     if missing_dates or force_download:
 
@@ -976,7 +1002,6 @@ def get_hist_data(symbol, start_date, end_date, interval, force_download=False):
         
         ibkr = IBHistoricalData()
         missing_data, lowest_barsize   = ibkr.get_batch_historical_data(symbol, missing_dates, barsize=interval, minHourDay_only=True) # will convert bar size down to the lowest common denominator
-        print(f"Missing data: {len(missing_data)} rows of data")
         new_data = combine_dataframes([stored_data, missing_data])
         save_data(new_data, symbol, lowest_barsize)
         data = load_data(symbol, file_interval)

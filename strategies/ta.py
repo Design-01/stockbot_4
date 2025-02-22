@@ -585,18 +585,18 @@ class SupRes(TA):
                       self.name_Sup_2, self.name_Sup_2_Upper, self.name_Sup_2_Lower]
 
     def run(self, df, startwith='res'):
-        last_close = df['close'].iloc[-1]
+        start_value = df['close'].iloc[-1]
         
         # Initialize all columns with NaN
         for name in self.names:
             df[name] = np.nan
         
         if startwith == 'res':
-            res_levels = self._find_levels(df, last_close, 'res', 2)
-            sup_levels = self._find_levels(df, last_close, 'sup', 2)
+            res_levels = self._find_levels(df, start_value, 'res', 2)
+            sup_levels = self._find_levels(df, start_value, 'sup', 2)
         else:
-            sup_levels = self._find_levels(df, last_close, 'sup', 2)
-            res_levels = self._find_levels(df, last_close, 'res', 2)
+            sup_levels = self._find_levels(df, start_value, 'sup', 2)
+            res_levels = self._find_levels(df, start_value, 'res', 2)
         
         # Add resistance levels
         for i, (level, upper, lower, idx) in enumerate(res_levels):

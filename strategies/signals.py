@@ -384,10 +384,10 @@ class GetMaxSignalSincePoint(Signals):
 # --------------------------------------------------------------
 #£ Done
 @dataclass
-class PBPctHLLH(Signals):
+class PB_PctHLLH(Signals):
     """Computes the % of bars that have a lower highs (BULL pullback, so downward)
     Vice versa for BEAR case. So this is only for pullbacks not overall trends. """
-    name: str = 'PB_HLLH'
+    name: str = 'PB_PctHLLH'
     pointCol: str = ''
     atrCol: str = ''
     atrMultiple: float = 1.0 # minimum number of ATRs required between pointCol low and toCol
@@ -426,19 +426,19 @@ class PBPctHLLH(Signals):
 
 
 @dataclass
-class PBAllSameColour(Signals):
-    """Retruns the ration of how many bars are of the same colour as the longshort direction. 
+class PB_ASC(Signals):
+    """Pullback All Same Colour : Retruns the ration of how many bars are of the same colour as the longshort direction. 
     This class is the check the pullback is all in the same direction. 
     eg if long then all the bars in the pullback are red.
     eg if short then all the bars in the pullback are green.
     """
-    name: str = 'PB_ASClr'
+    name: str = 'PB_ASC'
     pointCol: str = ''
     atrMultiple: float = 1.0 # minimum number of ATRs required between pointCol low and toCol
     
     
     def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}"
+        self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]
 
     def _compute_row(self, df:pd.DataFrame=pd.DataFrame()):
@@ -461,12 +461,12 @@ class PBAllSameColour(Signals):
     
 
 @dataclass
-class PBCoCByCountOpBars(Signals):
+class PB_CoC_ByCountOpBars(Signals):
     name: str = 'PB_CoC_OpBars'
     pointCol: str = ''
     
     def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}"
+        self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]
 
     def _compute_row(self, df: pd.DataFrame = pd.DataFrame()):
@@ -516,11 +516,11 @@ class PBCoCByCountOpBars(Signals):
 
 #£ Done
 @dataclass
-class PBOverlap(Signals):
+class PB_Overlap(Signals):
     """Computes the overlap as % from this high to prev low (BULL, so pullback is down) as ratio to prev bar range .
     Then gets the mean % of all overlaps. Works very well to give a good guide for a smooth pullback
     if the mean % is 50%. so the nearer to 50% the better """
-    name  : str = 'Olap'
+    name  : str = 'PB_Olap'
     pointCol: str = ''    
 
     def __post_init__(self):
@@ -550,14 +550,14 @@ class PBOverlap(Signals):
 #£ Done
 @dataclass
 class Trace(Signals):
-    name      : str = 'Rtcmt'
+    name      : str = 'Trace'
     usePoints : bool = True # if True then use points else use fromPriceCol and toPriceCol
     fromCol   : str = ''
     toCol     : str = ''
     optimalRtc: float = None # optimal retracement eg if 50 then 50% is the best retracement
   
     def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}"
+        self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]
 
     def compute_from_mid_trace(self, retracement, optimalRetracement):
@@ -1452,20 +1452,45 @@ class PctDiff(Signals):
 
 @dataclass
 class RoomToMove(Signals):
-    """This signal calculates the room to move based on the current price and the target col which could be the last pivot point or the Res levels.
-    The room to move is calculated as the distance between the current price and the last pivot point that is higher than the current price (if LONG).
-    The signal returns a value for the number atr muliples the current price is away from the last pivot point.
-    Account the points column having nan values.
+    """Calculate the available room for price movement relative to a target level, measured in ATR multiples.
+
+    This signal evaluates how much space exists between the current price and a target level (e.g., pivot point
+    or resistance/support level), normalized by the Average True Range (ATR). The measurement helps determine if
+    there's sufficient room for a potential trade in either direction.
+
+    Behavior:
+    - For LONG positions:
+        * If price > target: Returns unlimitedVal (unlimited room to move up)
+        * If price < target: Returns (target - price) / ATR
+    - For SHORT positions:
+        * If price < target: Returns unlimitedVal (unlimited room to move down)
+        * If price > target: Returns (price - target) / ATR
+    - Returns 0 if target or ATR values are missing (NaN)
+
+    Parameters:
+    ----------
+    name : str, default 'RTM'
+        Base name for the signal
+    tgetCol : str
+        Column name containing target prices (e.g., pivot points, resistance/support levels)
+    atrCol : str
+        Column name containing ATR values
+    unlimitedVal : int, default 10
+        Value to return when price has moved beyond target, indicating unlimited room to move
 
     Example:
-    If the current price is 2 atr multiples away from the last pivot point, the signal will return 2.
-    price  = 100
-    pivot  = 110
-    atr    = 5
-    room   = 2
+    --------
+    LONG position scenario:
+    - Current price = 100
+    - Target level = 110
+    - ATR = 5
+    - Result = (110 - 100) / 5 = 2 ATR multiples room to move
+
+    If price = 115 (above target):
+    - Result = unlimitedVal (indicating unlimited room to move)
     """
-    name : str = 'RTM'
-    tgetCol : str = ''
+    name: str = 'RTM'
+    tgetCol: str = ''
     atrCol: str = ''
     unlimitedVal: int = 10
 
@@ -1473,20 +1498,34 @@ class RoomToMove(Signals):
         self.name = f"{self.name}_{self.ls[0]}_{self.tgetCol}"
         self.names = [self.name]
 
-    def _compute_row(self, df:pd.DataFrame=pd.DataFrame(), **kwargs):
+    def _compute_row(self, df: pd.DataFrame = pd.DataFrame(), **kwargs):
+        if len(df) <= 1:
+            return 0
 
-        if len(df) > 1:
-            if self.ls == 'LONG':
-                if df[self.tgetCol].iat[-1] > 0:
-                    return (df[self.tgetCol].iat[-1] - df.close.iat[-1]) / df[self.atrCol].iat[-1]
+        close_price = df.close.iat[-1]
+        target_price = df[self.tgetCol].iat[-1]
+        atr = df[self.atrCol].iat[-1]
 
-                # if there is no target then return 2. meaning it has room to move so give an arbitrary high number
-                if pd.notna(df[self.atrCol].iat[-1]):
-                    return self.unlimitedVal
-    
-            elif self.ls == 'SHORT':
-                if df[self.tgetCol].iat[-1] > 0:
-                    return (df.close.iat[-1] - df[self.tgetCol].iat[-1]) / df[self.atrCol].iat[-1]
+        # Check if we have valid values
+        if not pd.notna(atr):
+            return 0
+        
+        if not pd.notna(target_price):
+            return self.unlimitedVal       
+
+        if self.ls == 'LONG':
+            # If price is already above target, unlimited room to move
+            if close_price > target_price:
+                return self.unlimitedVal
+            # Calculate room to move in ATR multiples
+            return (target_price - close_price) / atr
+
+        elif self.ls == 'SHORT':
+            # If price is already below target, unlimited room to move
+            if close_price < target_price:
+                return self.unlimitedVal
+            # Calculate room to move in ATR multiples
+            return (close_price - target_price) / atr
 
         return 0
     
@@ -2617,10 +2656,10 @@ class Validate(Signals):
         v1_prev = self._get_value(df, self.val1, prev=True)
         v2_prev = self._get_value(df, self.val2, prev=True) if self.operator not in v2_as_pivot else self._get_pivot(df, self.val2)
 
-        if self.operator == '^p': return v1 > v2 and v1_prev <= v2_prev
-        if self.operator == 'vp': return v1 < v2 and v1_prev >= v2_prev
-        if self.operator == '^' : return v1 > v2 and v1_prev <= v2_prev
-        if self.operator == 'v' : return v1 < v2 and v1_prev >= v2_prev
+        if self.operator == '^p': return v1_prev < v2_prev and v1 >= v2_prev
+        if self.operator == 'vp': return v1_prev > v2_prev and v1 <= v2_prev
+        if self.operator == '^' : return v1_prev < v2_prev and v1 >= v2_prev
+        if self.operator == 'v' : return v1_prev > v2_prev and v1 <= v2_prev
 
         if self.operator == '><': return self.val2[0] <= v1 <= self.val2[1] if isinstance(v2, tuple) else False
 
