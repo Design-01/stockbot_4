@@ -199,7 +199,6 @@ def TA_Volume(f, ls:str='LONG', lookBack:int=100, volMA:int=10, TArow:int=2, sco
 
 
 
-
 def TA_RSI(f, lookBack:int=100, rsiPeriod:int=14, TArow:int=3, scoreRow:int=4):
     ta_rs = f.add_ta(ta.RSATRMA(comparisonPrefix='SPY', ma=10, atr=50), 
             [{'dash': 'solid', 'color': 'yellow', 'width': 1},
