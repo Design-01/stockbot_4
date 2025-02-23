@@ -2600,19 +2600,94 @@ class IsValid(Signals):
 @dataclass
 class Validate(Signals):
     """
-    Checks two values and returns a boolean based on the specified operator.
-    val1 and val2 can be: tuple(column_name, index), column_name (uses index -1), or float value
-    """
+        A class for performing value and time-based comparisons on DataFrame values.
+        Inherits from Signals class to provide signal generation capabilities.
+
+        The class supports multiple comparison types:
+        1. Direct value comparisons ('>', '<', '==')
+        2. Pivot-based comparisons ('p>p', 'p<p', '^p', 'vp', '>p', '<p')
+        3. Cross-point detections ('^', 'v')
+        4. Range validation ('><')
+        5. Time-based comparisons ('t>t', 't<t', 't==t', 't>=t', 't<=t', 't!=t')
+
+        Parameters
+        ----------
+        val1 : str | float | tuple
+            First value for comparison. Can be:
+            - str: Column name (uses index -1)
+            - float: Direct value
+            - tuple(str, int): (column_name, index)
+            For time-based comparisons, this will always use df.index[-1]
+        
+        val2 : str | float | tuple
+            Second value for comparison. Can be:
+            - str: Column name (uses index -1) or time string (e.g., '10:55') for time comparisons
+            - float: Direct value
+            - tuple(str, int): (column_name, index)
+            - tuple(float, float): Range bounds for '><' operator
+        
+        operator : str
+            Comparison operator. Valid options:
+            - '>', '<', '==': Direct comparisons
+            - 'p>p', 'p<p': Pivot-to-pivot comparisons
+            - '^p', 'vp': Cross-up/down through pivot
+            - '>p', '<p': Value to pivot comparisons
+            - '^', 'v': Cross-up/down through value
+            - '><': Range check
+            - 't>t', 't<t', 't==t', 't>=t', 't<=t', 't!=t': Time comparisons
+        
+        ls : str, default 'LONG'
+            Signal direction indicator. Used in signal name generation.
+
+        Methods
+        -------
+        _get_value(df: pd.DataFrame, val_spec, prev: bool = False) -> float
+            Extracts value from DataFrame based on specification.
+        
+        _get_pivot(df: pd.DataFrame, val_spec) -> float
+            Gets pivot value from DataFrame, handling NaN values.
+        
+        _compute_row(df: pd.DataFrame) -> bool
+            Computes the comparison result for the current row.
+
+        Examples
+        --------
+        # Compare if current value of 'CLOSE' is greater than VWAP
+        >>> validator = Validate('CLOSE',  '>', 'VWAP_session', ls='LONG')
+        
+        # Check if current value crossed above pivot point
+        >>> validator = Validate('CLOSE', ^p', ('HP_hi_10', -2), ' ls='LONG')
+        
+        # Check if current time is after 10:55
+        >>> validator = Validate(None, 't>t', '10:55', ls='LONG')
+        
+        # Check if value is within range
+        >>> validator = Validate('RSI', '><',  (30, 70), ls='LONG')
+
+        Notes
+        -----
+        - For pivot-based comparisons, the pivot value is extracted from historical data
+        - Time comparisons always use the latest index timestamp (df.index[-1])
+        - The class automatically generates a signal name based on parameters
+        - NaN values are handled gracefully in pivot calculations
+        - Minimum of 2 rows required in DataFrame for comparisons involving previous values
+
+        Raises
+        ------
+        ValueError
+            If an invalid operator is provided
+    """ 
     val1: str | float | tuple = ''
-    val2: str | float | tuple = ''
     operator: str = ''
+    val2: str | float | tuple = ''
     ls: str = 'LONG'
     
 
     def __post_init__(self):
         self.name = f"VAL_{self.ls[:1]}_{self.val1}_{self.operator}_{self.val2}"
         self.names = [self.name]
-        if self.operator not in ['>', '<', 'p>p', 'p<p', '^p', 'vp', '>p', '<p', '^', 'v', '><', '==']:
+        if self.operator not in ['>', '<', 'p>p', 'p<p', '^p', 'vp', '>p', '<p', '^', 'v', '><', '==',
+                        't>t', 't<t', 't==t', 't>=t', 't<=t', 't!=t']:
             raise ValueError("Invalid operator: must be one of '>', '<', 'p>p', 'p<p', '^p', 'vp', '>p', '<p', '^', 'v', '><', '==' ")
         self.normRange = (0,1)
 
@@ -2637,6 +2712,20 @@ class Validate(Signals):
         """Compute the comparison result for a single row."""
         if len(df) < 2: return False
 
+        if self.operator in ['t>t', 't<t', 't==t', 't>=t', 't<=t', 't!=t']:
+            # Get current timestamp from index
+            t1 = df.index[-1].time()
+            
+            # Convert comparison time string to time object
+            t2 = pd.to_datetime(self.val2).time()
+            
+            # Perform time-based comparisons
+            if self.operator == 't>t': return t1 > t2
+            if self.operator == 't<t': return t1 < t2
+            if self.operator == 't==t': return t1 == t2
+            if self.operator == 't>=t': return t1 >= t2
+            if self.operator == 't<=t': return t1 <= t2
+            if self.operator == 't!=t': return t1 != t2
 
 
         v1_as_pivot = ['p>p', 'p<p']

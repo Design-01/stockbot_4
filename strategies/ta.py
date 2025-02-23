@@ -51,7 +51,9 @@ class TA(ABC):
             if not last_valid_indices:
                 lookback_index = 0
             else:
-                lookback_index = max(min(last_valid_indices) - rows_to_update, 0) # + 1 # added 1 just to be sure
+                if rows_to_update == 'max':
+                    lookback_index = 0
+                else: lookback_index = max(min(last_valid_indices) - rows_to_update, 0) # + 1 # added 1 just to be sure
 
             return df.iloc[-lookback_index:]
 
@@ -105,6 +107,7 @@ class AddColumn:
 class Levels(TA):
     """Add horizontal levels to a DataFrame"""
     level: str = '' # pre_mkt_high, pre_mkt_low, pre_mkt_close, pre_mkt_open, pre_mkt_volume, regular_high, regular_low, regular_close, regular_open, regular_volume, post_mkt_high, post_mkt_low, post_mkt_close, post_mkt_open, post_mkt_volume, prev_day_high, prev_day_low, prev_day_close, prev_day_open, prev_day_volume
+    ffill: bool = False
 
     def __post_init__(self):
         self.name = self.level
@@ -132,6 +135,16 @@ class Levels(TA):
                     elif self.level == 'intraday_close':  data.loc[df.index, self.name] = df['close'].iloc[-1]
                     elif self.level == 'intraday_open':   data.loc[df.index, self.name] = df['open'].iloc[0]
                     elif self.level == 'intraday_volume': data.loc[df.index, self.name] = df['volume'].cumsum()
+                    elif self.level == 'intraday_high_9.35':
+                        early_df = df.between_time('09:30:00', '09:35:00')
+                        if not early_df.empty:
+                            value = early_df['high'].max()
+                            data.loc[df.index, self.name] = value
+                    elif self.level == 'intraday_low_9.35':
+                        early_df = df.between_time('09:30:00', '09:35:00')
+                        if not early_df.empty:
+                            value = early_df['low'].min()
+                            data.loc[df.index, self.name] = value
 
             if 'post_mkt' in self.level:
                 df = day_data.between_time('16:00:00', '23:59:59')
@@ -155,6 +168,10 @@ class Levels(TA):
                     elif self.level == 'prev_day_open':   data.loc[data.index.normalize() == date, self.name] = df['open'].iloc[0]
                     elif self.level == 'prev_day_volume': data.loc[data.index.normalize() == date, self.name] = df['volume'].sum()
 
+        # Apply forward fill if requested
+        if self.ffill:
+            data[self.name] = data[self.name].ffill()
+
         return data
 
 
@@ -173,36 +190,10 @@ class MA(TA):
         return data[self.maCol].rolling(window=self.period).mean().rename(self.name)
 
 
+# ----------------------------------------------------------------#
+# ---------------------- Volume Indicators ---------------------- #
+# ----------------------------------------------------------------#
 
-
-@dataclass
-class VWAP(TA):
-    interval: str = 'Session' # 'Session', 'Day', 'Week', 'Month', 'Year'
-
-
-    def __post_init__(self):
-        self.name = f"VWAP"
-        self.names = self.name
-        self.rowsToUpdate = 10
-
-    @preprocess_data
-    def run(self, data: pd.DataFrame) -> pd.Series:
-        # # Add datetime index if not present
-        # if not isinstance(data.index, pd.DatetimeIndex):
-        #     data.index = pd.to_datetime(data.index)
-            
-        # Create session labels using date
-        data['session'] = data.index.date
-        
-        typical_price = data[self.column]
-        volume = data['volume']
-        
-        # Group by session and calculate VWAP (ie resets every day)
-        cumulative_pv = (typical_price * volume).groupby(data['session']).cumsum()
-        cumulative_volume = volume.groupby(data['session']).cumsum()
-        
-        vwap = (cumulative_pv / cumulative_volume).rename(self.name)
-        return vwap
 
 
 @dataclass
@@ -283,6 +274,161 @@ class VWAP(TA):
             raise ValueError(f"Invalid interval: {self.interval}. "
                            f"Must be one of: {', '.join(valid_intervals)}")
 
+
+@dataclass
+class VolumeAccumulation(TA):
+    volCol: str = 'volume'  # Column name for volume data
+    
+    def __post_init__(self):
+        self.name = f"VOL_ACC"
+        self.names = self.name
+        self.rowsToUpdate = 'max'  # Only need current day's data
+        
+    @preprocess_data
+    def run(self, data: pd.DataFrame) -> pd.Series:
+        # Create a date column from the index for grouping
+        dates = data.index.date
+        
+        # Calculate cumulative sum within each day
+        data[self.name] = 0.0  # Initialize the new column
+        for date in pd.unique(dates):
+            mask = dates == date
+            data.loc[mask, self.name] = data.loc[mask, self.volCol].cumsum()
+            
+        return data[self.name]
+
+
+@dataclass
+class VolumeTODC(TA):
+    """Volume Time of Day Comparison Indicator. Compares volume accumulation at a specific time of day to historical average.
+    Requires VolumeAccumulation to be run first."""
+    volAccCol: str = 'VOL_ACC'  # Column name for volume accumulation data
+    lookbackDays: int = 10  # Number of days to look back for comparison
+    
+    def __post_init__(self):
+        self.name = f"VOL_TODC_{self.lookbackDays}"
+        self.names = self.name
+        self.rowsToUpdate = 'max'  # update all rows
+        
+    @preprocess_data
+    def run(self, data: pd.DataFrame) -> pd.Series:
+        # Initialize the result column
+        data[self.name] = 0.0
+        
+        # For each unique time of day
+        for time in pd.unique(data.index.time):
+            # Get all values for this specific time of day
+            time_mask = data.index.time == time
+            time_indices = data[time_mask].index
+            
+            # Calculate rolling comparison for this time of day
+            for i in range(len(time_indices)):
+                current_idx = time_indices[i]
+                current_value = data.loc[current_idx, self.volAccCol]
+                
+                if i == 0:  # First day has no previous data
+                    continue
+                
+                # Get previous values for this time (up to lookback days)
+                historical_indices = time_indices[max(0, i-self.lookbackDays):i]
+                if len(historical_indices) == 0:
+                    continue
+                
+                # Calculate average of historical values
+                historical_avg = data.loc[historical_indices, self.volAccCol].mean()
+                
+                # Calculate percentage change from historical average
+                if historical_avg != 0:  # Avoid division by zero
+                    pct_change = ((current_value - historical_avg) / historical_avg) * 100
+                    # Store result in original dataframe using loc instead of iloc
+                    data.loc[current_idx, self.name] = pct_change
+        
+        return data[self.name]
+
+
+
+@dataclass
+class VolAcc(TA):
+    """
+    Acceleration Indicator
+    Measures rate of change in trend direction, normalized to -100 to +100.
+    Positive values indicate increasing slope (acceleration up),
+    negative values indicate decreasing slope (acceleration down).
+    """
+    max_accel: float = 0.001  # Maximum expected acceleration (0.1% per period)
+    
+    def __post_init__(self):
+        self.name = f"VolACC"
+        self.names = [self.name]
+        self.rowsToUpdate = len(self.column) + 1
+    
+    @staticmethod
+    def normalize(series: pd.Series, max_value: float) -> pd.Series:
+        """Efficient normalization to -100 to 100 range"""
+        return (series / max_value).clip(-1, 1) * 100
+    
+    @preprocess_data
+    def run(self, data: pd.DataFrame) -> pd.Series:
+        d = data['volume']
+        current_slope = d.diff() / d.shift(1)
+        prev_slope = d.shift(1).diff() / d.shift(2)
+        acceleration = current_slope - prev_slope
+        return self.normalize(acceleration, self.max_accel).rename(self.name)
+
+
+@dataclass
+class VolumeThreshold(TA):
+    """
+    Volume Threshold Indicator
+    Identifies when volume is above a specified percentage threshold
+    compared to its moving average.
+    Returns 1 when above threshold, 0 when below.
+    """
+    period: int = 10           # Period for moving average
+    threshold: float = 0.8     # 80% above moving average = 1.8
+    
+    def __post_init__(self):
+        self.column = 'volume'
+        self.name = f"VOL_THRESH_{self.period}_{int(self.threshold*100)}"
+        self.names = [self.name]
+        self.rowsToUpdate = self.period + 1
+    
+    @preprocess_data
+    def run(self, data: pd.DataFrame) -> pd.Series:
+        # Calculate moving average of volume
+        volume_ma = data[self.column].rolling(window=self.period).mean()
+        
+        # Calculate ratio of current volume to moving average
+        volume_ratio = data[self.column] / volume_ma
+        
+        # Create binary signal: 1 if above threshold, 0 if below
+        signal = (volume_ratio > (1 + self.threshold)).astype(int)
+        
+        return signal.rename(self.name)
+    
+
+@dataclass
+class VolDev(TA):
+    """Calculates percentage deviation of current volume from its moving average"""
+    period: int = 10 # period for the moving average
+
+    def __post_init__(self):
+        self.name = f"VDEV_{self.period}"
+        self.names = [self.name]
+        self.rowsToUpdate = self.period + 1
+
+    def run(self, df: pd.DataFrame) -> pd.DataFrame:
+        
+        # Calculate volume moving average
+        volume_ma = df[self.column].rolling(window=self.period).mean()
+        
+        # Calculate percentage deviation
+        # ((current - average) / average) * 100
+        df[self.name] = ((df[self.column] - volume_ma) / volume_ma) * 100
+            
+        return df
+
+# ----------------------------------------------------------------#
 
 @dataclass
 class MACD(TA):
@@ -853,33 +999,7 @@ class ColVal:
         return data[self.name]
 
 
-@dataclass
-class VolAcc(TA):
-    """
-    Acceleration Indicator
-    Measures rate of change in trend direction, normalized to -100 to +100.
-    Positive values indicate increasing slope (acceleration up),
-    negative values indicate decreasing slope (acceleration down).
-    """
-    max_accel: float = 0.001  # Maximum expected acceleration (0.1% per period)
-    
-    def __post_init__(self):
-        self.name = f"VolACC"
-        self.names = [self.name]
-        self.rowsToUpdate = len(self.column) + 1
-    
-    @staticmethod
-    def normalize(series: pd.Series, max_value: float) -> pd.Series:
-        """Efficient normalization to -100 to 100 range"""
-        return (series / max_value).clip(-1, 1) * 100
-    
-    @preprocess_data
-    def run(self, data: pd.DataFrame) -> pd.Series:
-        d = data['volume']
-        current_slope = d.diff() / d.shift(1)
-        prev_slope = d.shift(1).diff() / d.shift(2)
-        acceleration = current_slope - prev_slope
-        return self.normalize(acceleration, self.max_accel).rename(self.name)
+
 
 
 @dataclass
@@ -987,58 +1107,10 @@ class PctChange:
         return df
 
 
-@dataclass
-class VolDev(TA):
-    """Calculates percentage deviation of current volume from its moving average"""
-    period: int = 10 # period for the moving average
 
-    def __post_init__(self):
-        self.name = f"VDEV_{self.period}"
-        self.names = [self.name]
-        self.rowsToUpdate = self.period + 1
-
-    def run(self, df: pd.DataFrame) -> pd.DataFrame:
-        
-        # Calculate volume moving average
-        volume_ma = df[self.column].rolling(window=self.period).mean()
-        
-        # Calculate percentage deviation
-        # ((current - average) / average) * 100
-        df[self.name] = ((df[self.column] - volume_ma) / volume_ma) * 100
-            
-        return df
     
 
-@dataclass
-class VolumeThreshold(TA):
-    """
-    Volume Threshold Indicator
-    Identifies when volume is above a specified percentage threshold
-    compared to its moving average.
-    Returns 1 when above threshold, 0 when below.
-    """
-    period: int = 10           # Period for moving average
-    threshold: float = 0.8     # 80% above moving average = 1.8
-    
-    def __post_init__(self):
-        self.column = 'volume'
-        self.name = f"VOL_THRESH_{self.period}_{int(self.threshold*100)}"
-        self.names = [self.name]
-        self.rowsToUpdate = self.period + 1
-    
-    @preprocess_data
-    def run(self, data: pd.DataFrame) -> pd.Series:
-        # Calculate moving average of volume
-        volume_ma = data[self.column].rolling(window=self.period).mean()
-        
-        # Calculate ratio of current volume to moving average
-        volume_ratio = data[self.column] / volume_ma
-        
-        # Create binary signal: 1 if above threshold, 0 if below
-        signal = (volume_ratio > (1 + self.threshold)).astype(int)
-        
-        return signal.rename(self.name)
-    
+
 
 @dataclass
 class TrendDuration(TA):

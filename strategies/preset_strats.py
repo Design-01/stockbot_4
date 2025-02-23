@@ -6,6 +6,23 @@ from  strategies.ta import TAData
 from frame import Frame
 from data.random_data import RandomOHLCV
 from dataclasses import dataclass
+from typing import Dict, Any, List
+
+#------------------------------------------------------------
+# ----------  H E L P E R S  --------------------------------
+#------------------------------------------------------------
+
+def batch_add_ta(f, ta:list, style: Dict[str, Any] | List[Dict[str, Any]] = {}, chart_type: str = "line", row: int = 1, nameCol:str=None):
+    for t in ta:
+        f.add_ta(t, style=style, chart_type=chart_type, row=row)
+
+def add_score(f, validations:List[sig.Validate], name:str, weight:int=1, scoreType='mean', lookBack:int=10, row:int=3):
+    cols=[v.name for v in validations]
+    f.add_ta(sig.Score(name=name, cols=cols, scoreType=scoreType, weight=weight, lookBack=lookBack), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=row)
+
+#------------------------------------------------------------
+#------------------------------------------------------------
+#------------------------------------------------------------
 
 def SIG_sentiment(f, lookBack, atr:int=20, volMA:int=10, rsiPeriod:int=14, scoreRow:int=3):
     f.add_ta(sig.SentimentGap(normRange=(-5,5), lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
@@ -152,6 +169,128 @@ def SIG_compare_to_market_ta(f, marketCol='SPY_close', ls:str='LONG', lookBack:i
         
 
 #------------------------------------------------------------
+# ----------   T A  -----------------------------------------
+#------------------------------------------------------------
+def TA_TA(f, lookBack:int=100, atrSpan:int=50, pointsSpan:int=10, TArow:int=3):
+    ma_ta(f, [50, 150, 200])
+    f.add_ta(ta.ATR(span=atrSpan), {'dash': 'solid', 'color': 'cyan', 'width': 1}, row=3, chart_type='')
+    f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=3), [{'color': 'green', 'size': 3}, {'color': 'red', 'size': 10}], chart_type = 'points')
+    f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=pointsSpan), [{'color': 'green', 'size': 10}, {'color': 'red', 'size': 4}], chart_type = 'points')
+    f.add_ta(ta.VWAP(column='close',  interval='session'), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=1)
+    f.add_ta(ta.VolumeAccumulation(), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=2)
+    f.add_ta(ta.SupResAllRows(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1, rowsToUpdate=lookBack),
+    [{'dash': 'solid', 'color': 'green', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 1}, # support # green = rgba(0, 255, 0, 0.1)
+    {'dash': 'solid', 'color': 'red', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
+    chart_type = 'support_resistance')
+
+
+
+def TA_Volume(f, ls:str='LONG', lookBack:int=100, volMA:int=10, TArow:int=2, scoreRow:int=5):
+    tas = [
+        ta.MA('volume', volMA), 
+        ta.VolumeAccumulation(),
+        ta.VolumeTODC(lookbackDays=10),
+        sig.VolumeSpike(ls=ls, normRange=(0, 200), volMACol=f'MA_vo_{volMA}', lookBack=lookBack),
+        sig.VolumeROC(ls=ls, normRange=(0, 300), lookBack=lookBack)
+    ]
+    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    add_score(f, tas,  name=f'{ls}_Vol',  scoreType='max', lookBack=lookBack, row=scoreRow)
+    return tas
+
+
+
+
+def TA_RSI(f, lookBack:int=100, rsiPeriod:int=14, TArow:int=3, scoreRow:int=4):
+    ta_rs = f.add_ta(ta.RSATRMA(comparisonPrefix='SPY', ma=10, atr=50), 
+            [{'dash': 'solid', 'color': 'yellow', 'width': 1},
+            {'dash': 'solid', 'color': 'cyan', 'width': 1}], 
+            chart_type='line', row=TArow)
+    add_score(f, ta_rs,  name='RSI',  scoreType='mean', lookBack=lookBack, row=scoreRow)
+    return ta_rs
+
+
+    
+def TA_Levels(f, TArow:int=3, scoreRow:int=4):
+    tas = [
+        ta.Levels(level='pre_mkt_high',       ffill=True),
+        ta.Levels(level='pre_mkt_low',        ffill=True),
+        ta.Levels(level='intraday_high_9.35', ffill=True),
+        ta.Levels(level='intraday_low_9.35',  ffill=True),
+        ta.Levels(level='intraday_high'),                
+        ta.Levels(level='intraday_low'),                 
+        ta.Levels(level='prev_day_high'),                
+        ta.Levels(level='prev_day_low')
+    ]
+    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow) 
+    add_score(f, tas,  name='Levels',  scoreType='mean', lookBack=100, row=scoreRow)
+    return tas    
+
+
+
+def TA_RTM(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, TArow:int=2, scoreRow:int=3):
+    tas = [
+        sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='Res_1_Lower',        unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
+        sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='1 day_Res_1_Lower',  unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
+        sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='1 hour_Res_1_Lower', unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
+        sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='prev_day_high',      unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
+    ]
+    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    add_score(f, tas,  name=f'{ls}_RTM', scoreType='min', lookBack=lookBack, row=scoreRow) 
+    return tas
+
+
+
+def TA_Pullback(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, TArow:int=2, scoreRow:int=3):
+    tas = [
+        sig.PB_PctHLLH          (ls=ls, normRange=(0,100), atrCol=f'ATR_{atrSpan}', pointCol='HP_hi_3', lookBack=lookBack), # Lower Highs
+        sig.PB_ASC              (ls=ls, normRange=(0,100),                          pointCol='HP_hi_3', lookBack=lookBack), # Pct of pull back bars with same colour .eg all red if 'LONG
+        sig.PB_CoC_ByCountOpBars(ls=ls, normRange=(0,100),                          pointCol='HP_hi_3', lookBack=lookBack), # count of consecutive same colour prior to CoC bar. eg 3 red bars before CoC bar. Then % as a total of PB bars 
+        sig.PB_Overlap          (ls=ls, normRange=(0,100),                          pointCol='HP_hi_3', lookBack=lookBack), # Mean of the % pull back overlap the previous bar
+    ]
+    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    add_score(f, tas, name=f'{ls}_PB', scoreType='mean', lookBack=lookBack, row=scoreRow) 
+    return tas
+
+
+
+def TA_touches(f, ls='LONG', lookBack:int=100,  atrSpan:int=10, direction:str='down', toTouchAtrScale=10, pastTouchAtrScale=2,  TArow:int=2, scoreRow:int=3):
+    col1 = 'Sup_1_Upper'        if direction == 'down' else 'Res_1_Lower'
+    col2 = '1 hour_Sup_1_Upper' if direction == 'down' else '1 hour_Res_1_Lower'
+    col3 = '1 day_Sup_1_Upper'  if direction == 'down' else '1 day_Res_1_Lower'
+    tas = [
+        sig.TouchWithBar(ls=ls, atrCol=f'ATR_{atrSpan}', valCol=col1,            direction=direction, toTouchAtrScale=toTouchAtrScale, pastTouchAtrScale=pastTouchAtrScale, lookBack=lookBack), # has a bar touched a level -- Res 1
+        sig.TouchWithBar(ls=ls, atrCol=f'ATR_{atrSpan}', valCol=col2,            direction=direction, toTouchAtrScale=toTouchAtrScale, pastTouchAtrScale=pastTouchAtrScale, lookBack=lookBack), # has a bar touched a level -- Res 3
+        sig.TouchWithBar(ls=ls, atrCol=f'ATR_{atrSpan}', valCol=col3,            direction=direction, toTouchAtrScale=toTouchAtrScale, pastTouchAtrScale=pastTouchAtrScale, lookBack=lookBack), # has a bar touched a level -- Res 2
+        sig.TouchWithBar(ls=ls, atrCol=f'ATR_{atrSpan}', valCol='prev_day_low',  direction=direction, toTouchAtrScale=toTouchAtrScale, pastTouchAtrScale=pastTouchAtrScale, lookBack=lookBack), # has a bar touched a level -- Res 2
+        sig.TouchWithBar(ls=ls, atrCol=f'ATR_{atrSpan}', valCol='prev_day_high', direction=direction, toTouchAtrScale=toTouchAtrScale, pastTouchAtrScale=pastTouchAtrScale, lookBack=lookBack), # has a bar touched a level -- Res 2
+    ]
+    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    add_score(f, tas, name=f'{ls}_Touch', scoreType='mean', lookBack=lookBack, row=scoreRow) 
+    return tas
+
+#------------------------------------------------------------
+# ----------  V A L I D A T I O N S  ------------------------
+#------------------------------------------------------------
+
+def VALIDATE_pullback(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
+    pass
+
+def VALIDATE_touches(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
+    pass
+
+def VALIDATE_RTM(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
+    pass
+
+def VALIDATE_buy(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
+    pass
+
+def VALIDATE_sell(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
+    pass
+
+def VALIDATE_bonus(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
+    pass 
+
+#------------------------------------------------------------
 # ----------  S T R A T E G I E S  --------------------------
 #------------------------------------------------------------
 
@@ -244,27 +383,26 @@ def STRATEGY_pullback_to_cons(f, ls='LONG', lookBack:int=100, scoreRow:int=5, ma
     else:
         print('STRATEGY_pullback_to_cons :: SHORT STRATEGY NOT IMPLEMENTED YET')
 
-#------------------------------------------------------------
-# ----------  V A L I D A T I O N S  ------------------------
-#------------------------------------------------------------
 
-def VALIDATE_pullback(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
-    pass
 
-def VALIDATE_touches(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
-    pass
+def VALIDATE_tbp(f, ls='LONG', atrSpan:int=10, lookBack:int=100, sigRow:int=3, validationRow:int=4):
+    tbp_signals = [
+        sig.TBP(ls=ls, atrCol=f'ATR_{atrSpan}',   barsToPlay=3, lookBack=lookBack),
+        sig.TBP(ls=ls, atrCol=f'ATR_{atrSpan}',   barsToPlay=4, lookBack=lookBack),
+    ]
+    batch_add_ta(f, tbp_signals,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
+    add_score(f, tbp_signals,  name=f'{ls}_TBP',  scoreType='max',  lookBack=lookBack, row=validationRow)
 
-def VALIDATE_RTM(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
-    pass
 
-def VALIDATE_buy(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
-    pass
+def VALIDATE_turnbars(f, ls='LONG',  atrSpan:int=10, lookBack:int=100, sigRow:int=3, validationRow:int=4):
+    turnbar_signals = [
+        sig.TurnBar(ls=ls, atrCol=f'ATR_{atrSpan}',  lookBack=lookBack),
+    ]
+    batch_add_ta(f, turnbar_signals,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
+    add_score(f, turnbar_signals,  name=f'{ls}_TurnBar',  scoreType='max',  lookBack=lookBack, row=validationRow)
 
-def VALIDATE_sell(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
-    pass
 
-def VALIDATE_bonus(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
-    pass 
+
 
 ## --------------------------------------------------------------
 ## --------------- E X I T   S T R A T E G I E S -----------------
