@@ -300,7 +300,8 @@ class VolumeAccumulation(TA):
 
 @dataclass
 class VolumeTODC(TA):
-    """Volume Time of Day Comparison Indicator. Compares volume accumulation at a specific time of day to historical average.
+    """Volume Time of Day Comparison Indicator. 
+    Compares volume accumulation at a specific time of day to historical average.
     Requires VolumeAccumulation to be run first."""
     volAccCol: str = 'VOL_ACC'  # Column name for volume accumulation data
     lookbackDays: int = 10  # Number of days to look back for comparison

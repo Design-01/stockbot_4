@@ -18,7 +18,9 @@ def batch_add_ta(f, ta:list, style: Dict[str, Any] | List[Dict[str, Any]] = {}, 
 
 def add_score(f, validations:List[sig.Validate], name:str, weight:int=1, scoreType='mean', lookBack:int=10, row:int=3):
     cols=[v.name for v in validations]
-    f.add_ta(sig.Score(name=name, cols=cols, scoreType=scoreType, weight=weight, lookBack=lookBack), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=row)
+    score_obj = sig.Score(name=name, cols=cols, scoreType=scoreType, weight=weight, lookBack=lookBack)
+    f.add_ta(score_obj, {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=row)
+    return score_obj.name
 
 #------------------------------------------------------------
 #------------------------------------------------------------
@@ -183,32 +185,6 @@ def TA_TA(f, lookBack:int=100, atrSpan:int=50, pointsSpan:int=10, TArow:int=3):
     {'dash': 'solid', 'color': 'red', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
     chart_type = 'support_resistance')
 
-
-
-def TA_Volume(f, ls:str='LONG', lookBack:int=100, volMA:int=10, TArow:int=2, scoreRow:int=5):
-    tas = [
-        ta.MA('volume', volMA), 
-        ta.VolumeAccumulation(),
-        ta.VolumeTODC(lookbackDays=10),
-        sig.VolumeSpike(ls=ls, normRange=(0, 200), volMACol=f'MA_vo_{volMA}', lookBack=lookBack),
-        sig.VolumeROC(ls=ls, normRange=(0, 300), lookBack=lookBack)
-    ]
-    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
-    add_score(f, tas,  name=f'{ls}_Vol',  scoreType='max', lookBack=lookBack, row=scoreRow)
-    return tas
-
-
-
-def TA_RSI(f, lookBack:int=100, rsiPeriod:int=14, TArow:int=3, scoreRow:int=4):
-    ta_rs = f.add_ta(ta.RSATRMA(comparisonPrefix='SPY', ma=10, atr=50), 
-            [{'dash': 'solid', 'color': 'yellow', 'width': 1},
-            {'dash': 'solid', 'color': 'cyan', 'width': 1}], 
-            chart_type='line', row=TArow)
-    add_score(f, ta_rs,  name='RSI',  scoreType='mean', lookBack=lookBack, row=scoreRow)
-    return ta_rs
-
-
-    
 def TA_Levels(f, TArow:int=3, scoreRow:int=4):
     tas = [
         ta.Levels(level='pre_mkt_high',       ffill=True),
@@ -221,38 +197,25 @@ def TA_Levels(f, TArow:int=3, scoreRow:int=4):
         ta.Levels(level='prev_day_low')
     ]
     batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow) 
-    add_score(f, tas,  name='Levels',  scoreType='mean', lookBack=100, row=scoreRow)
-    return tas    
 
+#------------------------------------------------------------
+# ----------   S C O R E   T A  -----------------------------
+#------------------------------------------------------------
 
-
-def TA_RTM(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, TArow:int=2, scoreRow:int=3):
+def SCORE_TA_Volume(f, ls:str='LONG', lookBack:int=100, volMA:int=10, TArow:int=2, scoreRow:int=5):
     tas = [
-        sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='Res_1_Lower',        unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
-        sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='1 day_Res_1_Lower',  unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
-        sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='1 hour_Res_1_Lower', unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
-        sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='prev_day_high',      unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
+        ta.MA('volume', volMA), 
+        ta.VolumeAccumulation(),
+        ta.VolumeTODC(lookbackDays=10),
+        sig.VolumeSpike(ls=ls, normRange=(0, 200), volMACol=f'MA_vo_{volMA}', lookBack=lookBack),
+        sig.VolumeROC(ls=ls, normRange=(0, 300), lookBack=lookBack)
     ]
     batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
-    add_score(f, tas,  name=f'{ls}_RTM', scoreType='min', lookBack=lookBack, row=scoreRow) 
-    return tas
+    score_col = add_score(f, tas,  name=f'{ls}_Vol',  scoreType='max', lookBack=lookBack, row=scoreRow)
+    return score_col
 
 
-
-def TA_Pullback(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, TArow:int=2, scoreRow:int=3):
-    tas = [
-        sig.PB_PctHLLH          (ls=ls, normRange=(0,100), atrCol=f'ATR_{atrSpan}', pointCol='HP_hi_3', lookBack=lookBack), # Lower Highs
-        sig.PB_ASC              (ls=ls, normRange=(0,100),                          pointCol='HP_hi_3', lookBack=lookBack), # Pct of pull back bars with same colour .eg all red if 'LONG
-        sig.PB_CoC_ByCountOpBars(ls=ls, normRange=(0,100),                          pointCol='HP_hi_3', lookBack=lookBack), # count of consecutive same colour prior to CoC bar. eg 3 red bars before CoC bar. Then % as a total of PB bars 
-        sig.PB_Overlap          (ls=ls, normRange=(0,100),                          pointCol='HP_hi_3', lookBack=lookBack), # Mean of the % pull back overlap the previous bar
-    ]
-    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
-    add_score(f, tas, name=f'{ls}_PB', scoreType='mean', lookBack=lookBack, row=scoreRow) 
-    return tas
-
-
-
-def TA_touches(f, ls='LONG', lookBack:int=100,  atrSpan:int=10, direction:str='down', toTouchAtrScale=10, pastTouchAtrScale=2,  TArow:int=2, scoreRow:int=3):
+def SCORE_TA_touches(f, ls='LONG', lookBack:int=100,  atrSpan:int=10, direction:str='down', toTouchAtrScale=10, pastTouchAtrScale=2,  TArow:int=2, scoreRow:int=3):
     col1 = 'Sup_1_Upper'        if direction == 'down' else 'Res_1_Lower'
     col2 = '1 hour_Sup_1_Upper' if direction == 'down' else '1 hour_Res_1_Lower'
     col3 = '1 day_Sup_1_Upper'  if direction == 'down' else '1 day_Res_1_Lower'
@@ -264,30 +227,129 @@ def TA_touches(f, ls='LONG', lookBack:int=100,  atrSpan:int=10, direction:str='d
         sig.TouchWithBar(ls=ls, atrCol=f'ATR_{atrSpan}', valCol='prev_day_high', direction=direction, toTouchAtrScale=toTouchAtrScale, pastTouchAtrScale=pastTouchAtrScale, lookBack=lookBack), # has a bar touched a level -- Res 2
     ]
     batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
-    add_score(f, tas, name=f'{ls}_Touch', scoreType='mean', lookBack=lookBack, row=scoreRow) 
-    return tas
+    score_col = add_score(f, tas, name=f'{ls}_Touch', scoreType='mean', lookBack=lookBack, row=scoreRow) 
+    return score_col
+
+
+def SCORE_TA_Pullback(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, TArow:int=2, scoreRow:int=3):
+    tas = [
+        sig.PB_PctHLLH          (ls=ls, normRange=(0,100), atrCol=f'ATR_{atrSpan}', pointCol='HP_hi_3', lookBack=lookBack), # Lower Highs
+        sig.PB_ASC              (ls=ls, normRange=(0,100),                          pointCol='HP_hi_3', lookBack=lookBack), # Pct of pull back bars with same colour .eg all red if 'LONG
+        sig.PB_CoC_ByCountOpBars(ls=ls, normRange=(0,100),                          pointCol='HP_hi_3', lookBack=lookBack), # count of consecutive same colour prior to CoC bar. eg 3 red bars before CoC bar. Then % as a total of PB bars 
+        sig.PB_Overlap          (ls=ls, normRange=(0,100),                          pointCol='HP_hi_3', lookBack=lookBack), # Mean of the % pull back overlap the previous bar
+    ]
+    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    score_col = add_score(f, tas, name=f'{ls}_PB', scoreType='mean', lookBack=lookBack, row=scoreRow) 
+    return score_col
+
+
+
+def SCORE_TA_Bar_StrengthWeakness(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, barSwMA:int=4, TArow:int=2, scoreRow:int=3):
+    bsw = sig.BarSW(ls=ls, normRange=(-5,5), atrCol=f'ATR_{atrSpan}', lookBack=lookBack)
+    ma = ta.MA(maCol=bsw.name, period=barSwMA)
+    score_col = sig.PctDiff(metricCol=ma.name, lookBack=lookBack)
+    return score_col
+     
+
+def SCORE_TA_RTM(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, TArow:int=2, scoreRow:int=3):
+    tas = [
+        sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='Res_1_Lower',        unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
+        sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='1 day_Res_1_Lower',  unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
+        sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='1 hour_Res_1_Lower', unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
+        sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='prev_day_high',      unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
+    ]
+    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    score_col = add_score(f, tas,  name=f'{ls}_RTM', scoreType='min', lookBack=lookBack, row=scoreRow) 
+    return score_col
+
+def TA_RSI(f, lookBack:int=100, rsiPeriod:int=14, TArow:int=3, scoreRow:int=4):
+    
+    add_score(f, ta_rs,  name='RSI',  scoreType='mean', lookBack=lookBack, row=scoreRow)
+    return ta_rs
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
 
 #------------------------------------------------------------
-# ----------  V A L I D A T I O N S  ------------------------
+# ----------  S C O R E    V A L I D A T I O N S  -----------
 #------------------------------------------------------------
+#! All validation score should be 'mean'. check value so consistant score ranges.  
 
-def VALIDATE_pullback(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
-    pass
+def SCORE_VALID_premkt_volume(f, ls:str='LONG', lookBack:int=100, sigRow:int=3, validationRow:int=4):
+    validations = [
+        sig.Validate(f, val1='VOL_TODC_10', operator='>', val2=200, lookBack=lookBack),  # Volume Time of Day Comparison Indicator
+    ]
+    batch_add_ta(f, validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
+    scoreCol = add_score(f, validations,  name=f'{ls}_PremktVolume',  scoreType='mean', lookBack=lookBack, row=validationRow)
+    return scoreCol
 
-def VALIDATE_touches(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
-    pass
 
-def VALIDATE_RTM(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
-    pass
+def SCORE_VALID_time_of_day(f, ls:str='LONG', lookBack:int=100, sigRow:int=3, validationRow:int=4):
+    validations = [
+        sig.Validate(f, val1='idx', operator='t>t', val2='09:35', lookBack=lookBack),  # Volume Time of Day Comparison Indicator
+        sig.Validate(f, val1='idx', operator='t<t', val2='12:00', lookBack=lookBack),  # Volume Time of Day Comparison Indicator
+    ]
+    batch_add_ta(f, validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
+    score_col = add_score(f, validations,  name=f'{ls}_Time',  scoreType='mean', lookBack=lookBack, row=validationRow)
+    return score_col
 
-def VALIDATE_buy(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
-    pass
 
-def VALIDATE_sell(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
-    pass
+def SCORE_VALID_breaks_premkt_and_5minbar(f, ls:str='LONG', lookBack:int=100, sigRow:int=3, validationRow:int=4):
+    validations = [
+        sig.Validate(f, val1='close', operator='>', val2='pre_mkt_high', lookBack=lookBack),  # close > pre_mkt_high
+        sig.Validate(f, val1='close', operator='>', val2='intraday_high_9.35', lookBack=lookBack),  # close > intraday_high_9.35
+    ]
+    batch_add_ta(f, validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
+    scoreCol = add_score(f, validations,  name=f'{ls}_ValBreaks',  scoreType='mean', lookBack=lookBack, row=validationRow)
+    return scoreCol
 
-def VALIDATE_bonus(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
-    pass 
+
+def SCORE_VALID_buy(f, ls='LONG', lookBack:int=100, sigRow:int=3, validationRow:int=4):
+    ta_rs = f.add_ta(ta.RSATRMA(comparisonPrefix='SPY', ma=10, atr=50), 
+            [{'dash': 'solid', 'color': 'yellow', 'width': 1},
+            {'dash': 'solid', 'color': 'cyan', 'width': 1}], 
+            chart_type='line', row=sigRow)
+    
+    buy_validations = [
+        sig.Validate(f, val1='close',             operator='>',   val2='VWAP_session', lookBack=lookBack), # close > VWAP
+        sig.Validate(f, val1='close',             operator='^',   val2='high',         lookBack=lookBack), # close breaks prev high
+        sig.Validate(f, val1='Score_LONG_RTM',    operator='>',   val2=20,             lookBack=lookBack), # Room to move > 2 (measured by ATR units but check normalised score. 2 might = 20%)
+        sig.Validate(f, val1=ta_rs.name,          operator='>',   val2=2,              lookBack=lookBack),  # RS > 2 (measured by ATR units)
+    ]
+    batch_add_ta(f, buy_validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
+    scoreCol = add_score(f, buy_validations,  name=f'{ls}_ValBuy',  scoreType='mean', lookBack=lookBack, row=validationRow) 
+    return scoreCol
+
+
+# other validations that can be added but critical to achieveing high level of confidence 
+def SCORE_VALID_bonus(f, ls='LONG',  atrSpan:int=10, lookBack:int=100, sigRow:int=3, validationRow:int=4):
+    bonus_validations = [
+        sig.Validate(f, val1=('HP_hi_10', -1),                    operator='p<p', val2=('HP_hi_10', -2), lookBack=lookBack),  # Higher High
+        sig.Validate(f, val1=('LP_lo_10', -1),                    operator='p<p', val2=('LP_lo_10', -2), lookBack=lookBack),  # Higher Low
+        sig.Validate(f, val1='close',                             operator='>',   val2='MA_cl_50',       lookBack=lookBack),  # close > MA50
+        sig.Validate(f, val1='close',                             operator='^p',  val2='HP_hi_10',       lookBack=lookBack),  # close breaks HP_hi_10
+        sig.Validate(f, val1='Touch_down_1 hour_Sup_1_Upper',     operator='>',   val2=80,               lookBack=lookBack),  # Touch down 1 hour support
+        sig.Validate(f, val1='Touch_down_prev_day_high',          operator='>',   val2=80,               lookBack=lookBack),  # Touch down prev day high
+    ]
+    batch_add_ta(f, bonus_validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
+    score_col = add_score(f, bonus_validations,  name=f'{ls}_ValBonus',  scoreType='mean', lookBack=lookBack, row=validationRow)
+    return score_col
+
+
+
+
 
 #------------------------------------------------------------
 # ----------  S T R A T E G I E S  --------------------------
