@@ -617,9 +617,9 @@ class Trace(Signals):
 @dataclass
 class BuySetup(Signals):
     name: str = 'BuySetup'
-    ls: str = 'LONG'
-    lookBack: int = 200
     minCount: int = 3
+    bswCol: str = ''
+    retestCol: str = ''
     
     def __post_init__(self):
         self.name = f"{self.ls[0]}_{self.name}"
@@ -652,8 +652,8 @@ class BuySetup(Signals):
         hh = df.high.iat[-1] > df.high.iat[-2]  # has a higher high
         hl = df.low.iat[-1] > df.low.iat[-2]    # has a higher low
         cc = df.open.iat[-1] < df.close.iat[-1] # has a bullish candle
-        sw = df['BSW'].iat[-1] > 0.5            # has a bullish strength/weakness
-        dr = df['DR'].iat[-1] > 0.5             # has a double retest
+        sw = df[self.bswCol].iat[-1] > 0.5      # has a bullish strength/weakness
+        dr = df[self.retestCol].iat[-1] > 0.5   # has a double retest
         
         self.reversal_signal_count+= sum([hh, hl, cc, sw, dr])
 
@@ -787,6 +787,44 @@ class TouchWithBar(Signals):
 
         return 0.0
 
+
+@dataclass
+class Retest(Signals):
+    name: str = 'Retest'
+    direction: str = 'down'
+    atrCol: str = ''
+    valCol: str = ''
+    withinAtrRange: Tuple[float, float] = (-0.15, 0.15) # range below , range above
+    rollingLen:int = 10
+    
+    def __post_init__(self):
+        self.name = f"{self.name}_{self.direction}_{self.valCol}"
+        self.names = [self.name]
+        # cannot have both pointCol and valCol. choose one or the other
+        if self.pointCol and self.valCol:
+            raise ValueError("Retest :: cannot have both pointCol and valCol. choose one or the other")
+
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        if len(df) < 10:
+            return 0.0
+
+        bar_value = df.low.iat[-1] if self.direction == 'down' else df.high.iat[-1]
+        atr = df[self.atrCol].iat[-1]
+        min_level = bar_value + (atr * self.withinAtrRange[0])
+        max_level = bar_value + (atr * self.withinAtrRange[1])
+
+ 
+        vals = df[self.valCol].dropna().iloc[-self.rollingLen:]
+        if len(vals) < 1:
+            return 0.0
+
+        points_in_range = vals[(vals >= min_level) & (vals <= max_level)]
+        return len(points_in_range) 
+
+
+
+            
 
 
 

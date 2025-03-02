@@ -185,6 +185,7 @@ def TA_TA(f, lookBack:int=100, atrSpan:int=50, pointsSpan:int=10, TArow:int=3):
     {'dash': 'solid', 'color': 'red', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
     chart_type = 'support_resistance')
 
+
 def TA_Levels(f, TArow:int=3, scoreRow:int=4):
     tas = [
         ta.Levels(level='pre_mkt_high',       ffill=True),
@@ -229,6 +230,18 @@ def SCORE_TA_touches(f, ls='LONG', lookBack:int=100,  atrSpan:int=10, direction:
     batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
     score_col = add_score(f, tas, name=f'{ls}_Touch', scoreType='mean', lookBack=lookBack, row=scoreRow) 
     return score_col
+
+
+def SCORE_TA_retest(f, ls='LONG', name:str='Retest',  lookBack:int=100,  atrSpan:int=10, direction:str='down', toTouchAtrScale=10, pastTouchAtrScale=2,  TArow:int=2, scoreRow:int=3):
+    tas = [
+        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', pointCol='HP_hi_3', withinAtrRange=(-10, 10), rollingLen=20, lookBack=lookBack), # retest HP withing 10% of ATR
+        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', pointCol='LP_lo_3', withinAtrRange=(-10, 10), rollingLen=20, lookBack=lookBack), # retest LP withing 10% of ATR
+        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', valCol='low',       withinAtrRange=(-10, 10), rollingLen=3, lookBack=lookBack), # retest HP withing 10% of ATR
+
+    ]
+    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    scoreCol = add_score(f, tas,  name=f'{ls}_{name}',  scoreType='mean', lookBack=lookBack, row=scoreRow)
+    return scoreCol
 
 
 def SCORE_TA_Pullback(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, TArow:int=2, scoreRow:int=3):
@@ -346,6 +359,7 @@ def SCORE_VALID_bonus(f, ls='LONG',  atrSpan:int=10, lookBack:int=100, sigRow:in
     batch_add_ta(f, bonus_validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
     score_col = add_score(f, bonus_validations,  name=f'{ls}_ValBonus',  scoreType='mean', lookBack=lookBack, row=validationRow)
     return score_col
+
 
 
 
