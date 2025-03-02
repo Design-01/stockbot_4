@@ -509,9 +509,6 @@ class PB_CoC_ByCountOpBars(Signals):
 
         return consecutive_count / (len(window) - 1) * 100
     
-
-
-
     
 
 #£ Done
@@ -616,6 +613,76 @@ class Trace(Signals):
                 
         return 0
 
+
+@dataclass
+class BuySetup(Signals):
+    name: str = 'BuySetup'
+    ls: str = 'LONG'
+    lookBack: int = 200
+    minCount: int = 3
+    
+    def __post_init__(self):
+        self.name = f"{self.ls[0]}_{self.name}"
+        self.names = [self.name]  
+        self.reversal_signal_count = 0
+        self.entry_price = None
+        self.stop_price = None
+        self.is_buy = False
+        self.is_fail = False
+
+    def reset(self):
+        self.reversal_signal_count = 0
+        self.entry_price = None
+        self.stop_price = None
+        self.is_buy = False
+        self.is_fail = False
+
+    def _compute_row(self, df:pd.DataFrame=pd.DataFrame()):
+
+        # check if was a triggers or cancel last round
+        if self.is_buy | self.is_fail:
+            self.reset()
+            return False
+
+        # has 2 x lower highs and 2 x lower lows
+        lhs = df.high.iat[-1] < df.high.iat[-2] and df.high.iat[-2] < df.high.iat[-3]
+        lls = df.low.iat[-1]  < df.low.iat[-2]  and df.low.iat[-2]  < df.low.iat[-3]
+
+        # get the reversal signals for every run of the function
+        hh = df.high.iat[-1] > df.high.iat[-2]  # has a higher high
+        hl = df.low.iat[-1] > df.low.iat[-2]    # has a higher low
+        cc = df.open.iat[-1] < df.close.iat[-1] # has a bullish candle
+        sw = df['BSW'].iat[-1] > 0.5            # has a bullish strength/weakness
+        dr = df['DR'].iat[-1] > 0.5             # has a double retest
+        
+        self.reversal_signal_count+= sum([hh, hl, cc, sw, dr])
+
+        # set entry and stop if not set
+        if self.reversal_signal_count >= 1 and self.entry_price is None:
+            self.entry_price = df.high.iat[-1]
+            self.stop_price = min(df.low.iat[-1], df.low.iat[-2])
+
+
+        # Buy Setup checking if entry price is set
+        if self.entry_price is not None:
+
+            # breaks entry price
+            if df.high.iat[-1] > self.entry_price:
+                if self.reversal_signal_count >= self.minCount:
+                    self.is_buy = True
+                    return True
+                else:
+                    self.entry_price = df.high.iat[-1]
+            
+            # breaks stoploss price
+            if df.low.iat[-1] < self.stop_price:
+                if lls and lhs and not cc:
+                    self.is_fail = True
+                    return False
+                else:
+                    self.stop_price = min(df.low.iat[-1], df.low.iat[-2])
+
+        return False
 
 # --------------------------------------------------------------
 # ------- R E V E R S A L   S I G N A L S ----------------------
