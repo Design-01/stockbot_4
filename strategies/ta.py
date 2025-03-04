@@ -114,6 +114,10 @@ class Levels(TA):
         self.names = [self.name]
     
     def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        # Ensure the column exists
+        if self.name not in data.columns:
+            data[self.name] = pd.NA
+
         # Apply levels to each day
         for date in data.index.normalize().unique():
             day_data = data[data.index.normalize() == date]
@@ -182,7 +186,7 @@ class MA(TA):
 
     def __post_init__(self):
         self.name = f"MA_{self.maCol[:2]}_{self.period}"
-        self.names = f"MA_{self.maCol[:2]}_{self.period}"
+        self.names = [self.name]
         self.rowsToUpdate = self.period 
 
     @preprocess_data

@@ -116,6 +116,7 @@ def ma_ta(f, periods: list[int], ma_col: str = 'close', row: int = 1):
                     row=row)
 
 
+
 def gaps_ta(f, ls:str='LONG', pointCol:str='HP_hi_10', atrCol:str='ATR_50', lookBack:int=1, row:int=4, chartType:str='lines+markers'):
     l_or_s = ls[0]
     f.add_ta_batch([
@@ -205,13 +206,16 @@ def TA_Levels(f, TArow:int=3, scoreRow:int=4):
 
 def SCORE_TA_Volume(f, ls:str='LONG', lookBack:int=100, volMA:int=10, TArow:int=2, scoreRow:int=5):
     tas = [
-        ta.MA('volume', volMA), 
+        ta.MA(maCol='volume', period=volMA),
         ta.VolumeAccumulation(),
-        ta.VolumeTODC(lookbackDays=10),
+        ta.VolumeTODC(lookbackDays=10)
+    ]
+    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=2)
+    scores = [ 
         sig.VolumeSpike(ls=ls, normRange=(0, 200), volMACol=f'MA_vo_{volMA}', lookBack=lookBack),
         sig.VolumeROC(ls=ls, normRange=(0, 300), lookBack=lookBack)
     ]
-    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    batch_add_ta(f, scores,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
     score_col = add_score(f, tas,  name=f'{ls}_Vol',  scoreType='max', lookBack=lookBack, row=scoreRow)
     return score_col
 
@@ -232,15 +236,15 @@ def SCORE_TA_touches(f, ls='LONG', lookBack:int=100,  atrSpan:int=10, direction:
     return score_col
 
 
-def SCORE_TA_retest(f, ls='LONG', name:str='Retest',  lookBack:int=100,  atrSpan:int=10, direction:str='down', toTouchAtrScale=10, pastTouchAtrScale=2,  TArow:int=2, scoreRow:int=3):
+def SCORE_TA_retest(f, ls='LONG', lookBack:int=100,  atrSpan:int=10, direction:str='down', toTouchAtrScale=10, pastTouchAtrScale=2,  TArow:int=2, scoreRow:int=3):
     tas = [
-        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', pointCol='HP_hi_3', withinAtrRange=(-10, 10), rollingLen=20, lookBack=lookBack), # retest HP withing 10% of ATR
-        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', pointCol='LP_lo_3', withinAtrRange=(-10, 10), rollingLen=20, lookBack=lookBack), # retest LP withing 10% of ATR
-        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', valCol='low',       withinAtrRange=(-10, 10), rollingLen=3, lookBack=lookBack), # retest HP withing 10% of ATR
+        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', direction=direction, valCol='HP_hi_3', withinAtrRange=(-10, 10), rollingLen=20, lookBack=lookBack), # retest HP withing 10% of ATR
+        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', direction=direction, valCol='LP_lo_3', withinAtrRange=(-10, 10), rollingLen=20, lookBack=lookBack), # retest LP withing 10% of ATR
+        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', direction=direction, valCol='low',     withinAtrRange=(-10, 10), rollingLen=3, lookBack=lookBack),  # retest HP withing 10% of ATR
 
     ]
     batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
-    scoreCol = add_score(f, tas,  name=f'{ls}_{name}',  scoreType='mean', lookBack=lookBack, row=scoreRow)
+    scoreCol = add_score(f, tas,  name=f'{ls}_Retest',  scoreType='mean', lookBack=lookBack, row=scoreRow)
     return scoreCol
 
 
@@ -319,13 +323,39 @@ def SCORE_VALID_time_of_day(f, ls:str='LONG', lookBack:int=100, sigRow:int=3, va
     return score_col
 
 
-def SCORE_VALID_breaks_premkt_and_5minbar(f, ls:str='LONG', lookBack:int=100, sigRow:int=3, validationRow:int=4):
-    validations = [
-        sig.Validate(f, val1='close', operator='>', val2='pre_mkt_high', lookBack=lookBack),  # close > pre_mkt_high
-        sig.Validate(f, val1='close', operator='>', val2='intraday_high_9.35', lookBack=lookBack),  # close > intraday_high_9.35
-    ]
+def SCORE_VALID_Levels_premkt_and_5minbar(f, ls:str='LONG',  lookBack:int=100, sigRow:int=3, validationRow:int=4):
+    if ls == 'LONG':
+        validations = [
+            sig.Validate(f, val1='close', operator='>', val2='pre_mkt_high',       lookBack=lookBack),  # close > pre_mkt_high
+            sig.Validate(f, val1='close', operator='>', val2='intraday_high_9.35', lookBack=lookBack),  # close > intraday_high_9.35
+        ]
+    else:
+        validations = [
+            sig.Validate(f, val1='close', operator='<', val2='pre_mkt_low',       lookBack=lookBack),  # close < pre_mkt_low
+            sig.Validate(f, val1='close', operator='<', val2='intraday_low_9.35', lookBack=lookBack),  # close < intraday_low_9.35
+        ]
     batch_add_ta(f, validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
     scoreCol = add_score(f, validations,  name=f'{ls}_ValBreaks',  scoreType='mean', lookBack=lookBack, row=validationRow)
+    return scoreCol
+
+
+def SCORE_VALID_reset_if_breaks(f, ls = 'LONG', lookBack:int=100, sigRow:int=3, validationRow:int=4):
+    if ls == 'LONG':
+        validations = [
+            sig.Validate(f, val1='close', operator='v', val2='intraday_low',      lookBack=lookBack),  # close breaks below intraday low
+            sig.Validate(f, val1='close', operator='v', val2='pre_mkt_low',       lookBack=lookBack),  # close breaks below pre market low
+            sig.Validate(f, val1='close', operator='v', val2='prev_day_low',      lookBack=lookBack),  # close breaks below prev day low
+            sig.Validate(f, val1='close', operator='v', val2='intraday_low_9.35', lookBack=lookBack),  # close breaks below intraday low
+        ]
+    else:  
+        validations = [
+            sig.Validate(f, val1='close', operator='^', val2='intraday_high',      lookBack=lookBack),  # close breaks above intraday high
+            sig.Validate(f, val1='close', operator='^', val2='pre_mkt_high',       lookBack=lookBack),  # close breaks above pre market high
+            sig.Validate(f, val1='close', operator='^', val2='prev_day_high',      lookBack=lookBack),  # close breaks above prev day high
+            sig.Validate(f, val1='close', operator='^', val2='intraday_high_9.35', lookBack=lookBack),  # close breaks above intraday high
+        ]
+    batch_add_ta(f, validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
+    scoreCol = add_score(f, validations,  name=f'{ls}_ResetIfBreaks',  scoreType='mean', lookBack=lookBack, row=validationRow)
     return scoreCol
 
 
@@ -477,7 +507,12 @@ def VALIDATE_turnbars(f, ls='LONG',  atrSpan:int=10, lookBack:int=100, sigRow:in
     add_score(f, turnbar_signals,  name=f'{ls}_TurnBar',  scoreType='max',  lookBack=lookBack, row=validationRow)
 
 
-
+def SCORE_VALID_BuySetup(f, ls='LONG', bswCol:str='', retestCol:str='', lookBack:int=100, sigRow:int=3, validationRow:int=4):
+    buy_setup_signals = [
+        sig.BuySetup(ls=ls, bswCol=bswCol, retestCol=retestCol, minCount=3, minBSW=0.5, minRetest=0.5, lookBack=lookBack),
+    ]
+    batch_add_ta(f, buy_setup_signals,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
+    add_score(f, buy_setup_signals,  name=f'{ls}_BuySetup',  scoreType='max',  lookBack=lookBack, row=validationRow)
 
 ## --------------------------------------------------------------
 ## --------------- E X I T   S T R A T E G I E S -----------------

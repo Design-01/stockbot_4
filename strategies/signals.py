@@ -168,7 +168,7 @@ class Signals(ABC):
     lookBack: int = 1
 
     def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}"
+        self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]
 
     def get_score(self, val):
@@ -617,13 +617,20 @@ class Trace(Signals):
 @dataclass
 class BuySetup(Signals):
     name: str = 'BuySetup'
-    minCount: int = 3
     bswCol: str = ''
     retestCol: str = ''
+    minCount: int = 3
+    minBSW: float = 0.5
+    minRetest: float = 0.5
     
     def __post_init__(self):
         self.name = f"{self.ls[0]}_{self.name}"
-        self.names = [self.name]  
+        self.name_sig_count = f"{self.name}_Count"
+        self.name_entry = f"{self.name}_Entry"
+        self.name_stop = f"{self.name}_Stop"
+        self.name_buy = f"{self.name}_isBuy"
+        self.name_fail = f"{self.name}_isFail"
+        self.names = [self.name, self.name_sig_count, self.name_entry, self.name_stop, self.name_buy]
         self.reversal_signal_count = 0
         self.entry_price = None
         self.stop_price = None
@@ -649,11 +656,11 @@ class BuySetup(Signals):
         lls = df.low.iat[-1]  < df.low.iat[-2]  and df.low.iat[-2]  < df.low.iat[-3]
 
         # get the reversal signals for every run of the function
-        hh = df.high.iat[-1] > df.high.iat[-2]  # has a higher high
-        hl = df.low.iat[-1] > df.low.iat[-2]    # has a higher low
-        cc = df.open.iat[-1] < df.close.iat[-1] # has a bullish candle
-        sw = df[self.bswCol].iat[-1] > 0.5      # has a bullish strength/weakness
-        dr = df[self.retestCol].iat[-1] > 0.5   # has a double retest
+        hh = df.high.iat[-1] > df.high.iat[-2]            # has a higher high
+        hl = df.low.iat[-1] > df.low.iat[-2]              # has a higher low
+        cc = df.open.iat[-1] < df.close.iat[-1]           # has a bullish candle
+        sw = df[self.bswCol].iat[-1] >= self.minBSW       # has a bullish strength/weakness
+        dr = df[self.retestCol].iat[-1] >= self.minRetest # has a double retest
         
         self.reversal_signal_count+= sum([hh, hl, cc, sw, dr])
 
@@ -670,7 +677,6 @@ class BuySetup(Signals):
             if df.high.iat[-1] > self.entry_price:
                 if self.reversal_signal_count >= self.minCount:
                     self.is_buy = True
-                    return True
                 else:
                     self.entry_price = df.high.iat[-1]
             
@@ -678,11 +684,15 @@ class BuySetup(Signals):
             if df.low.iat[-1] < self.stop_price:
                 if lls and lhs and not cc:
                     self.is_fail = True
-                    return False
                 else:
                     self.stop_price = min(df.low.iat[-1], df.low.iat[-2])
+        
+        df[self.name_sig_count].iat[-1] = self.reversal_signal_count
+        df[self.name_entry].iat[-1] = self.entry_price
+        df[self.name_stop].iat[-1] = self.stop_price
+        df[self.name_buy].iat[-1] = self.is_buy
 
-        return False
+        return self.is_buy
 
 # --------------------------------------------------------------
 # ------- R E V E R S A L   S I G N A L S ----------------------
@@ -1473,9 +1483,16 @@ class VolumeSpike(Signals):
     name         : str = 'VolSpike'
     volMACol     : str = ''
 
-    def _compute_row(self, df:pd.DataFrame):
+    def __post_init__(self):
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame):
         current_volume = df['volume'].iat[-1]
         vol_ma = df[self.volMACol].iat[-1]
+        
+        # Check if vol_ma is zero to avoid division by zero
+        if vol_ma == 0:
+            return 0  # or return 0, or handle it as needed
         
         # Calculate the percent change between the current volume and the rolling average volume
         return ((current_volume - vol_ma) / vol_ma) * 100
@@ -1489,6 +1506,9 @@ class VolumeROC(Signals):
     """
     name: str = 'VolROC'
 
+    def __post_init__(self):
+        self.names = [self.name]
+
     
     def _compute_row(self, df: pd.DataFrame):
         """
@@ -1497,6 +1517,10 @@ class VolumeROC(Signals):
         # Get the volume series for the lookback period
         vol1 = df['volume'].iat[-1]
         vol2 = df['volume'].iat[-2]
+        
+        # Check if vol_ma is zero to avoid division by zero
+        if vol2 == 0:
+            return 0  # or return 0, or handle it as needed
         
         # Calculate ROC
         return ((vol1 - vol2) / vol2) * 100
@@ -2849,6 +2873,8 @@ class Validate(Signals):
 
         v1_prev = self._get_value(df, self.val1, prev=True)
         v2_prev = self._get_value(df, self.val2, prev=True) if self.operator not in v2_as_pivot else self._get_pivot(df, self.val2)
+
+        if not v1_prev > 0 or not v2_prev > 0: return False
 
         if self.operator == '^p': return v1_prev < v2_prev and v1 >= v2_prev
         if self.operator == 'vp': return v1_prev > v2_prev and v1 <= v2_prev
