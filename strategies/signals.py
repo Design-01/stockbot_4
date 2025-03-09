@@ -126,6 +126,8 @@ def is_gap_pivot_crossover(df: pd.DataFrame, pivot_col: str, ls: str) -> bool:
         return False
 
 def get_valid_pb(ls, df, pointCol:str, minLen:int=3):
+    if minLen < 3:
+        raise ValueError("get_valid_pb :: minLen must be at least 3")
     # check if names exists in df
     if not pointCol in df.columns:
         return None
@@ -134,18 +136,19 @@ def get_valid_pb(ls, df, pointCol:str, minLen:int=3):
     # check if has points
     points = df[pointCol].dropna()
     # print(f'length of points: {len(points)}')
-    if len(points) < 2:
+    if len(points) < 1:
         return None
     
     # check if window long enough
     w0 = df.loc[points.index[-1]:]
-    # print(f'lenght of w0: {len(w0)}')
+    # print(f'{df.index[-1]} :: lenght of w0: {len(w0)}')
     if len(w0) < minLen:
         return None
     
     if ls == 'LONG':
         #check if high < two previous high ago
         if not w0.high.iat[-1] < w0.high.iat[-3] :
+            # print(f'{df.index[-1]} :: not w0.high.iat[-1] < w0.high.iat[-3]')
             return None
         
         return w0
@@ -248,6 +251,7 @@ class Signals(ABC):
             val = self._compute_row(current_window)
             if not pd.isna(val):
                 result_series.iloc[i] = float(val)
+
 
         return self.return_series(df.index[-lookback:], self.get_score(result_series))
 
@@ -391,10 +395,22 @@ class PB_PctHLLH(Signals):
     pointCol: str = ''
     atrCol: str = ''
     atrMultiple: float = 1.0 # minimum number of ATRs required between pointCol low and toCol
+    minPbLen: int = 3
     
     def __post_init__(self):
         self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]   
+        self.prev_val = 0.0
+
+    def _use_prev_if_none(self, val):
+        """If the value is None or 0, use the previous value.
+        The idea is to persista ofr just one bar. """
+        if (pd.isna(val) or val == 0.0) and self.prev_val > 0:
+            val = self.prev_val
+            self.prev_val = 0.0
+        else:
+            self.prev_val = val
+        return val
    
 
     #$ **kwargs is used to allow any signal arguments to be passed to any run method. This so that the same run method can be used when looping through signals.
@@ -402,10 +418,11 @@ class PB_PctHLLH(Signals):
         """Computes the % of bars that have a lower highs (BULL pullback, so downward)
         Vice versa for BEAR case. So this is only for pullbacks not overall trends. """
 
-        window  = get_valid_pb( ls=self.ls, df=df, pointCol=self.pointCol, minLen=4)
+        window  = get_valid_pb( ls=self.ls, df=df, pointCol=self.pointCol, minLen=self.minPbLen)
         
         if window is None:
-            return 0.0
+            return self._use_prev_if_none(0.0)
+        
 
         if self.ls == 'LONG': # if there are more than 2 bars in the pullback from the high
             # eg fhp.high < fhp.high.shift() retruns a series of bools. 
@@ -416,11 +433,13 @@ class PB_PctHLLH(Signals):
             # 2000-01-01 00:14:00     True
             # 2000-01-01 00:15:00    False
             # then mean() returns the mean of the bools.
-            return (window.high < window.high.shift())[1:].mean() * 100
+            val = (window.high < window.high.shift())[1:].mean() * 100
+            return self._use_prev_if_none(val)
     
 
-        if self.ls == 'SHORT' and len(window) > 2: # if there are more than 2 bars in the pullback from the low
-            return (window.low > window.low.shift())[1:].mean() * 100
+        if self.ls == 'SHORT' : # if there are more than 2 bars in the pullback from the low
+            val = (window.low > window.low.shift())[1:].mean() * 100
+            return self._use_prev_if_none(val)
     
         return 0.0
 
@@ -435,27 +454,41 @@ class PB_ASC(Signals):
     name: str = 'PB_ASC'
     pointCol: str = ''
     atrMultiple: float = 1.0 # minimum number of ATRs required between pointCol low and toCol
+    minPbLen: int = 3
     
     
     def __post_init__(self):
         self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]
+        self.prev_val = 0.0
+
+    def _use_prev_if_none(self, val):
+        """If the value is None or 0, use the previous value.
+        The idea is to persista ofr just one bar. """
+        if (pd.isna(val) or val == 0.0) and self.prev_val > 0:
+            val = self.prev_val
+            self.prev_val = 0.0
+        else:
+            self.prev_val = val
+        return val
 
     def _compute_row(self, df:pd.DataFrame=pd.DataFrame()):
-        window  = get_valid_pb( ls=self.ls, df=df, pointCol=self.pointCol, minLen=4)
+        window  = get_valid_pb( ls=self.ls, df=df, pointCol=self.pointCol, minLen=self.minPbLen)
         
         if window is None:
-            return 0.0
+            return self._use_prev_if_none(0.0)
         
         total_bars = len(window) -1
         if len(window) > 2:
             if self.ls == 'LONG':
                 same_colour_bars = len(window[window['close'] < window['open']]) # red bars
-                return  (same_colour_bars / total_bars) * 100
+                val =  (same_colour_bars / total_bars) * 100
+                return self._use_prev_if_none(val)
 
             if self.ls == 'SHORT':
                 same_colour_bars = len(window[window['close'] > window['open']]) # green bars
-                return  (same_colour_bars / total_bars) * 100
+                val =  (same_colour_bars / total_bars) * 100
+                return self._use_prev_if_none(val)
 
         return 0.0
     
@@ -464,50 +497,69 @@ class PB_ASC(Signals):
 class PB_CoC_ByCountOpBars(Signals):
     name: str = 'PB_CoC_OpBars'
     pointCol: str = ''
+    minPbLen: int = 3
     
     def __post_init__(self):
         self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]
+        self.prev_window = None
 
     def _compute_row(self, df: pd.DataFrame = pd.DataFrame()):
+        window = get_valid_pb(ls=self.ls, df=df, pointCol=self.pointCol, minLen=self.minPbLen)
+        if window is None or len(window) <= 1:
+            if self.prev_window is not None:
+                window = self.prev_window
+            else: 
+                return 0.0
+        else:
+            self.prev_window = window
         
-        def convert_candles_to_reverse_list(window):
-            candles = []
-            for _, row in window.iterrows():
-                candles.append({
-                    'open': row['open'],
-                    'close': row['close'],
-                    'is_green': row['close'] > row['open']
-                })
-            return candles[::-1] 
+        candles = []
+        for _, row in window.iterrows():
+            candles.append({
+                'open': row['open'],
+                'close': row['close'],
+                'is_green': row['close'] > row['open']
+            })
         
-
-        window = get_valid_pb(ls=self.ls, df=df, pointCol=self.pointCol, minLen=4)
-        if window is None:
-            return 0.0
+        # Reverse to start from most recent
+        candles = candles[::-1]
         
-        last_candle_is_green = window['close'].iat[-1] > window['open'].iat[-1]
+        # Check if signal is present (either in last pullback candle or current bar)
+        current_bar_is_green = df.close.iat[-1] > df.open.iat[-1]
+        prev_bar_is_green = df.close.iat[-2] > df.open.iat[-2]
+        prev_bar_is_opposite = prev_bar_is_green != current_bar_is_green
+        # last_candle_is_green = candles[0]['is_green'] or (current_bar_is_green and prev_bar_is_opposite)
+        last_candle_is_green = current_bar_is_green and prev_bar_is_opposite
         consecutive_count = 0
         
         if self.ls == 'LONG':
+            # For LONG, we want the last candle to be green (bullish)
             if not last_candle_is_green:
                 return 0.0
-
-            for c in convert_candles_to_reverse_list(window):
-                if c['is_green']:
+            
+            # Count consecutive red candles before the last green one
+            for i in range(1, len(candles)):
+                if candles[i]['is_green']:
                     break
                 consecutive_count += 1
-            
-        if self.ls == 'SHORT':
+                
+        elif self.ls == 'SHORT':
+            # For SHORT, we want the last candle to be red (bearish)
             if last_candle_is_green:
                 return 0.0
-
-            for c in convert_candles_to_reverse_list(window):
-                if not c['is_green']:
+            
+            # Count consecutive green candles before the last red one
+            for i in range(1, len(candles)):
+                if not candles[i]['is_green']:
                     break
                 consecutive_count += 1
-
-        return consecutive_count / (len(window) - 1) * 100
+        
+        # Calculate as percentage of total bars minus the signal bar
+        total_bars = len(candles) - 1  # Exclude the signal bar
+        if total_bars > 0:
+            return (consecutive_count / total_bars) * 100
+        return 0.0
     
     
 
@@ -518,17 +570,29 @@ class PB_Overlap(Signals):
     Then gets the mean % of all overlaps. Works very well to give a good guide for a smooth pullback
     if the mean % is 50%. so the nearer to 50% the better """
     name  : str = 'PB_Olap'
-    pointCol: str = ''    
+    pointCol: str = ''   
+    minPbLen: int = 3 
 
     def __post_init__(self):
         self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]
+        self.prev_val = 0.0
+
+    def _use_prev_if_none(self, val):
+        """If the value is None or 0, use the previous value.
+        The idea is to persista ofr just one bar. """
+        if (pd.isna(val) or val == 0.0) and self.prev_val > 0:
+            val = self.prev_val
+            self.prev_val = 0.0
+        else:
+            self.prev_val = val
+        return val
 
     def _compute_row(self, df:pd.DataFrame):
-        window  = get_valid_pb( ls=self.ls, df=df, pointCol=self.pointCol, minLen=4)
+        window  = get_valid_pb( ls=self.ls, df=df, pointCol=self.pointCol, minLen=self.minPbLen)
         
         if window is None:
-            return 0.0
+            return self._use_prev_if_none(0.0)
             
         prev = window.shift(1).copy()
         olap          = window.high - prev.low if self.ls == 'LONG' else prev.high - window.low
@@ -541,7 +605,8 @@ class PB_Overlap(Signals):
         # calculate score based on olap_pct
         optimal_olap_pct = 0.5
         score = 100 - abs(olap_pct_mean - optimal_olap_pct) * 150 
-        return max(score, 0)
+        val = max(score, 0)
+        return self._use_prev_if_none(val)
 
 
 #£ Done
@@ -1488,8 +1553,10 @@ class PctDiff(Signals):
         if pd.isna(val1) or pd.isna(val2) or val2 == 0:
             return 0
         
+        diff = val2 - val1
+        
         # Calculate percentage difference
-        return ((val1 - val2) / val2) * 100
+        return (diff / 100) * 100
 
 # -----------------------------------------------------------------------
 # ---- P R I C E --------------------------------------------------------
@@ -2698,6 +2765,8 @@ class BuySetup(MultiSignals):
         for i in range(len(df)):
             results.iloc[i] = self._compute_row(df.iloc[:i+1])
         return results
+    
+    
 
 # --------------------------------------------------------------------
 # ----- E V E N T   S I G N A L S ------------------------------------
@@ -3276,7 +3345,7 @@ class Condition:
 
 
 @dataclass
-class Strategy(MultiSignals):
+class Strategy(Signals):
     name: str
     
     def __post_init__(self):

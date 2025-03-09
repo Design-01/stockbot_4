@@ -177,8 +177,8 @@ def SIG_compare_to_market_ta(f, marketCol='SPY_close', ls:str='LONG', lookBack:i
 def TA_TA(f, lookBack:int=100, atrSpan:int=50, pointsSpan:int=10, TArow:int=3):
     ma_ta(f, [50, 150, 200])
     f.add_ta(ta.ATR(span=atrSpan), {'dash': 'solid', 'color': 'cyan', 'width': 1}, row=3, chart_type='')
-    f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=3), [{'color': 'green', 'size': 3}, {'color': 'red', 'size': 10}], chart_type = 'points')
-    f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=pointsSpan), [{'color': 'green', 'size': 10}, {'color': 'red', 'size': 4}], chart_type = 'points')
+    f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=3), [{'color': 'green', 'size': 5}, {'color': 'red', 'size': 5}], chart_type = 'points')
+    f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=pointsSpan), [{'color': 'green', 'size': 10}, {'color': 'red', 'size': 10}], chart_type = 'points')
     f.add_ta(ta.VWAP(column='close',  interval='session'), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=1)
     f.add_ta(ta.VolumeAccumulation(), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=2)
     f.add_ta(ta.SupResAllRows(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1, rowsToUpdate=lookBack),
@@ -236,24 +236,24 @@ def SCORE_TA_touches(f, ls='LONG', lookBack:int=100,  atrSpan:int=10, direction:
     return score_col
 
 
-def SCORE_TA_retest(f, ls='LONG', lookBack:int=100,  atrSpan:int=10, direction:str='down', toTouchAtrScale=10, pastTouchAtrScale=2,  TArow:int=2, scoreRow:int=3):
+def SCORE_TA_retest(f, ls='LONG', lookBack:int=100,  atrSpan:int=10, direction:str='down', withinAtrRange=(-0.1, 0.1), pastTouchAtrScale=2,  TArow:int=2, scoreRow:int=3):
     tas = [
-        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', direction=direction, valCol='HP_hi_3', withinAtrRange=(-10, 10), rollingLen=20, lookBack=lookBack), # retest HP withing 10% of ATR
-        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', direction=direction, valCol='LP_lo_3', withinAtrRange=(-10, 10), rollingLen=20, lookBack=lookBack), # retest LP withing 10% of ATR
-        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', direction=direction, valCol='low',     withinAtrRange=(-10, 10), rollingLen=3, lookBack=lookBack),  # retest HP withing 10% of ATR
+        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', direction=direction, valCol='HP_hi_3', withinAtrRange=withinAtrRange, rollingLen=5, lookBack=lookBack, normRange=(0,3)), # retest HP withing 10% of ATR
+        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', direction=direction, valCol='LP_lo_3', withinAtrRange=withinAtrRange, rollingLen=5, lookBack=lookBack, normRange=(0,3)), # retest LP withing 10% of ATR
+        sig.Retest(ls=ls, atrCol=f'ATR_{atrSpan}', direction=direction, valCol='low',     withinAtrRange=withinAtrRange, rollingLen=3,  lookBack=lookBack, normRange=(0,3)),  # retest HP withing 10% of ATR
 
     ]
     batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
-    scoreCol = add_score(f, tas,  name=f'{ls}_Retest',  scoreType='mean', lookBack=lookBack, row=scoreRow)
+    scoreCol = add_score(f, tas,  name=f'{ls}_Retest',  scoreType='sum', lookBack=lookBack, row=scoreRow)
     return scoreCol
 
 
-def SCORE_TA_Pullback(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, TArow:int=2, scoreRow:int=3):
+def SCORE_TA_Pullback(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, minPbLen:int=3, TArow:int=2, scoreRow:int=3):
     tas = [
-        sig.PB_PctHLLH          (ls=ls, normRange=(0,100), atrCol=f'ATR_{atrSpan}', pointCol='HP_hi_3', lookBack=lookBack), # Lower Highs
-        sig.PB_ASC              (ls=ls, normRange=(0,100),                          pointCol='HP_hi_3', lookBack=lookBack), # Pct of pull back bars with same colour .eg all red if 'LONG
-        sig.PB_CoC_ByCountOpBars(ls=ls, normRange=(0,100),                          pointCol='HP_hi_3', lookBack=lookBack), # count of consecutive same colour prior to CoC bar. eg 3 red bars before CoC bar. Then % as a total of PB bars 
-        sig.PB_Overlap          (ls=ls, normRange=(0,100),                          pointCol='HP_hi_3', lookBack=lookBack), # Mean of the % pull back overlap the previous bar
+        sig.PB_PctHLLH          (ls=ls, normRange=(0,100), minPbLen=minPbLen, atrCol=f'ATR_{atrSpan}', pointCol='HP_hi_3', lookBack=lookBack), # Lower Highs
+        sig.PB_ASC              (ls=ls, normRange=(0,100), minPbLen=minPbLen,                          pointCol='HP_hi_3', lookBack=lookBack), # Pct of pull back bars with same colour .eg all red if 'LONG
+        sig.PB_CoC_ByCountOpBars(ls=ls, normRange=(0,100), minPbLen=minPbLen,                          pointCol='HP_hi_3', lookBack=lookBack), # count of consecutive same colour prior to CoC bar. eg 3 red bars before CoC bar. Then % as a total of PB bars 
+        sig.PB_Overlap          (ls=ls, normRange=(0,100), minPbLen=minPbLen,                          pointCol='HP_hi_3', lookBack=lookBack), # Mean of the % pull back overlap the previous bar
     ]
     batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
     score_col = add_score(f, tas, name=f'{ls}_PB', scoreType='mean', lookBack=lookBack, row=scoreRow) 
@@ -264,7 +264,7 @@ def SCORE_TA_Pullback(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, TArow:
 def SCORE_TA_Bar_StrengthWeakness(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, barSwMA:int=4, TArow:int=2, scoreRow:int=3):
     bsw = sig.BarSW(ls=ls, normRange=(-5,5), atrCol=f'ATR_{atrSpan}', lookBack=lookBack)
     ma = ta.MA(maCol=bsw.name, period=barSwMA)
-    bws_diff = sig.PctDiff(metricCol1=bsw.name, metricCol2=ma.name, lookBack=lookBack)
+    bws_diff = sig.PctDiff(metricCol1=ma.name, metricCol2=bsw.name, lookBack=lookBack, normRange=(-100,100))
     
     batch_add_ta(f, [bsw, ma, bws_diff],  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
 

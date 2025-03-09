@@ -837,6 +837,7 @@ class StockX:
     ib: IB = None
     symbol: str = ''
     intradaySizes: List[str] = field(default_factory=list)
+    tradeSizes: List[str] = field(default_factory=list)
 
     def __post_init__(self):
         self.fundamentals = stock_fundamentals.Fundamentals(self.ib, self.symbol)
