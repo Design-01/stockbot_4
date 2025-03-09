@@ -187,18 +187,18 @@ def TA_TA(f, lookBack:int=100, atrSpan:int=50, pointsSpan:int=10, TArow:int=3):
     chart_type = 'support_resistance')
 
 
-def TA_Levels(f, TArow:int=3, scoreRow:int=4):
+def TA_Levels(f):
     tas = [
         ta.Levels(level='pre_mkt_high',       ffill=True),
         ta.Levels(level='pre_mkt_low',        ffill=True),
-        ta.Levels(level='intraday_high_9.35', ffill=True),
-        ta.Levels(level='intraday_low_9.35',  ffill=True),
+        ta.Levels(level='intraday_high_9.35', ffill=False),
+        ta.Levels(level='intraday_low_9.35',  ffill=False),
         ta.Levels(level='intraday_high'),                
         ta.Levels(level='intraday_low'),                 
         ta.Levels(level='prev_day_high'),                
         ta.Levels(level='prev_day_low')
     ]
-    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow) 
+    batch_add_ta(f, tas,  {'dash': 'dash', 'color': 'yellow', 'width': 1}, chart_type='line', row=1) 
 
 #------------------------------------------------------------
 # ----------   S C O R E   T A  -----------------------------
@@ -264,7 +264,11 @@ def SCORE_TA_Pullback(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, TArow:
 def SCORE_TA_Bar_StrengthWeakness(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, barSwMA:int=4, TArow:int=2, scoreRow:int=3):
     bsw = sig.BarSW(ls=ls, normRange=(-5,5), atrCol=f'ATR_{atrSpan}', lookBack=lookBack)
     ma = ta.MA(maCol=bsw.name, period=barSwMA)
-    score_col = sig.PctDiff(metricCol=ma.name, lookBack=lookBack)
+    bws_diff = sig.PctDiff(metricCol1=bsw.name, metricCol2=ma.name, lookBack=lookBack)
+    
+    batch_add_ta(f, [bsw, ma, bws_diff],  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+
+    score_col = add_score(f, [bws_diff],  name=f'{ls}_BSW', scoreType='min', lookBack=lookBack, row=scoreRow) 
     return score_col
      
 
@@ -315,7 +319,7 @@ def SCORE_VALID_premkt_volume(f, ls:str='LONG', lookBack:int=100, sigRow:int=3, 
 
 def SCORE_VALID_time_of_day(f, ls:str='LONG', lookBack:int=100, sigRow:int=3, validationRow:int=4):
     validations = [
-        sig.Validate(f, val1='idx', operator='t>t', val2='09:35', lookBack=lookBack),  # Volume Time of Day Comparison Indicator
+        sig.Validate(f, val1='idx', operator='t>t', val2='09:34', lookBack=lookBack),  # Volume Time of Day Comparison Indicator
         sig.Validate(f, val1='idx', operator='t<t', val2='12:00', lookBack=lookBack),  # Volume Time of Day Comparison Indicator
     ]
     batch_add_ta(f, validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
@@ -507,12 +511,12 @@ def VALIDATE_turnbars(f, ls='LONG',  atrSpan:int=10, lookBack:int=100, sigRow:in
     add_score(f, turnbar_signals,  name=f'{ls}_TurnBar',  scoreType='max',  lookBack=lookBack, row=validationRow)
 
 
-def SCORE_VALID_BuySetup(f, ls='LONG', bswCol:str='', retestCol:str='', lookBack:int=100, sigRow:int=3, validationRow:int=4):
+def SCORE_VALID_BuySetup(f, ls='LONG', bswCol:str='', retestCol:str='', lookBack:int=100, TArow:int=3, scoreRow:int=4):
     buy_setup_signals = [
         sig.BuySetup(ls=ls, bswCol=bswCol, retestCol=retestCol, minCount=3, minBSW=0.5, minRetest=0.5, lookBack=lookBack),
     ]
-    batch_add_ta(f, buy_setup_signals,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
-    add_score(f, buy_setup_signals,  name=f'{ls}_BuySetup',  scoreType='max',  lookBack=lookBack, row=validationRow)
+    batch_add_ta(f, buy_setup_signals,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    add_score(f, buy_setup_signals,  name=f'{ls}_BuySetup',  scoreType='max',  lookBack=lookBack, row=scoreRow)
 
 ## --------------------------------------------------------------
 ## --------------- E X I T   S T R A T E G I E S -----------------

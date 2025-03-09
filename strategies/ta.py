@@ -112,6 +112,28 @@ class Levels(TA):
     def __post_init__(self):
         self.name = self.level
         self.names = [self.name]
+
+    def compute_935(self, df: pd.DataFrame) -> pd.Series:
+        # Get the first 5 minutes of the day and apply the high and low for the rest of the day intraday. 
+        # note that this df is already filtered for the day between 9:30 and 16:00
+        
+        # Extract the first 5 minutes (9:30 to 9:35)
+        first_5min = df.between_time('09:30:00', '09:35:00')
+        
+        if not first_5min.empty:
+            if self.level == 'intraday_high_9.35':
+                # Get the high from the first 5 minutes
+                high_935 = first_5min['high'].max()
+                # Apply this high value to the rest of the day starting from 9:35
+                df.loc[df.index >= '09:35:00', self.name] = high_935
+            
+            elif self.level == 'intraday_low_9.35':
+                # Get the low from the first 5 minutes
+                low_935 = first_5min['low'].min()
+                # Apply this low value to the rest of the day starting from 9:35
+                df.loc[df.index >= '09:35:00', self.name] = low_935
+        
+        return df
     
     def run(self, data: pd.DataFrame) -> pd.DataFrame:
         # Ensure the column exists
@@ -139,16 +161,11 @@ class Levels(TA):
                     elif self.level == 'intraday_close':  data.loc[df.index, self.name] = df['close'].iloc[-1]
                     elif self.level == 'intraday_open':   data.loc[df.index, self.name] = df['open'].iloc[0]
                     elif self.level == 'intraday_volume': data.loc[df.index, self.name] = df['volume'].cumsum()
-                    elif self.level == 'intraday_high_9.35':
-                        early_df = df.between_time('09:30:00', '09:35:00')
-                        if not early_df.empty:
-                            value = early_df['high'].max()
-                            data.loc[df.index, self.name] = value
-                    elif self.level == 'intraday_low_9.35':
-                        early_df = df.between_time('09:30:00', '09:35:00')
-                        if not early_df.empty:
-                            value = early_df['low'].min()
-                            data.loc[df.index, self.name] = value
+                    elif self.level in ['intraday_high_9.35', 'intraday_low_9.35']:
+                        first_5min = df.between_time('09:30:00', '09:35:00')
+                        if not first_5min.empty:
+                            if self.level == 'intraday_high_9.35': data.loc[df.index, self.name] = first_5min['high'].max()
+                            if self.level == 'intraday_low_9.35':  data.loc[df.index, self.name] = first_5min['low'].min()
 
             if 'post_mkt' in self.level:
                 df = day_data.between_time('16:00:00', '23:59:59')
@@ -284,7 +301,7 @@ class VolumeAccumulation(TA):
     volCol: str = 'volume'  # Column name for volume data
     
     def __post_init__(self):
-        self.name = f"VOL_ACC"
+        self.name = f"VOL_Acum"
         self.names = self.name
         self.rowsToUpdate = 'max'  # Only need current day's data
         
@@ -307,7 +324,7 @@ class VolumeTODC(TA):
     """Volume Time of Day Comparison Indicator. 
     Compares volume accumulation at a specific time of day to historical average.
     Requires VolumeAccumulation to be run first."""
-    volAccCol: str = 'VOL_ACC'  # Column name for volume accumulation data
+    volAccCol: str = 'VOL_Acum'  # Column name for volume accumulation data
     lookbackDays: int = 10  # Number of days to look back for comparison
     
     def __post_init__(self):

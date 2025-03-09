@@ -614,85 +614,7 @@ class Trace(Signals):
         return 0
 
 
-@dataclass
-class BuySetup(Signals):
-    name: str = 'BuySetup'
-    bswCol: str = ''
-    retestCol: str = ''
-    minCount: int = 3
-    minBSW: float = 0.5
-    minRetest: float = 0.5
-    
-    def __post_init__(self):
-        self.name = f"{self.ls[0]}_{self.name}"
-        self.name_sig_count = f"{self.name}_Count"
-        self.name_entry = f"{self.name}_Entry"
-        self.name_stop = f"{self.name}_Stop"
-        self.name_buy = f"{self.name}_isBuy"
-        self.name_fail = f"{self.name}_isFail"
-        self.names = [self.name, self.name_sig_count, self.name_entry, self.name_stop, self.name_buy]
-        self.reversal_signal_count = 0
-        self.entry_price = None
-        self.stop_price = None
-        self.is_buy = False
-        self.is_fail = False
 
-    def reset(self):
-        self.reversal_signal_count = 0
-        self.entry_price = None
-        self.stop_price = None
-        self.is_buy = False
-        self.is_fail = False
-
-    def _compute_row(self, df:pd.DataFrame=pd.DataFrame()):
-
-        # check if was a triggers or cancel last round
-        if self.is_buy | self.is_fail:
-            self.reset()
-            return False
-
-        # has 2 x lower highs and 2 x lower lows
-        lhs = df.high.iat[-1] < df.high.iat[-2] and df.high.iat[-2] < df.high.iat[-3]
-        lls = df.low.iat[-1]  < df.low.iat[-2]  and df.low.iat[-2]  < df.low.iat[-3]
-
-        # get the reversal signals for every run of the function
-        hh = df.high.iat[-1] > df.high.iat[-2]            # has a higher high
-        hl = df.low.iat[-1] > df.low.iat[-2]              # has a higher low
-        cc = df.open.iat[-1] < df.close.iat[-1]           # has a bullish candle
-        sw = df[self.bswCol].iat[-1] >= self.minBSW       # has a bullish strength/weakness
-        dr = df[self.retestCol].iat[-1] >= self.minRetest # has a double retest
-        
-        self.reversal_signal_count+= sum([hh, hl, cc, sw, dr])
-
-        # set entry and stop if not set
-        if self.reversal_signal_count >= 1 and self.entry_price is None:
-            self.entry_price = df.high.iat[-1]
-            self.stop_price = min(df.low.iat[-1], df.low.iat[-2])
-
-
-        # Buy Setup checking if entry price is set
-        if self.entry_price is not None:
-
-            # breaks entry price
-            if df.high.iat[-1] > self.entry_price:
-                if self.reversal_signal_count >= self.minCount:
-                    self.is_buy = True
-                else:
-                    self.entry_price = df.high.iat[-1]
-            
-            # breaks stoploss price
-            if df.low.iat[-1] < self.stop_price:
-                if lls and lhs and not cc:
-                    self.is_fail = True
-                else:
-                    self.stop_price = min(df.low.iat[-1], df.low.iat[-2])
-        
-        df[self.name_sig_count].iat[-1] = self.reversal_signal_count
-        df[self.name_entry].iat[-1] = self.entry_price
-        df[self.name_stop].iat[-1] = self.stop_price
-        df[self.name_buy].iat[-1] = self.is_buy
-
-        return self.is_buy
 
 # --------------------------------------------------------------
 # ------- R E V E R S A L   S I G N A L S ----------------------
@@ -810,10 +732,6 @@ class Retest(Signals):
     def __post_init__(self):
         self.name = f"{self.name}_{self.direction}_{self.valCol}"
         self.names = [self.name]
-        # cannot have both pointCol and valCol. choose one or the other
-        if self.pointCol and self.valCol:
-            raise ValueError("Retest :: cannot have both pointCol and valCol. choose one or the other")
-
 
     def _compute_row(self, df: pd.DataFrame) -> float:
         if len(df) < 10:
@@ -831,10 +749,6 @@ class Retest(Signals):
 
         points_in_range = vals[(vals >= min_level) & (vals <= max_level)]
         return len(points_in_range) 
-
-
-
-            
 
 
 
@@ -1570,6 +1484,9 @@ class PctDiff(Signals):
         """
         val1 = df[self.metricCol1].iat[-1]
         val2 = df[self.metricCol2].iat[-1]
+
+        if pd.isna(val1) or pd.isna(val2) or val2 == 0:
+            return 0
         
         # Calculate percentage difference
         return ((val1 - val2) / val2) * 100
@@ -1973,6 +1890,8 @@ class MultiSignals(ABC):
     def get_score(self, val):
         """Normalize values efficiently using vectorized operations."""
         def normalize_vec(x):
+                if x is None:
+                    return 0  # or another suitable default value, like np.nan
                 normalized = (x - self.normRange[0]) / (self.normRange[1] - self.normRange[0]) * 100
                 clamped = np.clip(normalized, 0, 100)  # Clamp the values between 0 and 100
                 return np.round(clamped, 2)  # Added rounding to match single-value function
@@ -2696,6 +2615,89 @@ class ConsolidationPreMove(MultiSignals):
         return results
 
 
+@dataclass
+class BuySetup(MultiSignals):
+    name: str = 'BuySetup'
+    bswCol: str = ''
+    retestCol: str = ''
+    minCount: int = 3
+    minBSW: float = 0.5
+    minRetest: float = 0.5
+    
+    def __post_init__(self):
+        self.name = f"{self.ls[0]}_{self.name}"
+        self.name_sig_count = f"{self.name}_Count"
+        self.name_entry = f"{self.name}_Entry"
+        self.name_stop = f"{self.name}_Stop"
+        self.name_buy = f"{self.name}_isBuy"
+        self.name_fail = f"{self.name}_isFail"
+        self.names = [self.name, self.name_sig_count, self.name_entry, self.name_stop, self.name_buy, self.name_fail]
+        self.reset()
+
+    def reset(self):
+        self.reversal_signal_count = 0
+        self.entry_price = None
+        self.stop_price = None
+        self.is_buy = False
+        self.is_fail = False
+
+    def _compute_row(self, df: pd.DataFrame) -> pd.Series:
+        # Check if was a trigger or cancel last round
+        if self.is_buy or self.is_fail:
+            self.reset()
+            return pd.Series({name: None for name in self.names})
+        
+        if len(df) < 3:
+            return pd.Series({name: None for name in self.names})
+
+        # Has 2 x lower highs and 2 x lower lows
+        lhs = df.high.iat[-1] < df.high.iat[-2] and df.high.iat[-2] < df.high.iat[-3]
+        lls = df.low.iat[-1] < df.low.iat[-2] and df.low.iat[-2] < df.low.iat[-3]
+
+        # Get the reversal signals for every run of the function
+        hh = df.high.iat[-1] > df.high.iat[-2]            # Has a higher high
+        hl = df.low.iat[-1] > df.low.iat[-2]              # Has a higher low
+        cc = df.open.iat[-1] < df.close.iat[-1]           # Has a bullish candle
+        sw = df[self.bswCol].iat[-1] >= self.minBSW       # Has a bullish strength/weakness
+        dr = df[self.retestCol].iat[-1] >= self.minRetest # Has a double retest
+        
+        self.reversal_signal_count += sum([hh, hl, cc, sw, dr])
+
+        # Set entry and stop if not set
+        if self.reversal_signal_count >= 1 and self.entry_price is None:
+            self.entry_price = df.high.iat[-1]
+            self.stop_price = min(df.low.iat[-1], df.low.iat[-2])
+
+        # Buy Setup checking if entry price is set
+        if self.entry_price is not None:
+            # Breaks entry price
+            if df.high.iat[-1] > self.entry_price:
+                if self.reversal_signal_count >= self.minCount:
+                    self.is_buy = True
+                else:
+                    self.entry_price = df.high.iat[-1]
+            
+            # Breaks stoploss price
+            if df.low.iat[-1] < self.stop_price:
+                if lls and lhs and not cc:
+                    self.is_fail = True
+                else:
+                    self.stop_price = min(df.low.iat[-1], df.low.iat[-2])
+        
+        return pd.Series({
+            self.name: self.is_buy,
+            self.name_sig_count: self.reversal_signal_count,
+            self.name_entry: self.entry_price,
+            self.name_stop: self.stop_price,
+            self.name_buy: self.is_buy,
+            self.name_fail: self.is_fail
+        })
+
+    def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        results = pd.DataFrame(index=df.index, columns=self.names)
+        for i in range(len(df)):
+            results.iloc[i] = self._compute_row(df.iloc[:i+1])
+        return results
 
 # --------------------------------------------------------------------
 # ----- E V E N T   S I G N A L S ------------------------------------
@@ -2863,6 +2865,8 @@ class Validate(Signals):
         v1 = self._get_value(df, self.val1) if self.operator not in v1_as_pivot else self._get_pivot(df, self.val1)
         v2 = self._get_value(df, self.val2) if self.operator not in v2_as_pivot else self._get_pivot(df, self.val2)
 
+        if pd.isna(v1) or pd.isna(v2): return False
+
         if self.operator == 'p>p': return v1 > v2
         if self.operator == 'p<p': return v1 < v2
         if self.operator == '>p' : return v1 > v2
@@ -2871,17 +2875,19 @@ class Validate(Signals):
         if self.operator == '<'  : return v1 < v2
         if self.operator == '==' : return v1 == v2
 
+        if self.operator == '><': return self.val2[0] <= v1 <= self.val2[1] if isinstance(self.val2, tuple) else False
+
+
         v1_prev = self._get_value(df, self.val1, prev=True)
         v2_prev = self._get_value(df, self.val2, prev=True) if self.operator not in v2_as_pivot else self._get_pivot(df, self.val2)
-
-        if not v1_prev > 0 or not v2_prev > 0: return False
+        
+        if pd.isna(v1_prev) or pd.isna(v2_prev): return False
 
         if self.operator == '^p': return v1_prev < v2_prev and v1 >= v2_prev
         if self.operator == 'vp': return v1_prev > v2_prev and v1 <= v2_prev
         if self.operator == '^' : return v1_prev < v2_prev and v1 >= v2_prev
         if self.operator == 'v' : return v1_prev > v2_prev and v1 <= v2_prev
 
-        if self.operator == '><': return self.val2[0] <= v1 <= self.val2[1] if isinstance(v2, tuple) else False
 
         raise ValueError("Invalid operator")
 
@@ -3240,6 +3246,8 @@ class Condition:
     val1: Union[str, float, int]
     operator: str
     val2: Union[str, float, int]
+    is_met: bool = False
+    startFromStep: int = 1
     
     def _get_value(self, row: pd.Series, val: Union[str, float, int]) -> float:
         """Extract value from either a row column or direct value"""
@@ -3247,152 +3255,169 @@ class Condition:
             return row[val]
         return val
     
-    def evaluate(self, row: pd.Series) -> bool:
-        val1 = self._get_value(row, self.val1)
-        val2 = self._get_value(row, self.val2)
-        
+    def _compare(self, val1: float, val2: float) -> bool:
+        """Compare two values based on the operator"""
         if   self.operator == '>':  return val1 >  val2
         elif self.operator == '<':  return val1 <  val2
         elif self.operator == '>=': return val1 >= val2
         elif self.operator == '<=': return val1 <= val2
         elif self.operator == '==': return val1 == val2
         return False
-
+    
+    def reset(self):
+        self.is_met = False
+    
+    def evaluate(self, row: pd.Series) -> bool:
+        if self.is_met: return True
+        val1 = self._get_value(row, self.val1)
+        val2 = self._get_value(row, self.val2)
+        self.is_met = self._compare(val1, val2)
+        return self.is_met
 
 
 @dataclass
-class Strategy(Signals):
-    name: str = ''
+class Strategy(MultiSignals):
+    name: str
+    
+    def __post_init__(self):
+        # Initialize MultiSignals parent class
+        super().__post_init__()
+        
+        self.name = f'Stgy_{self.name}'
+        self.name_conditions_met = f"{self.name}_ConditionsMet"
+        self.name_steps_passed = f"{self.name}_StepsPassed"
+        self.name_action = f"{self.name}_Action"
+        self.name_pct_complete = f"{self.name}_PctComplete"
+        self.steps = {}
+        self.current_step = 1  # Start at step 1 instead of 0
+        self.total_steps = 0
+        self.steps_passed = 0  # Added counter for steps passed
+        self.results = pd.Series({
+            self.name_conditions_met: 0, 
+            self.name_steps_passed: 0, 
+            self.name_action: 'WAIT',
+            self.name_pct_complete: 0
+        })
+
+    def _new_step(self, step:int):
+        self.steps[step] = {'pass_ifs': [], 'reset_ifs': []}
+        self.total_steps = max(self.total_steps, step)
+
+
+    def pass_if(self, step:int, scoreCol:str, operator:str, threshold:float|int):
+        if step not in self.steps: self._new_step(step)
+        cond_name = f"{self.name}_Step{step}_PassIf{scoreCol}_{operator}_{threshold}"
+        self.steps[step]['pass_ifs'] += [Condition(step, cond_name, scoreCol, operator, threshold)] 
+        self.results[cond_name] = False      
+
+    def reset_if(self, step:int, scoreCol:str, operator:str, threshold:float|int, startFromStep:int):
+        if step not in self.steps: raise ValueError(f"Strategy :: Step {step} does not exist")
+        cond_name = f"{self.name}_Step{step}_ResetIf{scoreCol}_{operator}_{threshold}"
+        self.steps[step]['reset_ifs'] += [Condition(step, cond_name, scoreCol, operator, threshold, False, startFromStep)]
+        self.results[cond_name] = False
+    
+    def _check_step_conditions(self, condType: str, step: int, row: pd.Series):
+        """Check if all conditions of a specific type are met for a step"""
+        # If the step doesn't exist or there are no conditions of this type, return False
+        if step not in self.steps or not self.steps[step][condType]:
+            return False
+        
+        # Start with assumption that all conditions are met
+        all_met = True
+        
+        # Evaluate ALL conditions and update results
+        for cond in self.steps[step][condType]:
+            is_met = cond.evaluate(row)
+            self.results[cond.name] = is_met
+            
+            # Track if any condition fails, but continue evaluating all conditions
+            if not is_met:
+                all_met = False
+        
+        return all_met
+    
+    def _reset_from_step(self, step:int):
+        self.current_step = step
+        for s in self.steps:
+            if s >= step:
+                # Reset both pass and reset conditions
+                for cond in self.steps[s]['pass_ifs']:
+                    cond.reset()
+                    self.results[cond.name] = False
+                for cond in self.steps[s]['reset_ifs']:
+                    cond.reset()
+                    self.results[cond.name] = False
 
     
-    # Initialize collections to store conditions
-    steps: Dict = field(default_factory=dict)
-    global_reset_conditions: List[Condition] = field(default_factory=list)
-    buy_conditions: List[Condition] = field(default_factory=list)
-    price_conditions: List[Condition] = field(default_factory=list)
-
-    def __post_init__(self):
-        self.name = f'Stgy_{self.name}'
+    def _get_min_start_step(self, step: int) -> int:
+        if not self.steps[step]['reset_ifs']:
+            return step
+        # Filter to only get startFromSteps of conditions that were met
+        met_conditions = [cond for cond in self.steps[step]['reset_ifs'] if cond.is_met]
+        if not met_conditions:
+            return step
+        return min([cond.startFromStep for cond in met_conditions])
+    
+    def _update_metrics(self):
+        """Update metrics in the results Series"""
+        # Count total conditions met
+        met_conditions = 0
         
-    def _ensure_step_exists(self, step: int):
-        """Ensure the step exists in self.steps with proper structure"""
-        if step not in self.steps:
-            self.steps[step] = {
-                'valid_conditions': [],
-                'reset_conditions': [],
-                'status': False,
-                'last_true_index': None
-            }
-
-    def valid_if(self, step: int, name: str, val1: str, operator: str, val2: float):
-        """Add a validation condition for a specific step"""
-        self._ensure_step_exists(step)
-        condition = Condition(step=step, name=name, val1=val1, operator=operator, val2=val2)
-        self.steps[step]['valid_conditions'].append(condition)
-
-    def reset_if(self, step: Union[int, str], name: str, val1: str, operator: str, val2: float):
-        """Add a reset condition. If step='all', it's a global reset condition"""
-        condition = Condition(step=step, name=name, val1=val1, operator=operator, val2=val2)
-        if step == 'all':
-            self.global_reset_conditions.append(condition)
-        else:
-            self._ensure_step_exists(step)
-            self.steps[step]['reset_conditions'].append(condition)
-
-    def buy_if(self, step: int, name: str, val1: str, operator: str, val2: float):
-        """Add a buy condition"""
-        condition = Condition(step=step, name=name, val1=val1, operator=operator, val2=val2)
-        self.buy_conditions.append(condition)
-
-    def buy_price(self, step: int, name: str, val1: str, operator: str, val2: float):
-        """Add a price condition for buy signal"""
-        condition = Condition(step=step, name=name, val1=val1, operator=operator, val2=val2)
-        self.price_conditions.append(condition)
-
-    def _compute_row(self, df: pd.DataFrame) -> pd.Series:
-        """Compute strategy values for a single row"""
-        row = pd.Series(dtype=float)
-        current_row = df.iloc[-1]
+        for step in self.steps:
+            for cond in self.steps[step]['pass_ifs']:
+                if cond.is_met:
+                    met_conditions += 1
         
-        # Check global reset conditions first
-        global_reset = False
-        for condition in self.global_reset_conditions:
-            result = condition.evaluate(current_row)
-            row[f'{self.name}_reset_{condition.name}'] = int(result)
-            if result:
-                global_reset = True
-
-        if global_reset:
-            # Reset all steps
-            for step_data in self.steps.values():
-                step_data['status'] = False
-                step_data['last_true_index'] = None
+        # Update metrics
+        self.results[self.name_conditions_met] = met_conditions
+        self.results[self.name_steps_passed] = self.current_step - 1
         
-        # Process each step in sequence
-        sequence_still_valid = True  # Track if the sequence of validations remains intact
-        for step in sorted(self.steps.keys()):
-            step_data = self.steps[step]
-            
-            # Check step-specific reset conditions
-            step_reset = False
-            for condition in step_data['reset_conditions']:
-                result = condition.evaluate(current_row)
-                row[f'{self.name}_reset_{step}_{condition.name}'] = int(result)
-                if result:
-                    step_reset = True
-            
-            if step_reset:
-                step_data['status'] = False
-                step_data['last_true_index'] = None
-            
-            # Only proceed with validation if the sequence is still valid
-            if not sequence_still_valid:
-                continue
+        # Calculate percentage complete (based on steps)
+        if self.total_steps > 0:
+            self.results[self.name_pct_complete] = round((self.current_step - 1) / self.total_steps * 100, 1)
+    
+    def compute_signals(self, df: pd.DataFrame) -> pd.Series:
+        if len(df) == 0:
+            return self.results
+        
+        row = df.iloc[-1]
+        reset_occurred = False
+        triggered_reset_condition = None
+
+        # First check if we need to reset due to reset conditions
+        # Only check reset conditions for the current and previous steps
+        for step in range(1, self.current_step + 1):
+            if step in self.steps and self._check_step_conditions('reset_ifs', step, row):
+                reset_step = self._get_min_start_step(step)
                 
-            # Check validation conditions
-            step_valid = True
-            for condition in step_data['valid_conditions']:
-                result = condition.evaluate(current_row)
-                row[f'{self.name}_valid_{step}_{condition.name}'] = int(result)
-                if not result:
-                    step_valid = False
-            
-            step_data['status'] = step_valid
-            if step_valid:
-                step_data['last_true_index'] = len(df) - 1
-            
-            sequence_still_valid = sequence_still_valid and step_valid
+                # Save which reset condition was triggered before resetting
+                for cond in self.steps[step]['reset_ifs']:
+                    if cond.is_met:
+                        triggered_reset_condition = cond.name
+                
+                self._reset_from_step(reset_step)
+                reset_occurred = True
+                # If we've reset, update metrics and exit
+                self._update_metrics()
+                
+                # Re-set the triggered condition to True after reset
+                if triggered_reset_condition:
+                    self.results[triggered_reset_condition] = True
+                    
+                return self.results
         
-        # Process buy conditions if entire sequence is valid
-        buy_signal = False
-        if sequence_still_valid:
-            buy_signal = True
-            for condition in self.buy_conditions:
-                result = condition.evaluate(current_row)
-                row[f'{self.name}_buy_{condition.name}'] = int(result)
-                if not result:
-                    buy_signal = False
+        # Check if current step's pass conditions are met
+        if self._check_step_conditions('pass_ifs', self.current_step, row):
+            self.current_step += 1
+            if self.current_step > self.total_steps:
+                self.results[self.name_action] = 'BUY'
         
-        # If we have a buy signal, calculate the buy price
-        if buy_signal:
-            for condition in self.price_conditions:
-                if condition.evaluate(current_row):
-                    row[f'{self.name}_price'] = current_row[condition.val1]
-                    break
-        else:
-            row[f'{self.name}_price'] = np.nan
-            
-        return row
+        # Update metrics
+        self._update_metrics()
 
-    def compute(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Compute strategy values for entire DataFrame
-        Returns a new DataFrame with strategy columns added
-        """
-        results = []
-        for i in range(self.lookBack, len(df)):
-            window = df.iloc[i-self.lookBack:i+1]
-            row = self._compute_row(window)
-            results.append(row)
-        
-        return pd.DataFrame(results, index=df.index[self.lookBack:])
+        return self.results
+
+
+
+
+
