@@ -45,10 +45,10 @@ def TA_atr_hplp_supres_volma(f, pointsSpan:int=10, atrSpan:int=50, volMA:int=10,
     #         [{'dash': 'solid', 'color': 'green', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 2}, # support # green = rgba(0, 255, 0, 0.1)
     #         {'dash': 'solid', 'color': 'red', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 2}], # resistance # red = rgba(255, 0, 0, 0.1)
     #         chart_type = 'support_resistance')
-    f.add_ta(ta.SupResAllRows(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1, rowsToUpdate=supresRowsToUpdate),
-            [{'dash': 'solid', 'color': 'green', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 1}, # support # green = rgba(0, 255, 0, 0.1)
-            {'dash': 'solid', 'color': 'red', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
-            chart_type = 'support_resistance')
+    # f.add_ta(ta.SupResAllRows(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1, rowsToUpdate=supresRowsToUpdate),
+    #         [{'dash': 'solid', 'color': 'green', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 1}, # support # green = rgba(0, 255, 0, 0.1)
+    #         {'dash': 'solid', 'color': 'red', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
+    #         chart_type = 'support_resistance')
     
 
 def SIG_is_trending(f, ls='LONG', ma=50, lookBack:int=100, scoreRow:int=6):
@@ -183,11 +183,11 @@ def TA_TA(f, lookBack:int=100, atrSpan:int=50, pointsSpan:int=10, TArow:int=3):
     f.add_ta(ta.VWAP(column='close',  interval='session'), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=1)
     f.add_ta(ta.VolumeAccumulation(), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=2)
     f.add_ta(ta.SupResAllRows(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1, rowsToUpdate=lookBack),
-    [{'dash': 'solid', 'color': 'green', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 1}, # support # green = rgba(0, 255, 0, 0.1)
-    {'dash': 'solid', 'color': 'red', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
+    [{'dash': 'solid', 'main_line_colour': 'green', 'zone_edge_colour': 'rgba(0, 255, 0, 0.3)', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 1}, # support # green = rgba(0, 255, 0, 0.1)
+    {'dash': 'solid', 'main_line_colour': 'red', 'fillcolour': "red", 'zone_edge_colour': 'rgba(255, 0, 0, 0.3)', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
     chart_type = 'support_resistance')
 
-
+122, 223, 187
 def TA_Levels(f):
     tas = [
         ta.Levels(level='pre_mkt_high',       ffill=True),

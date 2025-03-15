@@ -1032,9 +1032,9 @@ class StockX:
         f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=3), [{'color': 'green', 'size': 3}, {'color': 'red', 'size': 10}], chart_type = 'points')
         f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=pointsSpan), [{'color': 'green', 'size': 10}, {'color': 'red', 'size': 4}], chart_type = 'points')
         f.add_ta(ta.SupResAllRows(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1, rowsToUpdate=lookBack),
-            [{'dash': 'solid', 'color': 'green', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 1}, # support # green = rgba(0, 255, 0, 0.1)
-            {'dash': 'solid', 'color': 'red', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
-            chart_type = 'support_resistance')
+        [{'dash': 'solid', 'main_line_colour': 'green', 'zone_edge_colour': 'rgba(0, 255, 0, 0.3)', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 1}, # support # green = rgba(0, 255, 0, 0.1)
+        {'dash': 'solid', 'main_line_colour': 'red', 'fillcolour': "red", 'zone_edge_colour': 'rgba(255, 0, 0, 0.3)', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
+        chart_type = 'support_resistance')
         f.add_ta(sig.RoomToMove(ls=ls, tgetCol='Res_1_Lower', atrCol=f'ATR_{atrSpan}', unlimitedVal=10, normRange=(0,100), lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
         f.add_ta(sig.GapsSize( atrCol=f'ATR_{atrSpan}', normRange=(0,100), lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
         f.add_ta(sig.PctDiff(metricCol1='close', metricCol2='MA_cl_50', lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=sigRow)

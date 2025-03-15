@@ -565,62 +565,143 @@ class Chart:
         data (pd.DataFrame): DataFrame containing support and resistance levels with bounds
         style (List[Dict[str, Any]]): List of style dictionaries for support and resistance
         """
-        if style == {}: return
-        support_style, resistance_style = style
 
         def create_traces(level_col, upper_col, lower_col, style):
-            color = style.get('color', 'blue')
-            dash = style.get('dash', 'solid')
-            width = style.get('width', 2)
-            fillcolour = style.get('fillcolour', 'rgba(0, 0, 255, 0.1)')
+            """
+            Creates Plotly traces for support/resistance levels with properly bounded shaded areas.
+            
+            This function generates a set of traces that visualize support/resistance levels with:
+            1. A main level line (solid)
+            2. Upper and lower bound lines (dotted)
+            3. Shaded areas between upper and lower bounds
+            
+            The shading is carefully constructed to only appear where both upper and lower bounds
+            have valid data (non-NaN values). This prevents the shading from extending beyond
+            where the support/resistance lines actually exist.
+            
+            The function breaks the data into continuous segments and creates separate fill
+            areas for each segment to ensure proper visualization when lines have gaps.
+            
+            Args:
+                level_col (str): Column name for the main support/resistance level
+                upper_col (str): Column name for the upper bound
+                lower_col (str): Column name for the lower bound
+                style (dict): Dictionary with styling parameters including:
+                    - dash (str): Line style for main level ('solid', 'dash', 'dot', etc.)
+                    - width (int): Line width in pixels
+                    - fillcolour (str): Color for shaded area (RGBA format)
+                    - main_line_colour (str): Color for main level line (RGBA format)
+                    - zone_edge_colour (str): Color for upper/lower bound lines (RGBA format)
+            
+            Returns:
+                list: List of Plotly go.Scatter traces ready to be added to a figure
+            """
+            # Extract styling parameters from the style dictionary with defaults
+            dash = style.get('dash', 'solid')                            # Line style for main level
+            width = style.get('width', 2)                                # Line width in pixels
+            fillcolour = style.get('fillcolour', 'rgba(0, 0, 255, 0.1)') # Color for shaded area
+            main_line_colour = style.get('main_line_colour', 'rgba(0, 0, 255, 0.8)')  # Main line color
+            zone_edge_colour = style.get('zone_edge_colour', 'rgba(0, 0, 255, 0.2)')  # Edge line color
 
-            # Main level line
-            yield go.Scatter(
+            traces = []
+            
+            # PART 1: IDENTIFY CONTINUOUS SEGMENTS
+            # We need to find where both upper and lower bounds have valid data to properly create fills
+            mask = ~(data[upper_col].isna() | data[lower_col].isna())  # True where both lines have values
+            
+            # Find the start and end indices of each continuous segment
+            segment_starts = []  # Will hold starting indices of segments
+            segment_ends = []    # Will hold ending indices of segments
+            
+            in_segment = False   # Tracks whether we're currently in a valid segment
+            for i, valid in enumerate(mask):
+                if valid and not in_segment:
+                    # We just entered a valid segment
+                    segment_starts.append(i)
+                    in_segment = True
+                elif not valid and in_segment:
+                    # We just exited a valid segment
+                    segment_ends.append(i - 1)
+                    in_segment = False
+            
+            # If the last segment continues until the end of data, add the last index
+            if in_segment:
+                segment_ends.append(len(mask) - 1)
+            
+            # PART 2: CREATE FILL AREAS FOR EACH SEGMENT
+            # Iterate through each identified segment and create a separate fill area
+            for start, end in zip(segment_starts, segment_ends):
+                # Extract the relevant slice of data for this segment
+                segment_indices = data.index[start:end+1]
+                upper_values = data[upper_col].iloc[start:end+1].tolist()
+                lower_values = data[lower_col].iloc[start:end+1].tolist()
+                
+                # Create the x and y coordinates for the fill polygon by:
+                # 1. Going forward along the upper bound (left to right)
+                # 2. Then going backward along the lower bound (right to left)
+                # This creates a closed path that Plotly can fill with 'toself'
+                x_fill = segment_indices.tolist() + segment_indices.tolist()[::-1]
+                y_fill = upper_values + lower_values[::-1]
+                
+                # Add the fill area for this segment
+                traces.append(go.Scatter(
+                    x=x_fill,
+                    y=y_fill,
+                    fill='toself',                        # Fill the path formed by x and y
+                    fillcolor=fillcolour,                 # Use the specified fill color
+                    line=dict(color='rgba(0, 0, 0, 0)'),  # Transparent line (no visible border)
+                    hoverinfo='skip',                     # Disable hover tooltips on the fill
+                    showlegend=False,                     # Don't show in legend
+                    name=f"{level_col} Zone Segment"      # Naming for debugging purposes
+                ))
+            
+            # PART 3: ADD THE ACTUAL LINES
+            # These will be drawn on top of the fill areas
+            
+            # Main level line (will usually be in the middle of the filled area)
+            traces.append(go.Scatter(
                 x=data.index, 
                 y=data[level_col], 
-                name=level_col,
-                line=dict(color=color, width=width, dash=dash)
-            )
+                name=level_col,                           # Name that will appear in legend
+                line=dict(color=main_line_colour, width=width, dash=dash)  # Styling
+            ))
             
-            # Upper bound (dashed)
-            yield go.Scatter(
+            # Upper bound (dotted line)
+            traces.append(go.Scatter(
                 x=data.index, 
                 y=data[upper_col], 
-                name=f"{level_col} Upper",
-                line=dict(color=color, width=width-1, dash='dash')
-            )
+                name=f"{level_col} Upper",                # Name that will appear in legend
+                line=dict(color=zone_edge_colour, width=width, dash='dot')  # Always dotted
+            ))
             
-            # Lower bound (dashed)
-            yield go.Scatter(
+            # Lower bound (dotted line)
+            traces.append(go.Scatter(
                 x=data.index, 
                 y=data[lower_col], 
-                name=f"{level_col} Lower",
-                line=dict(color=color, width=width-1, dash='dash')
-            )
+                name=f"{level_col} Lower",                # Name that will appear in legend
+                line=dict(color=zone_edge_colour, width=width, dash='dot')  # Always dotted
+            ))
             
-            # Shaded area between upper and lower bounds
-  
-            yield go.Scatter(
-                x=data.index.tolist() + data.index.tolist()[::-1],
-                y=data[upper_col].tolist() + data[lower_col].tolist()[::-1],
-                fill='toself',
-                fillcolor=fillcolour,
-                line=dict(color='rgba(255,255,255,0)'),
-                showlegend=False,
-                name=f"{level_col} Zone"
-            )
+            return traces
+
+        def add_traces(cols, style):
+            if len(cols) == 0:
+                return
+            # print(f"Adding support/resistance traces: {cols}")
+            traces = create_traces(cols[0], cols[1], cols[2], style)
+            for trace in traces:
+                self.fig.add_trace(trace, row=1, col=1)
+
+        if not style: return
+        support_style, resistance_style = style
 
         # Support traces
-        support_cols = [col for col in data.columns if col.startswith('Sup')]
-        for i in range(0, len(support_cols), 3):
-            for trace in create_traces(support_cols[i], support_cols[i+1], support_cols[i+2], support_style):
-                self.fig.add_trace(trace, row=1, col=1)
+        add_traces([col for col in data.columns if col.startswith('Sup_1')], support_style)
+        add_traces([col for col in data.columns if col.startswith('Sup_2')], support_style)
 
         # Resistance traces
-        resistance_cols = [col for col in data.columns if col.startswith('Res')]
-        for i in range(0, len(resistance_cols), 3):
-            for trace in create_traces(resistance_cols[i], resistance_cols[i+1], resistance_cols[i+2], resistance_style):
-                self.fig.add_trace(trace, row=1, col=1)
+        add_traces([col for col in data.columns if col.startswith('Res_1')], resistance_style)
+        add_traces([col for col in data.columns if col.startswith('Res_2')], resistance_style)
    
     def add_rectangle(self, data: pd.DataFrame, style: List[Dict[str, Any]], chart_type='') -> None:
         """
