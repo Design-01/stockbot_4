@@ -6,8 +6,17 @@ import datetime
 from plotly.colors import hex_to_rgb
 import numpy as np
 import plotly.io as pio
+from dataclasses import dataclass
 
 
+# used to store the chart arguments for Chart.add_multi_ta
+@dataclass
+class ChartArgs:
+    style: Dict[str, Any] | list[Dict[str, Any]]
+    chart_type: str
+    row: int 
+    nameCol: pd.Series = None
+    columns: List[str] = None
 
 class Chart:
 
@@ -20,8 +29,6 @@ class Chart:
         self.ta = []
         self.set_fig()
     
-    def store_ta(self, ta_list):
-        self.ta = ta_list
 
     def set_fig(self):
         self.fig = make_subplots(
@@ -30,7 +37,11 @@ class Chart:
             shared_xaxes=True, 
             vertical_spacing=0.02,
             row_width=self.rowHeights)
+    
         
+    def store_ta(self, ta_list):
+        self.ta = ta_list
+
     def save_chart(self, filename, format='png'):
         """
         Save a Plotly figure as an image file
@@ -433,7 +444,7 @@ class Chart:
         self.add_candles_and_volume(df)
         self.add_layout_and_format(df)
 
-    def add_ta(self, data: pd.Series | pd.DataFrame, style: Dict[str, Any] | list[Dict[str, Any]], chart_type: str, row:int=1, nameCol:pd.Series=None) -> None:
+    def add_ta(self, data: pd.Series | pd.DataFrame, style: Dict[str, Any] | list[Dict[str, Any]], chart_type: str, row:int=1, nameCol:pd.Series=None, columns:List[str]=None) -> None:
         """Adds ta's to the chart
 
         args:
@@ -447,11 +458,13 @@ class Chart:
         # make styles consistent
         style = [style] if not isinstance(style, list) else style
 
+        columns = data.columns if columns is None else columns
+
         if chart_type == 'line':
             if isinstance(data, pd.Series):
                 self.fig.add_trace(go.Scatter(x=data.index, y=data, name=data.name, line=style[0]), row=row, col=1)
             elif isinstance(data, pd.DataFrame):
-                for column, stl in zip(data.columns, style):
+                for column, stl in zip(columns, style):
                     self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, line=stl), row=row, col=1)
 
         if chart_type == 'lines+markers':
@@ -473,16 +486,16 @@ class Chart:
                     ), row=row, col=1)
                 
             elif isinstance(data, pd.DataFrame):
-                for column, stl in zip(data.columns, style):
+                for column, stl in zip(columns, style):
                     self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, line=stl, mode=chart_type), row=row, col=1)
 
 
 
         # Add MACD subplot if provided
         if chart_type == 'macd' and isinstance(data, pd.DataFrame):
-            macd_col = [col for col in data.columns if col.endswith('MACD')][0]
-            signal_col = [col for col in data.columns if col.endswith('Signal')][0]
-            hist_col = [col for col in data.columns if col.endswith('Histogram')][0]
+            macd_col = [col for col in columns if col.endswith('MACD')][0]
+            signal_col = [col for col in columns if col.endswith('Signal')][0]
+            hist_col = [col for col in columns if col.endswith('Histogram')][0]
             
             # self.fig.add_trace(go.Bar(x=data.index, y=data[hist_col], name=hist_col, marker=hist_style), row=3, col=1)
             self.fig.add_trace(go.Scatter(x=data.index, y=data[macd_col], name=macd_col, line=style[0]), row=3, col=1)
@@ -492,7 +505,7 @@ class Chart:
             self.fig.update_layout()  # Adjust the height to accommodate the new subplot
         
         if chart_type == 'points' and isinstance(data, pd.DataFrame):
-            for column, stl in zip(data.columns, style):
+            for column, stl in zip(columns, style):
                 # Ensure 'size' and 'opacity' are set in the marker style if not provided
                 stl.setdefault('size', 10)  # Default size if not provided
                 stl.setdefault('color', 'blue')  # Default color if not provided
@@ -519,7 +532,7 @@ class Chart:
             self.add_rectangle(data, style, chart_type.upper())
         
         if chart_type == 'trendlines':
-            trend_cols = [col for col in data.columns if 'TREND' in col]
+            trend_cols = [col for col in columns if 'TREND' in col]
             for col in trend_cols:
                 mask = ~data[col].isna()
                 if mask.any():
@@ -529,6 +542,20 @@ class Chart:
                         name=col,
                         line=style[0]  # Use the same style for all trend lines
                     ), row=row, col=1)
+
+
+    def add_multi_ta(self, data: pd.DataFrame, chartArgs: List[ChartArgs]) -> None:
+        """
+        Adds multiple technical analysis indicators to the chart.
+
+        Args:
+        data (pd.DataFrame): DataFrame containing technical analysis indicators
+        chartArgs (List[ChartArgs]): List of ChartArgs objects containing indicator details
+        """
+        for chartArg in chartArgs:
+            self.add_ta(data, chartArg.style, chartArg.chart_type, chartArg.row, chartArg.nameCol)
+
+        
 
     def add_support_resistance(self, data: pd.DataFrame, style: List[Dict[str, Any]]) -> None:
         """

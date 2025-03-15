@@ -234,6 +234,7 @@ class Signals(ABC):
     def run(self, df: pd.DataFrame = pd.DataFrame()) -> pd.Series:
         """Generate signal scores for the lookback period."""
         if len(df) < 10:
+            # return self.return_series(df.index[-1:], self.get_score(0))
             return self.return_series(df.index[-1:], self.get_score(0))
         
         lookback = min(self.lookBack, len(df))  # Include all rows in the lookback period
@@ -1958,11 +1959,16 @@ class MultiSignals(ABC):
         """Normalize values efficiently using vectorized operations."""
         def normalize_vec(x):
                 if x is None:
-                    return 0  # or another suitable default value, like np.nan
+                    return np.nan  # or another suitable default value, like np.nan
                 normalized = (x - self.normRange[0]) / (self.normRange[1] - self.normRange[0]) * 100
                 clamped = np.clip(normalized, 0, 100)  # Clamp the values between 0 and 100
                 return np.round(clamped, 2)  # Added rounding to match single-value function
-                
+        
+        # if norm range is ste to None, return the value as is
+        if self.normRange is None:
+            return val
+
+
         if isinstance(val, (pd.Series, pd.DataFrame)):
             return val.apply(normalize_vec)
         return normalize_vec(val)
@@ -1983,7 +1989,7 @@ class MultiSignals(ABC):
             self.setup_columns(df)
 
         if len(df) < 10:
-            return pd.DataFrame(0, index=[df.index[-1]], columns=self.names)
+            return pd.DataFrame(np.nan, index=[df.index[-1]], columns=self.names)
         
         lookBack = min(self.lookBack, len(df))
 
@@ -1996,7 +2002,7 @@ class MultiSignals(ABC):
         # Ensure we have all expected columns
         for name in self.names:
             if name not in signals.columns:
-                signals[name] = 0
+                signals[name] = np.nan
                 
         # Normalize the results
         for col in signals.columns:
@@ -2691,73 +2697,156 @@ class BuySetup(MultiSignals):
     minBSW: float = 0.5
     minRetest: float = 0.5
     
+    
     def __post_init__(self):
+        self.normRange = None # No normalization for this signal
         self.name = f"{self.ls[0]}_{self.name}"
-        self.name_sig_count = f"{self.name}_Count"
+        self.name_sig_count = f"{self.name}_SigCount"
         self.name_entry = f"{self.name}_Entry"
         self.name_stop = f"{self.name}_Stop"
         self.name_buy = f"{self.name}_isBuy"
         self.name_fail = f"{self.name}_isFail"
-        self.names = [self.name, self.name_sig_count, self.name_entry, self.name_stop, self.name_buy, self.name_fail]
-        self.reset()
+        self.name_lhs = f"{self.name}_lhs"
+        self.name_lls = f"{self.name}_lls"
+        self.name_red1 = f"{self.name}_red1"
+        self.name_red2 = f"{self.name}_red2"
+        self.name_hh = f"{self.name}_hh"
+        self.name_hl = f"{self.name}_hl"
+        self.name_cc = f"{self.name}_cc"
+        self.name_sw = f"{self.name}_sw"
+        self.name_dr = f"{self.name}_dr"
+
+        self.names = [
+            self.name, 
+            self.name_sig_count, 
+            self.name_entry, 
+            self.name_stop, 
+            self.name_buy, 
+            self.name_fail,
+            self.name_lhs,
+            self.name_lls,
+            self.name_red2,
+            self.name_red1,
+            self.name_hh,
+            self.name_hl,
+            self.name_cc,
+            self.name_sw,
+            self.name_dr
+        ]
+        
+        self.reversal_signal_count = 0
+        self.entry_price = None
+        self.stop_price = None
+        self.is_buy = 0
+        self.is_fail = 0
+        self.step = 0
+        self.hh = 0
+        self.hl = 0
+        self.cc = 0
+        self.sw = 0
+        self.dr = 0
+        self.lhs = 0
+        self.lls = 0
+        self.red1 = 0
+        self.red2 = 0
 
     def reset(self):
         self.reversal_signal_count = 0
         self.entry_price = None
         self.stop_price = None
-        self.is_buy = False
-        self.is_fail = False
+        self.is_buy = 0
+        self.is_fail = 0
+        self.step = 0
+        self.hh = 0
+        self.hl = 0
+        self.cc = 0
+        self.sw = 0
+        self.dr = 0
+        self.lhs = 0
+        self.lls = 0
+        self.red1 = 0
+        self.red2 = 0
+
+    def get_default_series(self) -> pd.Series:
+        return pd.Series({
+            self.name: 0,
+            self.name_sig_count: 0,
+            self.name_entry: None,
+            self.name_stop: None,
+            self.name_buy: 0,
+            self.name_fail: 0,
+            self.name_lhs: 0,
+            self.name_lls: 0,
+            self.name_red1: 0,
+            self.name_red2: 0,
+            self.name_hh: 0,
+            self.name_hl: 0,
+            self.name_cc: 0,
+            self.name_sw: 0,
+            self.name_dr: 0
+        })
 
     def _compute_row(self, df: pd.DataFrame) -> pd.Series:
         # Check if was a trigger or cancel last round
         if self.is_buy or self.is_fail:
             self.reset()
-            return pd.Series({name: None for name in self.names})
+            return self.get_default_series()
         
         if len(df) < 3:
-            return pd.Series({name: None for name in self.names})
+            return self.get_default_series()
 
         # Has 2 x lower highs and 2 x lower lows
-        lhs = df.high.iat[-1] < df.high.iat[-2] and df.high.iat[-2] < df.high.iat[-3]
-        lls = df.low.iat[-1] < df.low.iat[-2] and df.low.iat[-2] < df.low.iat[-3]
+        self.lhs = df.high.iat[-1] < df.high.iat[-2] and df.high.iat[-2] < df.high.iat[-3]
+        self.lls = df.low.iat[-1] < df.low.iat[-2] and df.low.iat[-2] < df.low.iat[-3]
+        self.red1 = df.open.iat[-2] > df.close.iat[-1]
+        self.red2 = df.open.iat[-3] > df.close.iat[-2]
 
-        # Get the reversal signals for every run of the function
-        hh = df.high.iat[-1] > df.high.iat[-2]            # Has a higher high
-        hl = df.low.iat[-1] > df.low.iat[-2]              # Has a higher low
-        cc = df.open.iat[-1] < df.close.iat[-1]           # Has a bullish candle
-        sw = df[self.bswCol].iat[-1] >= self.minBSW       # Has a bullish strength/weakness
-        dr = df[self.retestCol].iat[-1] >= self.minRetest # Has a double retest
-        
-        self.reversal_signal_count += sum([hh, hl, cc, sw, dr])
+        if self.lhs and self.lls and self.red1 and self.red2:
+            self.step = 1
 
-        # Set entry and stop if not set
-        if self.reversal_signal_count >= 1 and self.entry_price is None:
-            self.entry_price = df.high.iat[-1]
-            self.stop_price = min(df.low.iat[-1], df.low.iat[-2])
+        if self.step == 1:
+            # Get the reversal signals for every run of the function
+            self.hh = df.high.iat[-1] > df.high.iat[-2]            # Has a higher high
+            self.hl = df.low.iat[-1] > df.low.iat[-2]              # Has a higher low
+            self.cc = df.open.iat[-1] < df.close.iat[-1]           # Has a bullish candle
+            self.sw = df[self.bswCol].iat[-1] >= self.minBSW       # Has a bullish strength/weakness
+            self.dr = df[self.retestCol].iat[-1] >= self.minRetest # Has a double retest
+            
+            self.reversal_signal_count += sum([self.hh, self.hl, self.cc, self.sw, self.dr])
+
+            # Set entry and stop if not set
+            if self.reversal_signal_count >= self.minCount:
+                self.entry_price = df.high.iat[-2]
+                self.stop_price = min(df.low.iat[-1], df.low.iat[-2])
+                self.step = 2
 
         # Buy Setup checking if entry price is set
-        if self.entry_price is not None:
+        if self.step == 2:
             # Breaks entry price
             if df.high.iat[-1] > self.entry_price:
-                if self.reversal_signal_count >= self.minCount:
-                    self.is_buy = True
-                else:
-                    self.entry_price = df.high.iat[-1]
-            
-            # Breaks stoploss price
-            if df.low.iat[-1] < self.stop_price:
-                if lls and lhs and not cc:
-                    self.is_fail = True
-                else:
-                    self.stop_price = min(df.low.iat[-1], df.low.iat[-2])
-        
+                self.is_buy = True
+            elif df.low.iat[-1] < self.stop_price:
+                self.is_fail = True
+            elif df.high.iat[-1] < df.high.iat[-2]:
+                self.entry_price = df.high.iat[-2]
+
+        # normRagnge disabled for this signal so manually apply the normalization
         return pd.Series({
-            self.name: self.is_buy,
+            self.name: self.is_buy * 100,
             self.name_sig_count: self.reversal_signal_count,
             self.name_entry: self.entry_price,
             self.name_stop: self.stop_price,
-            self.name_buy: self.is_buy,
-            self.name_fail: self.is_fail
+            self.name_buy: self.is_buy * 100,
+            self.name_fail: self.is_fail * 100,
+            self.name_lhs: self.lhs * 100,
+            self.name_lls: self.lls * 100,
+            self.name_red1: self.red1 * 100,
+            self.name_red2: self.red2 * 100,
+            self.name_hh: self.hh * 100,
+            self.name_hl: self.hl * 100,
+            self.name_cc: self.cc * 100,
+            self.name_sw: self.sw * 100,
+            self.name_dr: self.dr * 100
         })
 
     def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:

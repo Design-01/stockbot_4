@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Tuple, Union, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 import pandas as pd
-from chart.chart import Chart  # Use relative import for Chart
+from chart.chart import Chart, ChartArgs # Use relative import for Chart
 import strategies.ta as ta
 from strategies.ta import TA
 from strategies.signals import Signals
@@ -93,13 +93,15 @@ class Frame:
         self.data = updated_df[reordered_columns]
         return self.data
 
-    def add_ta(self, ta: TA, style: Dict[str, Any] | List[Dict[str, Any]] = {}, chart_type: str = "line", row: int = 1, nameCol:str=None):
+    def add_ta(self, ta: TA, style: Dict[str, Any] | List[Dict[str, Any]] = {}, chart_type: str = "line", row: int = 1, nameCol:str=None, columns:List[str]=None) -> TA:
         # Check for duplicates
-        for existing_ta, existing_style, existing_chart_type, existing_row, existing_nameCol in self.ta:
+        for existing_ta, existing_style, existing_chart_type, existing_row, existing_nameCol, existing_columns in self.ta:
             if (existing_ta == ta and 
                 existing_style == style and 
                 existing_chart_type == chart_type and 
-                existing_row == row):
+                existing_row == row and
+                existing_nameCol == nameCol and 
+                existing_columns == columns):
                 # Duplicate found, do not add
                 return ta
         
@@ -107,12 +109,18 @@ class Frame:
         if self.run_ta_on_load:
             self.update_data(ta.run(self.data))
         
-        self.ta.append((ta, style, chart_type, row, nameCol))
+        self.ta.append((ta, style, chart_type, row, nameCol, columns))
         # returning the ta object to allow it to be assigend and therefor access the name vaialbe in the ta object
         # eg 
         # ta1 = frame.add_ta(ta('close'), style, chart_type, row, nameCol)
         # ta2 = frame.add_ta(ta(ta1.name), style, chart_type, row, nameCol)
         return ta
+
+    def add_multi_ta(self, ta: TA, chartArgs:List[ChartArgs]):
+        """Add multiple technical indicators to the frame.
+        Allow for multiple styles and chart types to be added to the same indicator."""
+        for chartArg in chartArgs:
+            self.add_ta(ta, chartArg.style, chartArg.chart_type, chartArg.row, chartArg.nameCol, chartArg.columns)
 
     def add_ta_batch(self, taList:list[ta.TAData], forceRun:bool=False):
         for ta in taList:
@@ -226,12 +234,12 @@ class Frame:
         # Use existing plot logic
         self.chart.refesh(self.data)
         
-        for indicator, style, chart_type, row, nameCol in self.ta:
+        for indicator, style, chart_type, row, nameCol, columns in self.ta:
             if style == {}: 
                 continue
                 
             # Handle names whether they're in a list or string
-            names = indicator.names
+            names = indicator.names if columns is None else columns
             if isinstance(names, str):
                 names = [names]
             elif not isinstance(names, list):

@@ -7,6 +7,7 @@ from frame import Frame
 from data.random_data import RandomOHLCV
 from dataclasses import dataclass
 from typing import Dict, Any, List
+from chart.chart import ChartArgs 
 
 #------------------------------------------------------------
 # ----------  H E L P E R S  --------------------------------
@@ -166,9 +167,9 @@ def trending_ta(f, ls:str='LONG', lookBack:int=100, scoreRow:int=4, chartType:st
 
 def SIG_compare_to_market_ta(f, marketCol='SPY_close', ls:str='LONG', lookBack:int=100, scoreRow:int=4, chartType:str='line'):
     """As long as Comp_MKT above 0 then it is tradeing positively compared to the market"""
-    f.add_ta(ta.MansfieldRSI(stockCol='close', marketCol=marketCol,   span=14), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
-    f.add_ta(ta.PctChange(metric_column='MA_cl_50'), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=scoreRow)
-    f.add_ta(sig.Score(name='Comp_MKT', cols=['MRSI_14_SPY_close', 'PCT_MA_cl_50_1'], scoreType='mean', validThreshold=0, weight=1, lookBack=lookBack, normRange=(0,1)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=scoreRow)
+    f.add_ta(ta.MansfieldRSI(stockCol='close', marketCol=marketCol,   span=14), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type=chartType, row=scoreRow)
+    f.add_ta(ta.PctChange(metric_column='MA_cl_50'), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type=chartType, row=scoreRow)
+    f.add_ta(sig.Score(name='Comp_MKT', cols=['MRSI_14_SPY_close', 'PCT_MA_cl_50_1'], scoreType='mean', validThreshold=0, weight=1, lookBack=lookBack, normRange=(0,1)), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type=chartType, row=scoreRow)
         
 
 #------------------------------------------------------------
@@ -513,9 +514,14 @@ def VALIDATE_turnbars(f, ls='LONG',  atrSpan:int=10, lookBack:int=100, sigRow:in
 
 def SCORE_VALID_BuySetup(f, ls='LONG', bswCol:str='', retestCol:str='', lookBack:int=100, TArow:int=3, scoreRow:int=4):
     buy_setup_signals = [
-        sig.BuySetup(ls=ls, bswCol=bswCol, retestCol=retestCol, minCount=3, minBSW=0.5, minRetest=0.5, lookBack=lookBack),
+        sig.BuySetup(ls=ls, bswCol=bswCol, retestCol=retestCol, minCount=3, minBSW=0.5, minRetest=0.5, lookBack=lookBack)
     ]
-    batch_add_ta(f, buy_setup_signals,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    f.add_multi_ta(buy_setup_signals[0], [
+        ChartArgs({'dash': 'solid', 'color': 'cyan', 'width':5},     chart_type='lines+markers', row=1, columns=[f'{ls[0].upper()}_BuySetup_Entry']),
+        ChartArgs({'dash': 'solid', 'color': 'magenta', 'width': 5}, chart_type='lines+markers', row=1, columns=[f'{ls[0].upper()}_BuySetup_Stop']),
+        ChartArgs({'dash': 'solid', 'color': 'cyan', 'width': 2},    chart_type='line', row=3, columns=[f'{ls[0].upper()}_BuySetup_isBuy']),
+    ])
+    
     add_score(f, buy_setup_signals,  name=f'{ls}_BuySetup',  scoreType='max',  lookBack=lookBack, row=scoreRow)
 
 ## --------------------------------------------------------------
