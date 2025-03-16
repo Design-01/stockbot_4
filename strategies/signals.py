@@ -323,7 +323,7 @@ class Score(Signals):
         else:
             val = np.nan
         
-        return val * self.weight if not pd.isna(val) else np.nan
+        return round(val * self.weight, 1) if not pd.isna(val) else np.nan
     
     def reset_cache(self):
         """Reset the filtered columns cache if needed (e.g., if columns change)."""
@@ -1111,6 +1111,10 @@ class IsGappedOverPivot(Signals):
     name: str = 'GapPiv'
     pointCol: str = 'pivot'
 
+    def __post_init__(self):
+        self.name = f"{self.name}_{self.pointCol}"
+        self.names = [self.name]    
+
     def _compute_row(self, df: pd.DataFrame) -> float:
         # Get data up to current bar
         return is_gap_pivot_crossover(df, self.pointCol, self.ls)
@@ -1133,11 +1137,10 @@ class GappedPivots(Signals):
     """
     name: str = 'GPivs'
     pointCol: str = ''
-    runType: str = 'pct'
-    span: int = 20
+    spanPivots: int = 20
 
     def __post_init__(self):
-        self.name = f"Sig{self.ls[0]}_{self.name}"
+        self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]
 
     def _compute_row(self, df: pd.DataFrame) -> tuple[int, int]:
@@ -1150,6 +1153,9 @@ class GappedPivots(Signals):
         
         if len(pivots) == 0:
             return 0
+        else:
+            span_pivs = pivots.iloc[-min(self.spanPivots, len(pivots)):]
+            pivots = pivots.iloc[-span_pivs:]
 
         current_open = df['open'].iloc[-1]
         prev_close = df['close'].iloc[-2]
@@ -1263,44 +1269,8 @@ class GappedPastPivot(Signals):
 
 
 
-#£Done
 @dataclass
-class GapSizeOverPivot(Signals):
-    """Measure the size of price gaps relative to the previous close."""
-    name: str = 'GSiz'
-    atrCol: str = ''
-    pointCol: str = ''  # Column name for pivot points
-        
-    def _compute_row(self, df: pd.DataFrame) -> float:
-        """
-        Calculate the gap score relative to ATR for a confirmed pivot crossover.
-
-        Returns:
-        --------
-        float
-            Gap score as a percentage of ATR
-        """
-        # First check if there's a valid gap over pivot
-        if not is_gap_pivot_crossover(df, self.pointCol, self.ls):
-            return 0.0
-        
-        current_open = df['open'].iloc[-1]
-        prev_close = df['close'].iloc[-2]
-        current_atr = df[self.atrCol].iloc[-1]
-        
-        if current_atr == 0:
-            return 0.0
-            
-        if self.ls == 'LONG':
-            gap = current_open - prev_close
-        else:  # SHORT
-            gap = prev_close - current_open
-            
-        return gap / current_atr * 100
-
-
-@dataclass
-class GapsSize(Signals):
+class GapSize(Signals):
     name: str = 'GapSz'
     atrCol: str = ''
 
@@ -3434,18 +3404,25 @@ class Condition:
 
 
 @dataclass
-class Strategy(Signals):
+class Strategy(MultiSignals):
     name: str
     
     def __post_init__(self):
         # Initialize MultiSignals parent class
-        super().__post_init__()
-        
+        self.normRange = None # No normalization for this signal
         self.name = f'Stgy_{self.name}'
         self.name_conditions_met = f"{self.name}_ConditionsMet"
         self.name_steps_passed = f"{self.name}_StepsPassed"
         self.name_action = f"{self.name}_Action"
         self.name_pct_complete = f"{self.name}_PctComplete"
+
+        self.names = [
+            self.name_conditions_met, 
+            self.name_steps_passed, 
+            self.name_action, 
+            self.name_pct_complete
+            ]
+        
         self.steps = {}
         self.current_step = 1  # Start at step 1 instead of 0
         self.total_steps = 0
@@ -3465,14 +3442,20 @@ class Strategy(Signals):
     def pass_if(self, step:int, scoreCol:str, operator:str, threshold:float|int):
         if step not in self.steps: self._new_step(step)
         cond_name = f"{self.name}_Step{step}_PassIf{scoreCol}_{operator}_{threshold}"
-        self.steps[step]['pass_ifs'] += [Condition(step, cond_name, scoreCol, operator, threshold)] 
-        self.results[cond_name] = False      
+        self.steps[step]['pass_ifs'] += [Condition(step, cond_name, scoreCol, operator, threshold)]
+        self.results[cond_name] = False
+        # Add condition name to names list if not already there
+        if cond_name not in self.names:
+            self.names.append(cond_name)      
 
     def reset_if(self, step:int, scoreCol:str, operator:str, threshold:float|int, startFromStep:int):
         if step not in self.steps: raise ValueError(f"Strategy :: Step {step} does not exist")
         cond_name = f"{self.name}_Step{step}_ResetIf{scoreCol}_{operator}_{threshold}"
         self.steps[step]['reset_ifs'] += [Condition(step, cond_name, scoreCol, operator, threshold, False, startFromStep)]
         self.results[cond_name] = False
+        # Add condition name to names list if not already there
+        if cond_name not in self.names:
+            self.names.append(cond_name)
     
     def _check_step_conditions(self, condType: str, step: int, row: pd.Series):
         """Check if all conditions of a specific type are met for a step"""
@@ -3534,7 +3517,7 @@ class Strategy(Signals):
         if self.total_steps > 0:
             self.results[self.name_pct_complete] = round((self.current_step - 1) / self.total_steps * 100, 1)
     
-    def compute_signals(self, df: pd.DataFrame) -> pd.Series:
+    def _compute_row(self, df: pd.DataFrame) -> pd.Series:
         if len(df) == 0:
             return self.results
         
@@ -3574,6 +3557,12 @@ class Strategy(Signals):
         self._update_metrics()
 
         return self.results
+    
+    def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        results = pd.DataFrame(index=df.index, columns=self.names)
+        for i in range(len(df)):
+            results.iloc[i] = self._compute_row(df.iloc[:i+1])
+        return results
 
 
 

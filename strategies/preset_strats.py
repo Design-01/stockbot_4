@@ -175,19 +175,21 @@ def SIG_compare_to_market_ta(f, marketCol='SPY_close', ls:str='LONG', lookBack:i
 #------------------------------------------------------------
 # ----------   T A  -----------------------------------------
 #------------------------------------------------------------
-def TA_TA(f, lookBack:int=100, atrSpan:int=50, pointsSpan:int=10, TArow:int=3):
+def TA_TA(f, lookBack:int=100, atrSpan:int=50, pointsSpan:int=10, isDaily:bool=False):
     ma_ta(f, [50, 150, 200])
     f.add_ta(ta.ATR(span=atrSpan), {'dash': 'solid', 'color': 'cyan', 'width': 1}, row=3, chart_type='')
     f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=3), [{'color': 'green', 'size': 5}, {'color': 'red', 'size': 5}], chart_type = 'points')
     f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=pointsSpan), [{'color': 'green', 'size': 10}, {'color': 'red', 'size': 10}], chart_type = 'points')
-    f.add_ta(ta.VWAP(column='close',  interval='session'), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=1)
-    f.add_ta(ta.VolumeAccumulation(), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=2)
     f.add_ta(ta.SupResAllRows(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1, rowsToUpdate=lookBack),
     [{'dash': 'solid', 'main_line_colour': 'green', 'zone_edge_colour': 'rgba(0, 255, 0, 0.3)', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 1}, # support # green = rgba(0, 255, 0, 0.1)
     {'dash': 'solid', 'main_line_colour': 'red', 'fillcolour': "red", 'zone_edge_colour': 'rgba(255, 0, 0, 0.3)', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
     chart_type = 'support_resistance')
 
-122, 223, 187
+    if not isDaily:
+        f.add_ta(ta.VWAP(column='close',  interval='session'), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=1)
+        f.add_ta(ta.VolumeAccumulation(), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=2)
+
+
 def TA_Levels(f):
     tas = [
         ta.Levels(level='pre_mkt_high',       ffill=True),
@@ -200,6 +202,39 @@ def TA_Levels(f):
         ta.Levels(level='prev_day_low')
     ]
     batch_add_ta(f, tas,  {'dash': 'dash', 'color': 'yellow', 'width': 1}, chart_type='line', row=1) 
+
+
+#! TODO - Decide what is important to validate
+def TA_Daily(f, ls:str='LONG', pointCol:str='HP_hi_10', atrSpan:int=10, lookBack:int=1, TArow:int=2, scoreRow:int=5):
+    atr_col = f'ATR_{atrSpan}'
+    gap_tas = [
+        sig.IsGappedOverPivot(ls=ls, normRange=(0,1), pointCol=pointCol, lookBack=lookBack),
+        sig.GappedPivots(ls=ls, normRange=(0, 3), pointCol=pointCol, spanPivots=10, lookBack=lookBack),
+        sig.GappedRetracement(ls=ls, normRange=(0,100), pointCol=pointCol, atrCol=atr_col, lookBack=lookBack),
+        sig.GappedPastPivot(ls=ls, normRange=(0,100), atrCol=atr_col, pointCol=pointCol, lookBack=lookBack, maxAtrMultiple=10),
+        sig.GapSize(ls=ls, normRange=(0,300), atrCol=atr_col, lookBack=lookBack),
+        sig.RoomToMove(ls=ls, tgetCol='Res_1_Lower', atrCol=atr_col, unlimitedVal=10, normRange=(0,100), lookBack=lookBack)
+    ]
+    batch_add_ta(f, gap_tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+
+    ta_rs = f.add_ta(ta.RS(comparisonPrefix='SPY', ma=14, atr=atrSpan), 
+        [{'dash': 'solid', 'color': 'yellow', 'width': 1},
+        {'dash': 'solid', 'color': 'cyan', 'width': 1}], 
+        chart_type='line', row=TArow)
+    
+
+    validations = [
+        sig.Validate(f, val1='GapPiv_HP_hi_10',   operator='>', val2=1, lookBack=lookBack),  # has a bar gapped over the pivot
+        sig.Validate(f, val1='L_GPivs',           operator='>', val2=1, lookBack=lookBack),  # gapped pivots in the last 10 bars
+        sig.Validate(f, val1='L_GRtc',            operator='>', val2=50, lookBack=lookBack),  # gapped retracement of 50% or more
+        sig.Validate(f, val1='L_GPP',             operator='>', val2=80, lookBack=lookBack),  # gapped past pivot
+        sig.Validate(f, val1='GapSz',             operator='<', val2=400, lookBack=lookBack),  # gapped size less than 400%
+        sig.Validate(f, val1='RTM_L_Res_1_Lower', operator='>', val2=50, lookBack=lookBack),  # has room to move
+        sig.Validate(f, val1=ta_rs.name,          operator='>', val2=1, lookBack=lookBack),  # has a positive RS compared to the market (Relative Strength)
+    ]
+    batch_add_ta(f, validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    scoreCol = add_score(f, validations,  name=f'{ls}_Daily',  scoreType='mean', lookBack=lookBack, row=scoreRow)
+    return scoreCol
 
 #------------------------------------------------------------
 # ----------   S C O R E   T A  -----------------------------
@@ -290,18 +325,6 @@ def TA_RSI(f, lookBack:int=100, rsiPeriod:int=14, TArow:int=3, scoreRow:int=4):
     return ta_rs
 
 
-    
-
-
-
-
-
-
-
-
-
-
-
 
 
 #------------------------------------------------------------
@@ -365,16 +388,15 @@ def SCORE_VALID_reset_if_breaks(f, ls = 'LONG', lookBack:int=100, sigRow:int=3, 
 
 
 def SCORE_VALID_buy(f, ls='LONG', lookBack:int=100, sigRow:int=3, validationRow:int=4):
-    ta_rs = f.add_ta(ta.RSATRMA(comparisonPrefix='SPY', ma=10, atr=50), 
+    ta_rs = f.add_ta(ta.RS(comparisonPrefix='SPY', ma=10, atr=50), 
             [{'dash': 'solid', 'color': 'yellow', 'width': 1},
             {'dash': 'solid', 'color': 'cyan', 'width': 1}], 
             chart_type='line', row=sigRow)
     
     buy_validations = [
         sig.Validate(f, val1='close',             operator='>',   val2='VWAP_session', lookBack=lookBack), # close > VWAP
-        sig.Validate(f, val1='close',             operator='^',   val2='high',         lookBack=lookBack), # close breaks prev high
         sig.Validate(f, val1='Score_LONG_RTM',    operator='>',   val2=20,             lookBack=lookBack), # Room to move > 2 (measured by ATR units but check normalised score. 2 might = 20%)
-        sig.Validate(f, val1=ta_rs.name,          operator='>',   val2=2,              lookBack=lookBack),  # RS > 2 (measured by ATR units)
+        sig.Validate(f, val1=ta_rs.name,       operator='>',   val2=2,              lookBack=lookBack),  # RS > 2 (measured by ATR units)
     ]
     batch_add_ta(f, buy_validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
     scoreCol = add_score(f, buy_validations,  name=f'{ls}_ValBuy',  scoreType='mean', lookBack=lookBack, row=validationRow) 
@@ -394,9 +416,6 @@ def SCORE_VALID_bonus(f, ls='LONG',  atrSpan:int=10, lookBack:int=100, sigRow:in
     batch_add_ta(f, bonus_validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
     score_col = add_score(f, bonus_validations,  name=f'{ls}_ValBonus',  scoreType='mean', lookBack=lookBack, row=validationRow)
     return score_col
-
-
-
 
 
 

@@ -12,7 +12,6 @@ class Frame:
     symbol: str
     data: pd.DataFrame = pd.DataFrame()
     trading_hours: List[Tuple[str, str]] = field(default_factory=lambda: [("09:30", "16:00")])
-    run_ta_on_load: bool = True
     rowHeights: List[float] = field(default_factory=lambda: [0.1, 0.2, 0.2, 0.6])
     name: str = None
 
@@ -93,7 +92,7 @@ class Frame:
         self.data = updated_df[reordered_columns]
         return self.data
 
-    def add_ta(self, ta: TA, style: Dict[str, Any] | List[Dict[str, Any]] = {}, chart_type: str = "line", row: int = 1, nameCol:str=None, columns:List[str]=None) -> TA:
+    def add_ta(self, ta: TA, style: Dict[str, Any] | List[Dict[str, Any]] = {}, chart_type: str = "line", row: int = 1, nameCol:str=None, columns:List[str]=None, runOnLoad:bool=True) -> TA:
         # Check for duplicates
         for existing_ta, existing_style, existing_chart_type, existing_row, existing_nameCol, existing_columns in self.ta:
             if (existing_ta == ta and 
@@ -106,7 +105,7 @@ class Frame:
                 return ta
         
         # No duplicates found, add the new TA
-        if self.run_ta_on_load:
+        if runOnLoad:
             self.update_data(ta.run(self.data))
         
         self.ta.append((ta, style, chart_type, row, nameCol, columns))
@@ -116,11 +115,11 @@ class Frame:
         # ta2 = frame.add_ta(ta(ta1.name), style, chart_type, row, nameCol)
         return ta
 
-    def add_multi_ta(self, ta: TA, chartArgs:List[ChartArgs]):
+    def add_multi_ta(self, ta: TA, chartArgs:List[ChartArgs], runOnLoad:bool=True):
         """Add multiple technical indicators to the frame.
         Allow for multiple styles and chart types to be added to the same indicator."""
         for chartArg in chartArgs:
-            self.add_ta(ta, chartArg.style, chartArg.chart_type, chartArg.row, chartArg.nameCol, chartArg.columns)
+            self.add_ta(ta, chartArg.style, chartArg.chart_type, chartArg.row, chartArg.nameCol, chartArg.columns, runOnLoad)
 
     def add_ta_batch(self, taList:list[ta.TAData], forceRun:bool=False):
         for ta in taList:

@@ -10,6 +10,7 @@ from my_ib_utils import IBRateLimiter
 from pathlib import Path
 from dataframe_image import export
 import plotly.graph_objects as go
+from typing import Dict, Any, List
 
 from data import historical_data as hd
 from frame.frame import Frame
@@ -17,6 +18,7 @@ from strategies import ta
 from industry_classifications.sector import get_etf_from_sector_code
 import emails.email_client as email_client
 from project_paths import get_project_path
+from chart.chart import ChartArgs
 
 
 
@@ -811,17 +813,22 @@ import pandas as pd
 # ----------------------------------------------------------
 # ------- S T O C K X  -------------------------------------
 # ----------------------------------------------------------
-from frame.frame import Frame
-from dataclasses import dataclass, field
-from data import historical_data as hd
-from ib_insync import *
-from typing import Dict, Any, List
 import pandas as pd
+from enum import Enum
+from IPython.display import display
+from dataclasses import dataclass, field
+from typing import Dict, Any, List
+from ib_insync import *
+
 from data.random_data import RandomOHLCV
+from frame.frame import Frame
+from data import historical_data as hd
 import strategies.ta as ta
 import strategies.signals as sig
 import stock_fundamentals
 import strategies.preset_strats as ps
+from trades.price_x import EntryX, StopX, TargetX, TrailX
+from trades.tradex import TraderX
 
 @dataclass
 class TAData:
@@ -830,7 +837,64 @@ class TAData:
     chart_type: str = "line"
     row: int = 1
 
+class SignalStatus:
+    PRE_MARKET = "PRE_MARKET"
+    IN_TRADE  = "IN_TRADE"
+    PENDING   = "PENDING"
+    CANCELLED = "CANCELLED"
+    COMPLETED = "COMPLETED"
+    INACTIVE  = "INACTIVE"
 
+@dataclass
+class StockStats:
+    # Stock information
+    symbol: str = ''
+
+    # Core signal information
+    status: SignalStatus = SignalStatus.INACTIVE
+    status_why: str = ""  # Internal notes explaining current status
+
+    # Score information
+    score_1D: float = 0.0
+    score_preMkt_vol: float = 0.0
+    score_5M: float = 0.0
+    score_2M: float = 0.0
+    score_AVG: float = 0.0
+    score_best_barsize: str = ''
+    
+    # Performance metrics
+    pnl_realized: float = 0.0
+    pnl_unrealized: float = 0.0
+    trades_today: int = 0
+    win_rate: float = 0.0  # Percentage of winning trades
+    av_Rratio: float = 0.0  # Average R ratio per trade
+    
+    # Timestamps
+    last_updated: datetime = field(default_factory=datetime.now)
+    entry_time: Optional[datetime] = None
+    exit_time: Optional[datetime] = None
+
+    def update_score_av(self, scores:list[str]=None):
+        scores = scores if scores else [self.score_1D, self.score_preMkt, self.score_5M, self.score_2M] 
+        self.score_AVG = sum(scores) / len(scores)   
+        
+@dataclass
+class StockScoreCols:
+    preMkt_vol : str = ''
+    D1 : str = ''
+    M5 : str = ''
+    M2 : str = ''
+    M1 : str = ''
+    time : str = ''
+    level_premkt_gt : str = ''
+    touches : str = ''
+    reset_if_breaks : str = ''
+    pullback : str = ''
+    retest : str = ''
+    bsw : str = ''
+    buysetup : str = ''
+    rtm : str = ''
+    buy : str = ''
 
 @dataclass
 class StockX:
@@ -838,11 +902,19 @@ class StockX:
     symbol: str = ''
     intradaySizes: List[str] = field(default_factory=list)
     tradeSizes: List[str] = field(default_factory=list)
+    riskAmount: float = 100.00
+    outsideRth: bool = False
 
     def __post_init__(self):
         self.fundamentals = stock_fundamentals.Fundamentals(self.ib, self.symbol)
         self.frames = {}
-        self.status = [] # list of StatusLog
+        self.stats = StockStats(self.symbol)
+        self.trader = TraderX(self.ib, self.symbol)
+        self.ls = '' # LONG or SHORT
+        self.spy = None
+        self.score_cols = StockScoreCols()
+
+    # ------ Get Methods ----------------
 
     def get_frame(self, timeframe:str):
         if timeframe not in self.frames:
@@ -853,47 +925,37 @@ class StockX:
         if timeframe not in self.frames:
             return None
         return self.frames[timeframe].data
+    
+    def get_score_status_by_item(self, item_name: str, dataType:str) -> float:
+        """
+        Returns the score corresponding to the given item name from the DataFrame.
 
-    def get_status_df(self):
-        return pd.DataFrame([s.__dict__ for s in self.status])
-        
-    def set_up_frame(self, timeframe, dataType:str='random', start_date:str="52 weeksAgo", end_date:str='now', force_download:bool=False):
-        name = timeframe
-        for status in self.status:
-            if status.item == timeframe and status.dataType == dataType:
-                return
-            
-        
-        self.frames[name] = Frame(self.symbol, name=name, run_ta_on_load=True, rowHeights=[0.1, 0.1, 0.1, 0.1, 0.1, 0.5])
-        
-        if dataType == 'random':
-            df =  RandomOHLCV( 
-            freq      = timeframe, 
-            head_max  = 0.3, 
-            tail_max  = 0.3, 
-            start     = '2024',           
-            open_val  = 100.00,           
-            periods   = 400, 
-            open_rng  = (-0.4, 0.4), 
-            close_rng = (-0.4, 0.4), 
-            vol_rng   = (-1, 1),
-            volatility_rng  = (0, 0.02),
-            volatility_dur  = 3,
-            volatility_freq = 50).get_dataframe()
+        Parameters:
+        df (pd.DataFrame): The DataFrame containing 'item' and 'score' columns.
+        item_name (str): The name of the item to look up.
 
-            self.frames[timeframe].load_ohlcv(df)
+        Returns:
+        float: The score corresponding to the item name.
+        """
+        df = self.get_status_df()
+        row = df.loc[(df['item'] == item_name) & (df['dataType'] == dataType)]
+        if not row.empty:
+            return row['score'].iat[0]
+        else:
+            raise ValueError(f"Item '{item_name}' not found in the DataFrame")
 
-        elif dataType == 'ohlcv':
-             df = hd.get_hist_data(self.symbol, start_date, end_date, timeframe, force_download=force_download)
-             print(f"StockX::set_up_frame: {self.symbol} {timeframe} {dataType} {start_date} {end_date} {force_download=} : {df.shape}")
-             self.frames[name].load_ohlcv(df)
+    def get_stats(self) -> StockStats:
+        return self.stats
 
-        elif dataType == 'tick':
-            # todo: implement tick data
-            pass
+    #!------ Check Methods ---------------- Work in Progress
 
-    def import_market_data(self, df:pd.DataFrame, timeframe:str, prefix:str='imported_'):
-        self.frames[timeframe].import_data(df, importCols=['open', 'high', 'low', 'close', 'volume'], prefix=prefix)
+    def day_score_passed(self, min_score:float = 0.5) -> bool:
+        return self.stats.score_1D >= min_score
+    
+    def pre_market_passed(self, min_score:float = 0.5) -> bool:
+        return self.stats.score_5M >= min_score
+
+    # ------- Sector  -------------------
 
     def req_fundamentals(self, max_days_old=0):
         self.fundamentals.req_fundamentals(max_days_old)
@@ -943,26 +1005,47 @@ class StockX:
         # Case 4: Neither ETF is allowed
         return False
     
-    def get_score_status_by_item(self, item_name: str, dataType:str) -> float:
-        """
-        Returns the score corresponding to the given item name from the DataFrame.
+    # ------- Set up -------------------
 
-        Parameters:
-        df (pd.DataFrame): The DataFrame containing 'item' and 'score' columns.
-        item_name (str): The name of the item to look up.
+    def set_ls(self, ls:str):
+        if ls not in ['LONG', 'SHORT']:
+            raise ValueError(f"Invalid ls value: {ls}")
+        self.ls = ls
+        self.trader.set_ls(ls)
 
-        Returns:
-        float: The score corresponding to the item name.
-        """
-        df = self.get_status_df()
-        row = df.loc[(df['item'] == item_name) & (df['dataType'] == dataType)]
-        if not row.empty:
-            return row['score'].iat[0]
-        else:
-            raise ValueError(f"Item '{item_name}' not found in the DataFrame")
+    def setup_frame(self, timeframe, dataType:str='random', start_date:str="52 weeksAgo", end_date:str='now', force_download:bool=False):
+        name = timeframe          
         
+        self.frames[name] = Frame(self.symbol, name=name, rowHeights=[0.1, 0.1, 0.1, 0.1, 0.1, 0.5])
+        
+        if dataType == 'random':
+            df =  RandomOHLCV( 
+            freq      = timeframe, 
+            head_max  = 0.3, 
+            tail_max  = 0.3, 
+            start     = '2024',           
+            open_val  = 100.00,           
+            periods   = 400, 
+            open_rng  = (-0.4, 0.4), 
+            close_rng = (-0.4, 0.4), 
+            vol_rng   = (-1, 1),
+            volatility_rng  = (0, 0.02),
+            volatility_dur  = 3,
+            volatility_freq = 50).get_dataframe()
+
+            self.frames[timeframe].load_ohlcv(df)
+
+        elif dataType == 'ohlcv':
+             df = hd.get_hist_data(self.symbol, start_date, end_date, timeframe, force_download=force_download)
+             print(f"StockX::setup_frame: {self.symbol} {timeframe} {dataType} {start_date} {end_date} {force_download=} : {df.shape}")
+             self.frames[name].load_ohlcv(df)
+
+        elif dataType == 'tick':
+            # todo: implement tick data
+            pass
+
     def setup_all_frames(self, dataType:str='ohlcv', end_date="now", force_download:bool=False):
-        self.set_up_frame('1 day', dataType, start_date="52 weeksAgo", end_date=end_date, force_download=force_download)
+        self.setup_frame('1 day', dataType, start_date="52 weeksAgo", end_date=end_date, force_download=force_download)
         barsize_start_dates = {
             '1 week': "200 daysAgo",
             '1 day': "52 daysAgo",
@@ -972,7 +1055,134 @@ class StockX:
         }
         for barsize in self.intradaySizes:
             sd = barsize_start_dates[barsize]
-            self.set_up_frame(barsize, dataType, start_date=sd, end_date=end_date, force_download=force_download)
+            self.setup_frame(barsize, dataType, start_date=sd, end_date=end_date, force_download=force_download)
+
+    def setup_TA_PreMarket(self, lookBack, atrSpan, sigRow=3, validationRow=4, isSpy:bool=False):
+        if isSpy:
+            spy = self.spy.frames['1 day']
+            ps.TA_TA(spy, lookBack, atrSpan, pointsSpan=10, isDaily=True)
+            return
+
+        f_D1 = self.frames['1 day']
+        f_H1 = self.frames['1 hour']
+        
+        # basic TA
+        ps.TA_TA(f_D1, lookBack, atrSpan, pointsSpan=10, isDaily=True)
+        ps.TA_TA(f_H1, lookBack, atrSpan, pointsSpan=10, isDaily=False)
+        
+        # Pre Martket TA
+        ps.TA_Levels(f_H1) # not require for pre market but saves running in intraday 
+        ps.SCORE_TA_Volume(f_H1, lookBack, volMA=10, TArow=sigRow, scoreRow=validationRow)
+
+        # scores
+        self.score_cols.preMkt_vol = ps.SCORE_VALID_premkt_volume(f_H1, self.ls, lookBack, sigRow, validationRow)
+        self.score_cols.D1         = ps.TA_Daily(f_D1, self.ls, pointCol='HP_hi_10', atrSpan=atrSpan, lookBack=1, TArow=3, scoreRow=4)
+
+        self.stats.status = SignalStatus.PRE_MARKET
+        self.stats.status_why = "Daily TA is set up"
+
+    def setup_TA_intraday(self, lookBack, atrSpan, sigRow=3, validationRow=4):
+
+        # ----- S E T U P -----
+        for barsize in self.intradaySizes:
+            f = self.frames[barsize]
+            print(f'Running {self.ls} on {barsize}')
+            ps.TA_TA(f, lookBack, atrSpan, pointsSpan=10)
+            ps.SCORE_TA_Volume(f, lookBack, volMA=10, TArow=sigRow, scoreRow=validationRow)
+            ps.TA_Levels(f)
+
+            
+        # ----- I M P O R T -----
+        self.import_all_HTF_data()
+
+
+        # # ----- R U N -----
+        for barsize in self.tradeSizes:
+            f = self.frames[barsize]
+
+            # -- Validations --  
+            if self.ls == 'LONG':
+                # setup required scores and valicadations for the strategy
+                self.score_cols.time = ps.SCORE_VALID_time_of_day(f, self.ls, lookBack, sigRow, validationRow) #! > 9:35 will not include 9:35
+                self.score_cols.level_premkt_gt = ps.SCORE_VALID_Levels_premkt_and_5minbar(f, self.ls, lookBack, sigRow, validationRow)
+                self.score_cols.touches = ps.SCORE_TA_touches(f, self.ls, lookBack, atrSpan, direction='down', toTouchAtrScale=10, pastTouchAtrScale=2, TArow=3, scoreRow=4) #! > 50 is good touch
+                self.score_cols.reset_if_breaks = ps.SCORE_VALID_reset_if_breaks(f, self.ls, lookBack, sigRow, validationRow) #! > 1 is bad
+                self.score_cols.pullback = ps.SCORE_TA_Pullback(f, self.ls, lookBack, atrSpan, minPbLen=4, TArow=3, scoreRow=4) #! added persisnace to the pullback signals 
+                self.score_cols.retest = ps.SCORE_TA_retest(f, self.ls, lookBack, atrSpan, TArow=3, scoreRow=4) #! maybe needs some adjusting 
+                self.score_cols.bsw  = ps.SCORE_TA_Bar_StrengthWeakness(f, self.ls, lookBack, atrSpan, TArow=3, scoreRow=4) #! works but not sure what this is telling me
+                self.score_cols.buysetup = ps.SCORE_VALID_BuySetup(f, self.ls, self.score_cols.bsw, self.score_cols.retest, lookBack, TArow=3, scoreRow=4) #! works 
+                self.score_cols.rtm = ps.SCORE_TA_RTM(f, self.ls, lookBack, atrSpan, TArow=3, scoreRow=4)
+                self.score_cols.buy = ps.SCORE_VALID_buy(f, self.ls, lookBack, sigRow, validationRow)
+
+
+                # resets if new HP is formed
+                strat = sig.Strategy('PB', lookBack=lookBack)
+
+                """
+                -- premarket higher volume than average
+                -- time > 9:35 (wait for first 5 mins to play out)
+                -- breaks premkt high
+                -- price moves above first 5 min bar high
+                -- price pulls back 
+                    a. to max 50% of the first 5 min bar
+                    b. 2 or more lower highs (LH)
+                    c. sequential pullback with less than 50% overlap on any bar
+                    d. touches a support level (prev day high, this day low, daily Res 1 lower )
+                -- bullish bar completes (BSW ..  bot tail or CoC)
+                -- buy signal is confirmed (RTM, RS, break prev bar high)
+                """
+
+                # validates various metris. each step must be fully validated before moving to the next step
+
+
+                # PreMkt - get validated once for the day and then used for all steps
+                # volume is already run in the daily setup
+                strat.pass_if(step=1, scoreCol=self.score_cols.time,   operator='>', threshold=1)
+                
+                # Step 1) - Moves up
+                strat.pass_if(step=2, scoreCol=self.score_cols.level_premkt_gt, operator='>', threshold=1)
+
+                # Step 2) - Pulls back and touches a level
+                strat.pass_if(step=3, scoreCol=self.score_cols.touches, operator='>', threshold=1)
+
+                # Step 3) - Pullback Quality
+                strat.pass_if(step=4, scoreCol=self.score_cols.pullback, operator='>', threshold=1)
+
+                # Step 4) - Buy Signals
+                strat.pass_if(step=5, scoreCol=self.score_cols.buysetup, operator='>', threshold=1)
+                strat.pass_if(step=5, scoreCol=self.score_cols.buy,      operator='>', threshold=1)
+                strat.pass_if(step=5, scoreCol=self.score_cols.rtm,      operator='>', threshold=1)
+
+
+                # resets all steps if any of the following events are true. can be applied to a step or all steps
+                """
+                -- Buysetup fails
+                -- price breaks below the first 5 min bar low
+                -- price breaks below days lows 
+                """
+                strat.reset_if(step=2, scoreCol='L_BuySetup_isFail',  operator='>', threshold=1, startFromStep=2)
+                strat.reset_if(step=5, scoreCol=self.score_cols.reset_if_breaks, operator='>', threshold=1, startFromStep=2)
+
+                """
+                Retruns:
+                -- current step: the step that is being evaluated
+                -- steps passed: the number of steps that have been passed
+                -- conditions met: the number of conditions that have been met
+                -- action: 'BUY' or 'SELL'
+                """
+
+                f.add_multi_ta(strat, [
+                    ChartArgs({'dash': 'solid', 'color': 'cyan', 'width':5},     chart_type='lines+markers', row=5, columns=[strat.name_pct_complete])
+                ],
+                runOnLoad=False)
+        
+        self.stats.status = SignalStatus.PRE_MARKET
+        self.stats.status_why = f"Intraday TA is set up {self.intradaySizes}"
+
+    # ------- Imports -------------------
+
+    def import_market_data(self, df:pd.DataFrame, timeframe:str, prefix:str='imported_'):
+        self.frames[timeframe].import_data(df, importCols=['open', 'high', 'low', 'close', 'volume'], prefix=prefix)
 
     def import_all_market_data(self, mktStockX:object):
         """takes a different StockX object such as SPY and imports all its data (OHLCV) into this StockX object.
@@ -1021,78 +1231,61 @@ class StockX:
                     # print(f'Importing {fromBarsize} to {barsize}')
                     importCols = column_map[fromBarsize]
                     f.import_data(from_f.data, importCols=importCols, prefix=fromBarsize+'_')
-                    print(f.data.columns)
-
     
-    def run_day_frame(self, ls, lookBack, atrSpan, sigRow=3, validationRow=4):
-        f = self.frames['1 day']
-        pointsSpan = 10
-        ps.ma_ta(f, [50, 150, 200])
-        f.add_ta(ta.ATR(span=atrSpan), {'dash': 'solid', 'color': 'cyan', 'width': 1}, row=3, chart_type='')
-        f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=3), [{'color': 'green', 'size': 3}, {'color': 'red', 'size': 10}], chart_type = 'points')
-        f.add_ta(ta.HPLP(hi_col='high', lo_col='low', span=pointsSpan), [{'color': 'green', 'size': 10}, {'color': 'red', 'size': 4}], chart_type = 'points')
-        f.add_ta(ta.SupResAllRows(hi_point_col=f'HP_hi_{pointsSpan}', lo_point_col=f'LP_lo_{pointsSpan}', atr_col=f'ATR_{atrSpan}', tolerance=1, rowsToUpdate=lookBack),
-        [{'dash': 'solid', 'main_line_colour': 'green', 'zone_edge_colour': 'rgba(0, 255, 0, 0.3)', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 1}, # support # green = rgba(0, 255, 0, 0.1)
-        {'dash': 'solid', 'main_line_colour': 'red', 'fillcolour': "red", 'zone_edge_colour': 'rgba(255, 0, 0, 0.3)', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
-        chart_type = 'support_resistance')
-        f.add_ta(sig.RoomToMove(ls=ls, tgetCol='Res_1_Lower', atrCol=f'ATR_{atrSpan}', unlimitedVal=10, normRange=(0,100), lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
-        f.add_ta(sig.GapsSize( atrCol=f'ATR_{atrSpan}', normRange=(0,100), lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=sigRow)
-        f.add_ta(sig.PctDiff(metricCol1='close', metricCol2='MA_cl_50', lookBack=lookBack), {'dash': 'solid', 'color': 'yellow', 'width': 1}, chart_type='line', row=sigRow)
-        ta_rs = f.add_ta(ta.RSATRMA(comparisonPrefix='SPY', ma=14, atr=atrSpan), 
-                [{'dash': 'solid', 'color': 'yellow', 'width': 1},
-                {'dash': 'solid', 'color': 'cyan', 'width': 1}], 
-                chart_type='line', row=sigRow)
+    #! -------- Run --------------------- Work in progress
+
+    def RUN_FUNDAMENTALS(self, maxDaysOld:int=10, allowedETFs:List[str]=['XLY', 'XLK', 'XLC']):
+        # runs on load 
+        self.req_fundamentals(max_days_old=maxDaysOld)
+        self.sector_ETF_is_allowed(allowedETFs)
         
-        ta_rs_name = ta_rs.names[0]
+    def RUN_SETUP(self, spy:object, dataType:str='ohlcv', endDate:str='now', forceDownload:bool=False):
+        self.spy = spy
+        self.setup_all_frames(dataType, endDate, forceDownload)
+        self.spy.setup_all_frames(dataType, endDate, forceDownload)
+        self.import_all_market_data(spy)
 
-        # -- Validations --  
-        if ls == 'LONG':
-            validations = [
-                sig.Validate(f, val1='close',             operator='>',  val2='MA_cl_50', lookBack=lookBack), # close > MA50
-                sig.Validate(f, val1='PctDiff_MA_cl_50',  operator='>',  val2=0,          lookBack=lookBack), # MA50_PCT_Cahnge  > 0
-                sig.Validate(f, val1='close',             operator='^p', val2='HP_hi_3',  lookBack=lookBack), # close breaks HP_hi_3
-                sig.Validate(f, val1='close',             operator='^p', val2='HP_hi_10', lookBack=lookBack), # close breaks HP_hi_10
-                sig.Validate(f, val1='GapSz',             operator='><', val2=(2,10),     lookBack=lookBack), # GapSz between 2 and 10
-                sig.Validate(f, val1='RTM_L_Res_1_Lower', operator='>',  val2=2,          lookBack=lookBack), # Room to move > 2 (measured by ATR units)
-                sig.Validate(f, val1=ta_rs_name,          operator='>',  val2=2,          lookBack=lookBack)  # RS > 2 (measured by ATR units)
-            ]
-            
-            for v in validations:
-                f.add_ta(v, {'dash': 'solid', 'color': 'lime', 'width': 1}, chart_type='line', row=validationRow)
+    def RUN_PRE_MARKET(self, ls:str='LONG', timeToRun:str='9:35', minPreMarketScore:float=0.5, displayCharts:bool=False, printStats:bool=False):
+        self.set_ls(ls)
+        self.setup_TA_PreMarket(lookBack=100, atrSpan=14)
+        self.setup_TA_PreMarket(lookBack=100, atrSpan=14, isSpy=True)
+
+        self.stats.score_preMkt_vol = self.get_frame_data('1 hour').iloc[-1][self.score_cols.preMkt_vol]
+        self.stats.score_1D     = self.get_frame_data('1 day').iloc[-1][self.score_cols.D1]
+        self.stats.update_score_av([self.stats.score_1D, self.stats.score_preMkt_vol])
 
 
-        # --- Final Score ---
-        cols=[v.name for v in validations]
-        f.add_ta(sig.Score(name=f'{ls[0]}_VALIDATION', cols=cols, scoreType='mean', weight=1, lookBack=lookBack), {'dash': 'solid', 'color': 'magenta', 'width': 3}, chart_type='line', row=validationRow)
+        if printStats:
+            self.stats = self.get_stats()
+            display(pd.DataFrame(self.stats.__dict__, index=[0]))
 
-    def run_intraday_frames(self, lookback:int=1, plot:bool=False):
-        frames_run = []
-        if '1 hour' in self.frames:
-            f_1hr = self.frames['1 hour']
-            ps.require_ta_for_all(f_1hr)
-            ps.ma_ta(f_1hr, [50, 150, 200])
-            frames_run.append('1 hour')
+        if displayCharts:
+            self.spy.frames['1 day'].plot()  #!to Fix -- spy not plotting TA
+            print(f'Score: 1 day             --  {self.stats.score_1D}')   
+            print(f'Score: Pre Market Volume --  {self.stats.score_preMkt_vol}') 
+            print(f'Score: preMkt Average    --  {self.stats.score_AVG}')
+            self.frames['1 day'].plot()
+            self.frames['1 hour'].plot()
 
-        if '5 mins' in self.frames:
-            f_5min = self.frames['5 mins']
-            ps.require_ta_for_all(f_5min)
-            ps.ma_ta(f_5min, [8, 21, 50])
-            frames_run.append('5 mins')
-
-        if '2 mins' in self.frames:
-            f_5min = self.frames['2 mins']
-            ps.require_ta_for_all(f_5min)
-            ps.ma_ta(f_5min, [8, 21])
-            frames_run.append('2 mins')
+    def RUN_INTRADAY(self, updateEverySeconds:int=1, myTradingTimes:List[Tuple[str, str]]=None, maxTrades:int=3, displayCharts:bool=False, logTrades:bool=False):
+        """
+        1. Runs all frames to look for a buy signal
+        2. If a buy signal is found it will place the order
+        3. follow up with the trade
+        4. log the trade
+        5. start again but check trade limits"""
+        self.setup_TA_intraday(lookBack=100, atrSpan=14)
+        if displayCharts:
+            print(f'Score: 1 day             --  {self.stats.score_1D}')   
+            print(f'Score: Pre Market Volume --  {self.stats.score_preMkt_vol}') 
+            print(f'Score: preMkt Average    --  {self.stats.score_AVG}')
+            print('----------------------------------------------')
+            print(f'Score: 5 mins  --  {self.stats.score_5M}')
+            self.frames['5 mins'].plot()
         
-        print(f"Ran intraday frames: {frames_run}")
+        pass
 
-        if plot:
-            for frame in frames_run:
-                print(f"Plotting {frame}")
-                self.frames[frame].plot()
-      
-
+    #! ------- Update ------------------- Work in progress
 
     def req_tick_data(self, timeframe):
         # request the tick data from the data source
@@ -1107,7 +1300,38 @@ class StockX:
         # add the rows to the data frame.  eg if new data such as market data is added
         pass
 
+    #! ------- Trading ------------------- Work in progress
 
+    def setup_trader(self):
+        #! below is copied from TEST_order.ipynb
+
+        self.trader.add_entry(entryx=EntryX(orderType='STP', longPriceCol='high', shortPriceCol='low', barsAgo=1, offsetPct=0.00, limitOffsetPct=0.001))
+        # self.trader.add_entry(entryx=EntryX(orderType='MKT'))
+
+        trailInitType = 'rrr'
+        self.trader.add_stop_and_target(qtyPct=25,
+                                targetx=TargetX(longPriceCol='Res_1', shortPriceCol='Sup_1', offsetVal=0.50, barsAgo=1, rrIfNoTarget=2),
+                                initStop=StopX(longPriceCol='LoIst_lo_3', shortPriceCol='HiIst_hi_3', offsetVal=0.50, barsAgo=1),
+                                trailingStopPrices= [
+                                        TrailX(initType=trailInitType, initTrigVal=1, barsAgo=2, longPriceCol='FFILL_LP_lo_3', shortPriceCol='FFILL_HP_hi_3', offsetVal=0.01),
+                                        TrailX(initType=trailInitType, initTrigVal=2, barsAgo=2, longPriceCol='MA_cl_50',      shortPriceCol='MA_cl_50',      offsetVal=0.01),
+                                        TrailX(initType=trailInitType, initTrigVal=3, barsAgo=2, longPriceCol='MA_cl_21',      shortPriceCol='MA_cl_21',      offsetVal=0.01)
+                            ])
+
+        self.trader.add_stop(qtyPct=75, 
+                            initStop=StopX(name='Stop1', longPriceCol='LoIst_lo_3', shortPriceCol='HiIst_hi_3', offsetVal=0.50, barsAgo=1),
+                            trailingStopPrices= [
+                                TrailX(name='Stop1', initType=trailInitType, initTrigVal=1, barsAgo=2, longPriceCol='FFILL_LP_lo_3', shortPriceCol='FFILL_HP_hi_3', offsetVal=0.01),
+                                TrailX(name='Stop2', initType=trailInitType, initTrigVal=2, barsAgo=2, longPriceCol='MA_cl_50',      shortPriceCol='MA_cl_50',      offsetVal=0.01),
+                                TrailX(name='Stop3', initType=trailInitType, initTrigVal=3, barsAgo=2, longPriceCol='MA_cl_21',      shortPriceCol='MA_cl_21',      offsetVal=0.01)
+                            ])
+
+    def START_TRADE(self, tf:str):
+        f = self.frames[tf]
+        self.trader.set_orders(f.data, self.riskAmount, self.outsideRth)
+        self.trader.place_orders(delay_between_orders=1)
+
+    # ------- Backtest -------------------
             
     def run_backtest(self, start: str | int, end: str | int, htf_imports: Dict[str, list] = None, save_snapshots: bool = False):
         """
@@ -1189,4 +1413,20 @@ class StockX:
                                 
                     frame.backtest_next_row()
 
+    # ------- Helpers -------------------
 
+    def display_frame_data(self, timeframe:str, column_contains:str=None):
+        if timeframe not in self.frames:
+            print(f"Timeframe '{timeframe}' not found in StockX frames")
+            return
+        cols = self.frames[timeframe].data.columns if not column_contains else [col for col in self.frames[timeframe].data.columns if column_contains in col]
+        display(self.frames[timeframe].data[cols])
+    
+    def display_columns(self, timeframe:str, contains:str=None):
+        cols = self.frames[timeframe].data.columns
+        if contains:
+            cols = [col for col in cols if contains in col]
+        display(cols)
+        
+    def display_stats(self):
+        display(self.stats)    

@@ -111,7 +111,6 @@ class OrderX:
         self.entryPrice = entryPrice
         self.entryOrderType = entryOrderType
 
-
     def _get_entry_order(self, qty, bracket_count):
         entry_order = None
         self.parentID = self._get_next_order_id()
@@ -185,7 +184,6 @@ class OrderX:
         bracket = [entry_order, stop_order, target_order]
         self.orders.extend(bracket)
         return bracket
-
 
     def add_stop_order(self, qtyPct, stop_price):
         if pd.isna(stop_price): raise ValueError(f"OrderXData.add_stop_order: stop_price cannot be None. Got {stop_price}")

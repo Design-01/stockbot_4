@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 import pandas as pd
 import copy
-import sb_order
-import sb_prices 
-from sb_prices import PriceX, EntryX, StopX, TargetX, RiskX, TrailX, AccelX, TraceX, QtyX
+from trades.sb_order import OrderX
+import trades.price_x as price_x 
+from trades.price_x import PriceX, EntryX, StopX, TargetX, RiskX, TrailX, AccelX, TraceX, QtyX
 import strategies.ta as ta
 import strategies.preset_strats as ps
 import my_ib_utils 
@@ -39,15 +39,20 @@ def all_elements_in_list(list1, list2):
 
 @dataclass
 class TraderX:
-    name:str = 'Trader1'
     ib:IB = None
     symbol:str =''
-    ls:str = 'LONG'
+    ls:str = ''
 
     def __post_init__(self):
-        self.orderX = sb_order.OrderX('Strat1', self.ib, self.symbol, self.ls) # order manager
-        self.pricexGroups = []  # list of priceX objects to manage multiple priceX objects
+        self.orderX = OrderX('Strat1', self.ib, self.symbol, self.ls) # order manager
+        self.pricexGroups = []  # list of priceX objects to manage multiple priceX objects. this is so that we can have multiple brackets ech forming a % of the total risk.  alowws for complex trades
         self.tradeSummeries = [] # list of trade summeries for each priceX object
+
+    def set_ls(self, ls:str):
+        """Set the LONG or SHORT position"""
+        if ls not in ['LONG', 'SHORT']:
+            raise ValueError("ls must be either 'LONG' or 'SHORT'")
+        self.ls = ls
 
     def validate_frame(self, f):
         """Place holder for validation of the frame. 
@@ -60,7 +65,7 @@ class TraderX:
 
     def add_stop_and_target(self, qtyPct=25, targetx:TargetX=None, initStop:StopX=None, trailingStopPrices:list[TrailX]=None):
         name  = f"{self.name}_Strat{len(self.pricexGroups)+1}"
-        pricex = sb_prices.PriceX(name=name, ls=self.ls, includeTarget=True)
+        pricex = price_x.PriceX(name=name, ls=self.ls, includeTarget=True)
         pricex.entry = copy.deepcopy(self.entryx)
         pricex.stop = initStop
         if targetx: 
@@ -74,7 +79,7 @@ class TraderX:
 
     def add_stop(self, qtyPct=25, initStop:StopX=None, trailingStopPrices:list[TrailX]=None):
         name  = f"{self.name}_Strat{len(self.pricexGroups)+1}"
-        pricex = sb_prices.PriceX(name=name, ls=self.ls, includeTarget=False)
+        pricex = price_x.PriceX(name=name, ls=self.ls, includeTarget=False)
         pricex.entry = copy.deepcopy(self.entryx)
         pricex.stop = initStop
         if trailingStopPrices: 
@@ -88,7 +93,7 @@ class TraderX:
             pricex.set_ls()
             pricex.set_columns(data)
 
-    def set_orders(self, data=None, riskAmount=None, outsideRth=False, delay_between_orders=0):
+    def set_orders(self, data=None, riskAmount=None, outsideRth=False):
         totalQty = 0
         potential_loss = 0
         total_value = 0
@@ -225,11 +230,11 @@ class TraderX:
     def get_status(self):
         statuses = [px[1].status for px in self.pricexGroups]
         print(statuses)
-        if all_elements_in_list(statuses, sb_prices.ENTERING_STATES):
+        if all_elements_in_list(statuses, price_x.ENTERING_STATES):
             return TradeXStatus.ENTERING
-        elif all_elements_in_list(statuses, sb_prices.TRADE_STATES):
+        elif all_elements_in_list(statuses, price_x.TRADE_STATES):
             return TradeXStatus.IN_TRADE
-        elif all_elements_in_list(statuses, sb_prices.EXIT_STATES):
+        elif all_elements_in_list(statuses, price_x.EXIT_STATES):
             return TradeXStatus.EXITED
 
     def START(self, f, riskAmount, outsideRth=False, delay_between_orders=1):

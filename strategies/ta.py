@@ -485,17 +485,18 @@ class MACD(TA):
 
 
 @dataclass
-class RSATRMA(TA):
+class RS(TA):
     "Realtive Strength Average True Range Moving Average "
     comparisonPrefix: str = 'SPY'
-    ma: int = 14
     atr: int = 14
+    ma: int = 14
 
     def __post_init__(self):
-        self.name_rs = f"RS_{self.comparisonPrefix}_{self.atr}"
-        self.name_atr = f"RS_MA_{self.comparisonPrefix}_{self.atr}_{self.ma}"
-        self.names = [self.name_rs, self.name_atr]
+        self.name = f"RS_{self.comparisonPrefix}_{self.atr}"
+        self.name_ma = f"{self.name}_ma"
+        self.names = [self.name]
         self.rowsToUpdate = max(self.atr, self.ma) + 1
+
 
     @preprocess_data
     def run(self, data: pd.DataFrame) -> pd.Series:
@@ -514,10 +515,10 @@ class RSATRMA(TA):
         stk_change = (data['close'] - data['close'].shift(1)) / stk_atr
 
         # compute relative strength and relative strength moving average
-        data[self.name_rs]  = stk_change - abs(mkt_change) # mkt can be negative so 3 - 2 = 1 ..  but alos want 3- -2 = 1
-        data[self.name_atr] = data[self.name_rs].rolling(window=self.ma).mean()
+        data[self.name]  = stk_change - abs(mkt_change) # mkt can be negative so 3 - 2 = 1 ..  but alos want 3- -2 = 1
+        data[self.name_ma] = data[self.name].rolling(window=self.ma).mean()
 
-        return data[[self.name_rs, self.name_atr]].round(2)
+        return data[[self.name, self.name_ma]].round(2)
 
 
 @dataclass
