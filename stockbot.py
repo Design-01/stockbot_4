@@ -39,21 +39,24 @@ class StockBot:
     def disiconnect_from_ib(self):
         self.ib.disconnect()
 
-    def scan(self, scanCode:str, price:Tuple[int, int], volume:int, changePerc:int, marketCap:int, limitEachCap:int):
+    def scan(self, 
+             scanCode:str ='TOP_PERC_GAIN',
+            priceRange: tuple[float, float] = (1, 100),
+            avgVolumeAbove: int = 100_000,
+            changePercent: float = 4,  # Changed from changePercAbove
+            marketCapRange: tuple[float, float] = (100, 10000), # value is in millions
+            location='STK.US.MAJOR'):
         # multi scan breaks the scan by market cap into smaller chunks so more than 50 stocks can be scanned
-        self.scanner.multiscan(
-            scan_code=scanCode, 
-            price=price,
-            volume=volume, 
-            change_perc=changePerc, 
-            market_cap=marketCap, # in millions
-            limit_each_cap=limitEachCap
+        
+        self.scanner.scan(
+            scanCode=scanCode, 
+            priceRange=priceRange,
+            avgVolumeAbove=avgVolumeAbove, 
+            changePercent=changePercent, 
+            marketCapRange=marketCapRange, # in millions
         )
 
-        # set up the tracker for the results
-        self.tracker_df = pd.DataFrame(index=self.scanner.scan_results_df.index)
-        self.tracker_df['symbol'] = self.scanner.scan_results_df['Symbol']
-        self.tracker_df['rank'] = self.scanner.scan_results_df['Rank']
+
 
     def setup_stocks(self, overrideScnaedStockList:Optional[List[str]]=None):
         """Sets up the stocks if they have passed the fundamentals by looking at the scanner results."""

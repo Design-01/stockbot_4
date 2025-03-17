@@ -912,7 +912,7 @@ class StockX:
         self.trader = TraderX(self.ib, self.symbol)
         self.ls = '' # LONG or SHORT
         self.spy = None
-        self.score_cols = StockScoreCols()
+        self.score_cols = StockScoreCols()  # a way of managing the various score columns produced and sharing accorss the different methods
 
     # ------ Get Methods ----------------
 
