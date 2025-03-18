@@ -838,12 +838,45 @@ class TAData:
     row: int = 1
 
 class SignalStatus:
+    DAILY_TA = "DAILY_TA"
     PRE_MARKET = "PRE_MARKET"
     IN_TRADE  = "IN_TRADE"
     PENDING   = "PENDING"
     CANCELLED = "CANCELLED"
     COMPLETED = "COMPLETED"
     INACTIVE  = "INACTIVE"
+
+@dataclass
+class StockStatsDaily:
+    # Stock information
+    symbol: str = ''
+    snapshotTime: datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    status: SignalStatus = SignalStatus.DAILY_TA
+
+    # Basic fundamentals
+    price: float = 0.0
+    marketCap: float = 0.0
+    currentPrice: float = 0.0
+    peRatio: float = 0.0
+    vol10dayAvg: float = 0.0
+
+    # Daily stats
+    vol_TODC : float = 0.0 # Volume Time of Day Change
+    priceChgPct: float = 0.0
+    breaksAbove10DayAvg: bool = False
+    breaksAbove50MA: bool = False
+    breaksAbove200MA: bool = False
+    breaksBelow50MA: bool = False
+    breaksBelow200MA: bool = False
+
+    # Scores
+    scoreVol : float = 0.0
+    scoreGaps : float = 0.0
+    scoreRTM : float = 0.0
+    score_1D : float = 0.0
+
+    # validation results
+    validAv_1D : float = 0.0
 
 @dataclass
 class StockStats:
@@ -856,7 +889,7 @@ class StockStats:
 
     # Score information
     score_1D: float = 0.0
-    score_preMkt_vol: float = 0.0
+    score_vol_TODC: float = 0.0
     score_5M: float = 0.0
     score_2M: float = 0.0
     score_AVG: float = 0.0
@@ -875,12 +908,12 @@ class StockStats:
     exit_time: Optional[datetime] = None
 
     def update_score_av(self, scores:list[str]=None):
-        scores = scores if scores else [self.score_1D, self.score_preMkt, self.score_5M, self.score_2M] 
-        self.score_AVG = sum(scores) / len(scores)   
+        scores = scores if scores else [self.score_1D, self.score_vol_TODC, self.score_5M, self.score_2M] 
+        self.score_AVG = round(sum(scores) / len(scores), 1)   
         
 @dataclass
 class StockScoreCols:
-    preMkt_vol : str = ''
+    vol_TODC : str = ''
     D1 : str = ''
     M5 : str = ''
     M2 : str = ''
@@ -894,12 +927,14 @@ class StockScoreCols:
     bsw : str = ''
     buysetup : str = ''
     rtm : str = ''
-    buy : str = ''
+    buy : str = '' 
+    gaps : str = ''
 
 @dataclass
 class StockX:
     ib: IB = None
     symbol: str = ''
+    ls: str = '' # LONG or SHORT
     intradaySizes: List[str] = field(default_factory=list)
     tradeSizes: List[str] = field(default_factory=list)
     riskAmount: float = 100.00
@@ -909,8 +944,8 @@ class StockX:
         self.fundamentals = stock_fundamentals.Fundamentals(self.ib, self.symbol)
         self.frames = {}
         self.stats = StockStats(self.symbol)
+        self.stats_daily = StockStatsDaily(self.symbol)
         self.trader = TraderX(self.ib, self.symbol)
-        self.ls = '' # LONG or SHORT
         self.spy = None
         self.score_cols = StockScoreCols()  # a way of managing the various score columns produced and sharing accorss the different methods
 
@@ -921,9 +956,12 @@ class StockX:
             return None
         return self.frames[timeframe]
     
-    def get_frame_data(self, timeframe:str):
+    def get_frame_data(self, timeframe:str, colsContains:List[str]=None):
         if timeframe not in self.frames:
             return None
+        if colsContains:
+            cols  = [col for col in self.frames[timeframe].data.columns if colsContains in col]
+            return self.frames[timeframe].data[cols]
         return self.frames[timeframe].data
     
     def get_score_status_by_item(self, item_name: str, dataType:str) -> float:
@@ -1013,7 +1051,11 @@ class StockX:
         self.ls = ls
         self.trader.set_ls(ls)
 
-    def setup_frame(self, timeframe, dataType:str='random', start_date:str="52 weeksAgo", end_date:str='now', force_download:bool=False):
+    def setup_frame(self, timeframe, dataType:str='random', start_date:str="52 weeksAgo", end_date:str='now', force_download:bool=False, isIntradayFrame:bool=False, isTradeFrame:bool=False):
+        if isIntradayFrame:
+            self.intradaySizes.append(timeframe)
+        if isTradeFrame:
+            self.tradeSizes.append(timeframe)
         name = timeframe          
         
         self.frames[name] = Frame(self.symbol, name=name, rowHeights=[0.1, 0.1, 0.1, 0.1, 0.1, 0.5])
@@ -1056,30 +1098,6 @@ class StockX:
         for barsize in self.intradaySizes:
             sd = barsize_start_dates[barsize]
             self.setup_frame(barsize, dataType, start_date=sd, end_date=end_date, force_download=force_download)
-
-    def setup_TA_PreMarket(self, lookBack, atrSpan, sigRow=3, validationRow=4, isSpy:bool=False):
-        if isSpy:
-            spy = self.spy.frames['1 day']
-            ps.TA_TA(spy, lookBack, atrSpan, pointsSpan=10, isDaily=True)
-            return
-
-        f_D1 = self.frames['1 day']
-        f_H1 = self.frames['1 hour']
-        
-        # basic TA
-        ps.TA_TA(f_D1, lookBack, atrSpan, pointsSpan=10, isDaily=True)
-        ps.TA_TA(f_H1, lookBack, atrSpan, pointsSpan=10, isDaily=False)
-        
-        # Pre Martket TA
-        ps.TA_Levels(f_H1) # not require for pre market but saves running in intraday 
-        ps.SCORE_TA_Volume(f_H1, lookBack, volMA=10, TArow=sigRow, scoreRow=validationRow)
-
-        # scores
-        self.score_cols.preMkt_vol = ps.SCORE_VALID_premkt_volume(f_H1, self.ls, lookBack, sigRow, validationRow)
-        self.score_cols.D1         = ps.TA_Daily(f_D1, self.ls, pointCol='HP_hi_10', atrSpan=atrSpan, lookBack=1, TArow=3, scoreRow=4)
-
-        self.stats.status = SignalStatus.PRE_MARKET
-        self.stats.status_why = "Daily TA is set up"
 
     def setup_TA_intraday(self, lookBack, atrSpan, sigRow=3, validationRow=4):
 
@@ -1233,6 +1251,91 @@ class StockX:
                     f.import_data(from_f.data, importCols=importCols, prefix=fromBarsize+'_')
     
     #! -------- Run --------------------- Work in progress
+
+    def RUN_DAILY(self, spy:object=None, isMarket:bool=False, displayCharts:bool=False, printStats:bool=False, forceDownload:bool=False):
+        self.setup_frame('1 day', 'ohlcv', start_date="52 weeksAgo", end_date='now', force_download=False)
+        self.setup_frame('1 hour', 'ohlcv', start_date="3 weeksAgo", end_date='now', force_download=False, isIntradayFrame=True)
+        if isMarket:
+            return
+
+        f_D1 = self.frames['1 day']
+        f_H1 = self.frames['1 hour']
+        self.import_all_market_data(spy)
+
+        # args
+        lookBack = 30
+        atrSpan = 14
+        sigRow = 3
+        validationRow = 4
+        
+        # basic TA
+        ps.TA_TA(f_D1, lookBack, atrSpan, pointsSpan=10, isDaily=True)
+        ps.TA_TA(f_H1, lookBack, atrSpan, pointsSpan=10, isDaily=False)
+        ps.TA_Levels(f_H1) # not require for pre market but saves running in intraday 
+        self.import_all_HTF_data()
+
+        # Scores
+        pointCol = 'HP_hi_10' if self.ls == 'LONG' else 'LP_lo_10'
+        self.score_cols.vol_TODC = ps.TA_Daily_Volume_Change(f_H1, lookBackDays=10) # lookcBackDays specific to VolumeTimeOfDayChangePct. (not the same as lookBack)
+        self.score_cols.D1       = ps.TA_Daily(f_D1, self.ls, pointCol=pointCol, atrSpan=atrSpan, lookBack=lookBack, TArow=3, scoreRow=4)
+        self.score_cols.gaps     = ps.SCORE_Gaps(f_D1, ls=self.ls, pointCol=pointCol, atrSpan=atrSpan, lookBack=lookBack, TArow=3, scoreRow=4)
+        self.score_cols.rtm      = ps.SCORE_TA_RTM_DAILY(f_D1, ls=self.ls, atrSpan=atrSpan, lookBack=lookBack, TArow=3, scoreRow=4)
+
+        self.stats.status = SignalStatus.DAILY_TA
+        self.stats.status_why = "Daily TA is set up"
+
+        if displayCharts:
+            self.spy.frames['1 day'].plot()  
+            print(f'Score: 1 day             --  {self.stats.score_1D}')   
+            print(f'Score: Pre Market Volume --  {self.stats.score_preMkt_vol}') 
+            print(f'Score: preMkt Average    --  {self.stats.score_AVG}')
+            self.frames['1 day'].plot()
+            self.frames['1 hour'].plot()
+
+    def set_daily_stats(self, displayCharts:bool=False, printStats:bool=False, forceDownload:bool=False, incFundamentals:bool=True):
+        # setup the daily stats
+        self.stats_daily = StockStatsDaily(self.symbol)  # auto sets the time to now
+        self.stats_daily.price = self.get_frame_data('1 day').iloc[-1]['close']
+
+        # get the latest fundamentals
+        if incFundamentals:
+            self.req_fundamentals(max_days_old=10)
+        if self.fundamentals.fundamentals is None:
+            print(f"StockX {self.symbol}::set_daily_stats: Fundamentals are not found.")
+        else:
+            self.stats_daily.marketCap = self.fundamentals.fundamentals.market_cap
+            self.stats_daily.currentPrice = self.fundamentals.fundamentals.current_price
+            self.stats_daily.peRatio = self.fundamentals.fundamentals.pe_ratio
+            self.stats_daily.vol10dayAvg = self.fundamentals.fundamentals.volume_10day_avg
+   
+        # set the stats
+        self.stats_daily.scoreVol = round(self.get_frame_data('1 hour').iloc[-1][self.score_cols.vol_TODC], 2)
+        self.stats_daily.scoreGaps = round(self.get_frame_data('1 day').iloc[-1][self.score_cols.gaps], 2)
+        self.stats_daily.scoreRTM = round(self.get_frame_data('1 day').iloc[-1][self.score_cols.rtm], 2)
+        self.stats_daily.score_1D = round(sum([self.stats_daily.scoreVol, self.stats_daily.scoreGaps, self.stats_daily.scoreRTM]) / 3, 2)
+        self.stats_daily.validAv_1D = round(self.get_frame_data('1 day').iloc[-1][self.score_cols.D1], 2)
+
+        prev_day = self.get_frame_data('1 day').iloc[-2]
+        today = self.get_frame_data('1 day').iloc[-1]
+        close_tday = self.get_frame_data('1 hour').iloc[-1]['close']
+        close_yday = prev_day['close']
+        ma50_yday = prev_day['MA_cl_50']
+        ma200_yday = prev_day['MA_cl_200']
+        ma50_today = today['MA_cl_50']
+        ma200_today = today['MA_cl_200']
+
+        self.stats_daily.breaksAbove50MA = close_yday < ma50_yday and close_tday > ma50_today
+        self.stats_daily.breaksAbove200MA = close_yday < ma200_yday and close_tday > ma200_today
+        self.stats_daily.breaksBelow50MA =  close_yday > ma50_yday and close_tday < ma50_today
+        self.stats_daily.breaksBelow200MA = close_yday > ma200_yday and close_tday < ma200_today
+
+        self.stats_daily.priceChgPct = round((close_tday - close_yday) / close_yday, 2) * 100
+
+
+        if printStats:
+            self.stats = self.get_stats()
+            display(pd.DataFrame(self.stats_daily.__dict__, index=[0]))
+
 
     def RUN_FUNDAMENTALS(self, maxDaysOld:int=10, allowedETFs:List[str]=['XLY', 'XLK', 'XLC']):
         # runs on load 

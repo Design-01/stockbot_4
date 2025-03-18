@@ -22,6 +22,7 @@ class StockBot:
        self.ma = ma.IBMarketAnalyzer(self.ib)
        self.scanner = StockbotScanner(self.ib)
        self.stocks = {}
+       self.stats_daily = []
 
        # --- store results
        self.tracker_df = pd.DataFrame()
@@ -57,19 +58,31 @@ class StockBot:
         )
 
 
+    def setup_stocks_from_scanner(self) -> List[StockX]:
+        # set up spy first 
+        self.stocks['SPY'] = StockX(self.ib, 'SPY', ls='LONG')
 
-    def setup_stocks(self, overrideScnaedStockList:Optional[List[str]]=None):
-        """Sets up the stocks if they have passed the fundamentals by looking at the scanner results."""
-        stocklist = []
-        if overrideScnaedStockList:
-            #setup  tracker_df with the override list
-            self.tracker_df = pd.DataFrame({'symbol': overrideScnaedStockList})
-            stocklist = overrideScnaedStockList
-        else:
-            stocklist = self.tracker_df['symbol'].to_list()
+        # get list of stocks from scanner
+        for row in self.scanner.get_results().itertuples():
+            ls = ''
+            if row.scanCode == 'TOP_PERC_GAIN': ls = 'LONG'
+            elif row.scanCode == 'TOP_PERC_LOSE': ls = 'SHORT'
+            self.stocks[row.symbol] = StockX(self.ib, row.symbol, ls=ls)
 
-        for symbol in stocklist:
-            self.stocks[symbol] = StockX(self.ib, symbol)
+        return self.stocks
+    
+    def run_stock_daily_analysis(self, limit:int=5):
+        self.stocks['SPY'].RUN_DAILY(isMarket=True)
+        count = 0
+
+        for stock in self.stocks.values():
+            if count == 5: break
+            stock.RUN_DAILY(self.stocks['SPY'])
+            stock.set_daily_stats()
+            self.stats_daily.append(stock.stats_daily)
+            
+            count += 1
+
 
     def run_fundamentals(self, allowedETFs:Optional[List[str]]=None):
         """Checks and logs the fundamentals and sets the results to the scanner results DataFrame."""

@@ -1138,6 +1138,7 @@ class GappedPivots(Signals):
     name: str = 'GPivs'
     pointCol: str = ''
     spanPivots: int = 20
+    ls: str = 'LONG'  # Added default value
 
     def __post_init__(self):
         self.name = f"{self.ls[0]}_{self.name}"
@@ -1153,18 +1154,19 @@ class GappedPivots(Signals):
         
         if len(pivots) == 0:
             return 0
-        else:
-            span_pivs = pivots.iloc[-min(self.spanPivots, len(pivots)):]
-            pivots = pivots.iloc[-span_pivs:]
+        
+        # Use an integer for slicing, not a Series
+        span_pivs = min(self.spanPivots, len(pivots))
+        recent_pivots = pivots.iloc[-span_pivs:]
 
         current_open = df['open'].iloc[-1]
         prev_close = df['close'].iloc[-2]
         
         # Only count pivots that fall within the gap range
         if self.ls == 'LONG' and current_open > prev_close:
-            return sum((pivot > prev_close) & (pivot < current_open) for pivot in pivots)
+            return sum((pivot > prev_close) & (pivot < current_open) for pivot in recent_pivots)
         elif self.ls == 'SHORT' and current_open < prev_close:
-            return sum((pivot < prev_close) & (pivot > current_open) for pivot in pivots)
+            return sum((pivot < prev_close) & (pivot > current_open) for pivot in recent_pivots)
 
         return 0
 
@@ -1226,7 +1228,7 @@ class GappedPastPivot(Signals):
     name: str = 'GPP'
     atrCol: str = ''
     pointCol: str = ''
-    maxAtrMultiple: int = 10  # Number of ATR past pivot before score starts diminishing
+    maxAtrMultiple: int = 1  # Number of ATR past pivot before score starts diminishing
 
     def _compute_row(self, df: pd.DataFrame) -> float:
         """
@@ -1285,9 +1287,12 @@ class GapSize(Signals):
         
         if current_atr == 0:
             return 0.0
-            
+        
+        # * 100 make this a % value
+        # 50 would mean the gap is 50% of ATR
+        # 120 would mean the gap is 120% of ATR
         gap = current_open - prev_close
-        return gap / current_atr 
+        return gap / current_atr * 100  
 
 # -----------------------------------------------------------------------
 # ---- S E N T I M E N T ------------------------------------------------

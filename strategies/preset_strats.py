@@ -203,6 +203,13 @@ def TA_Levels(f):
     ]
     batch_add_ta(f, tas,  {'dash': 'dash', 'color': 'yellow', 'width': 1}, chart_type='line', row=1) 
 
+def TA_RTM(f, ls:str='LONG', atrSpan:int=50, lookBack:int=1, TArow:int=3):
+    tas = [
+        sig.RoomToMove(ls=ls, tgetCol='Res_1_Lower', atrCol=f'ATR_{atrSpan}', unlimitedVal=5, normRange=(0,5), lookBack=lookBack),
+    ]
+    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    return tas[0].name
+
 
 #! TODO - Decide what is important to validate
 def TA_Daily(f, ls:str='LONG', pointCol:str='HP_hi_10', atrSpan:int=10, lookBack:int=1, TArow:int=2, scoreRow:int=5):
@@ -213,7 +220,7 @@ def TA_Daily(f, ls:str='LONG', pointCol:str='HP_hi_10', atrSpan:int=10, lookBack
         sig.GappedRetracement(ls=ls, normRange=(0,100), pointCol=pointCol, atrCol=atr_col, lookBack=lookBack),
         sig.GappedPastPivot(ls=ls, normRange=(0,100), atrCol=atr_col, pointCol=pointCol, lookBack=lookBack, maxAtrMultiple=10),
         sig.GapSize(ls=ls, normRange=(0,300), atrCol=atr_col, lookBack=lookBack),
-        sig.RoomToMove(ls=ls, tgetCol='Res_1_Lower', atrCol=atr_col, unlimitedVal=10, normRange=(0,100), lookBack=lookBack)
+        sig.RoomToMove(ls=ls, tgetCol='Res_1_Lower', atrCol=atr_col, unlimitedVal=5, normRange=(0,5), lookBack=lookBack)
     ]
     batch_add_ta(f, gap_tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
 
@@ -233,18 +240,48 @@ def TA_Daily(f, ls:str='LONG', pointCol:str='HP_hi_10', atrSpan:int=10, lookBack
         sig.Validate(f, val1=ta_rs.name,          operator='>', val2=1, lookBack=lookBack),  # has a positive RS compared to the market (Relative Strength)
     ]
     batch_add_ta(f, validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
-    scoreCol = add_score(f, validations,  name=f'{ls}_Daily',  scoreType='mean', lookBack=lookBack, row=scoreRow)
+    scoreCol = add_score(f, validations,  name=f'{ls}_Daily_VALID_Score',  scoreType='mean', lookBack=lookBack, row=scoreRow)
+    return scoreCol
+
+def SCORE_Gaps(f, ls:str='LONG', pointCol:str='HP_hi_10', atrSpan:int=10, lookBack:int=1, TArow:int=2, scoreRow:int=5):
+    atr_col = f'ATR_{atrSpan}'
+    gap_tas = [
+        sig.IsGappedOverPivot(ls=ls, normRange=(0,1), pointCol=pointCol, lookBack=lookBack),
+        sig.GappedPivots(ls=ls, normRange=(0, 3), pointCol=pointCol, spanPivots=10, lookBack=lookBack),
+        sig.GappedRetracement(ls=ls, normRange=(0,100), pointCol=pointCol, atrCol=atr_col, lookBack=lookBack),
+        sig.GappedPastPivot(ls=ls, normRange=(0,100), atrCol=atr_col, pointCol=pointCol, lookBack=lookBack, maxAtrMultiple=10),
+        sig.GapSize(ls=ls, normRange=(0,300), atrCol=atr_col, lookBack=lookBack),
+    ]
+    batch_add_ta(f, gap_tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)    
+
+    validations = [
+        sig.Validate(f, val1='GapPiv_HP_hi_10',   operator='>', val2=1, lookBack=lookBack),  # has a bar gapped over the pivot
+        sig.Validate(f, val1='L_GPivs',           operator='>', val2=1, lookBack=lookBack),  # gapped pivots in the last 10 bars
+        sig.Validate(f, val1='L_GRtc',            operator='>', val2=50, lookBack=lookBack),  # gapped retracement of 50% or more
+        sig.Validate(f, val1='L_GPP',             operator='>', val2=80, lookBack=lookBack),  # gapped past pivot
+        sig.Validate(f, val1='GapSz',             operator='<', val2=400, lookBack=lookBack),  # gapped size less than 400%
+    ]
+    batch_add_ta(f, validations,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    scoreCol = add_score(f, validations,  name=f'{ls}_Gaps',  scoreType='mean', lookBack=lookBack, row=scoreRow)
     return scoreCol
 
 #------------------------------------------------------------
 # ----------   S C O R E   T A  -----------------------------
 #------------------------------------------------------------
 
+def TA_Daily_Volume_Change(f, lookBackDays:int=10, TArow:int=2):
+    tas = [
+        ta.VolumeAccumulation(),
+        ta.VolumeTimeOfDayChangePct(lookbackDays=lookBackDays),
+    ]
+    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    return tas[1].name
+
 def SCORE_TA_Volume(f, ls:str='LONG', lookBack:int=100, volMA:int=10, TArow:int=2, scoreRow:int=5):
     tas = [
         ta.MA(maCol='volume', period=volMA),
         ta.VolumeAccumulation(),
-        ta.VolumeTODC(lookbackDays=10)
+        ta.VolumeTimeOfDayChangePct(lookbackDays=10)
     ]
     batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=2)
     scores = [ 
@@ -308,12 +345,21 @@ def SCORE_TA_Bar_StrengthWeakness(f, ls:str='LONG', lookBack:int=100, atrSpan:in
     return score_col
      
 
-def SCORE_TA_RTM(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, TArow:int=2, scoreRow:int=3):
+def SCORE_TA_RTM_TRADING(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, TArow:int=2, scoreRow:int=3):
     tas = [
         sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='Res_1_Lower',        unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
         sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='1 day_Res_1_Lower',  unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
         sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='1 hour_Res_1_Lower', unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
         sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol='prev_day_high',      unlimitedVal=10, normRange=(0,10), lookBack=lookBack),
+    ]
+    batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
+    score_col = add_score(f, tas,  name=f'{ls}_RTM', scoreType='min', lookBack=lookBack, row=scoreRow) 
+    return score_col
+
+def SCORE_TA_RTM_DAILY(f, ls:str='LONG', lookBack:int=100, atrSpan:int=50, TArow:int=3, scoreRow:int=4):
+    tgetCol = 'Res_1_Lower' if ls == 'LONG' else 'Sup_1_Upper'
+    tas = [
+        sig.RoomToMove(ls=ls, atrCol=f'ATR_{atrSpan}', tgetCol=tgetCol, unlimitedVal=5, normRange=(0,5), lookBack=lookBack),
     ]
     batch_add_ta(f, tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
     score_col = add_score(f, tas,  name=f'{ls}_RTM', scoreType='min', lookBack=lookBack, row=scoreRow) 
