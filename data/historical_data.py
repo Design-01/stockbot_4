@@ -985,9 +985,11 @@ def get_hist_data(symbol, start_date, end_date, interval, force_download=False, 
         start, end, rows = None , None, None
         if stored_data is not None:
             start, end, rows = stored_data.index[0], stored_data.index[-1], len(stored_data)
+
+
         print('-------------------------------------------------------------------------------------------------')
         print(f"get_hist_data            : {symbol} {interval} ({file_interval=})")
-        print(f"Data Path                : {get_project_path('data', 'historical_data_store')}")
+        print(f"Data Path                : {get_project_path('data', 'historical_data_store')}/{symbol}_{file_interval}.csv")
         print(f"Data Stored    - Start   : {start}, End: {end}, Rows: {rows}")
         print(f"Data Requested - Start   : {start_date}, End: {end_date}")
         print(f"Missing dates            : {len(missing_dates)}")

@@ -40,6 +40,43 @@ class StockBot:
     def disiconnect_from_ib(self):
         self.ib.disconnect()
 
+    def sleep(self, seconds:int=1):
+        self.ib.sleep(seconds)
+
+    def save_stats_daily_to_csv(self, folder_path:str='scanner\day_results'):
+        """
+        Saves the scan results to a CSV file in the specified folder.
+        
+        Args:
+            folder_path (str): The folder path where the CSV file will be saved.
+        
+        Returns:
+            str: The full path of the saved CSV file.
+        """
+        import os
+        from datetime import datetime
+        
+        # Get the results as a DataFrame
+        results_df = pd.DataFrame(self.stats_daily)
+        
+        # If there are no results, print a message and return
+        if results_df.empty:
+            print("No results to save.")
+            return None
+        
+        # Create the folder if it doesn't exist
+        os.makedirs(folder_path, exist_ok=True)
+
+        current_date = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        filename = f"Day_Results_{current_date}.csv"
+        file_path = os.path.join(folder_path, filename)
+        results_df.to_csv(file_path, index=False)
+        
+        print(f"Results saved to: {file_path}")
+        return file_path
+
+
+    #£
     def scan(self, 
              scanCode:str ='TOP_PERC_GAIN',
             priceRange: tuple[float, float] = (1, 100),
@@ -57,7 +94,7 @@ class StockBot:
             marketCapRange=marketCapRange, # in millions
         )
 
-
+    #£
     def setup_stocks_from_scanner(self) -> List[StockX]:
         # set up spy first 
         self.stocks['SPY'] = StockX(self.ib, 'SPY', ls='LONG')
@@ -71,19 +108,49 @@ class StockBot:
 
         return self.stocks
     
+    #£
     def run_stock_daily_analysis(self, limit:int=5):
         self.stocks['SPY'].RUN_DAILY(isMarket=True)
         count = 0
 
         for stock in self.stocks.values():
-            if count == 5: break
+            if count == limit: break
+            if stock.isMarket: continue # automatically skip the market. gets set to True within StockX when the stock is SPY or QQQ
             stock.RUN_DAILY(self.stocks['SPY'])
             stock.set_daily_stats()
             self.stats_daily.append(stock.stats_daily)
             
             count += 1
 
+        self.save_stats_daily_to_csv()
+        
 
+    def get_daily_stats(self, query=None, sort_by='score_1D', ascending=False, top_n=None, columns=None):
+        """
+        Get and filter daily stock statistics
+        
+        Parameters:
+        -----------
+        query : str - Pandas query string (e.g., "price > 50 and score_1D > 5")
+        sort_by : str or list - Column(s) to sort by
+        ascending : bool or list of bools - Sort order
+        top_n : int - Number of top stocks to return
+        columns : list - Specific columns to return
+        
+        Returns:
+        --------
+        DataFrame - Filtered and sorted DataFrame
+        """
+        # Create DataFrame from stats list
+        df = pd.DataFrame(self.stats_daily)
+        
+        if query: df = df.query(query)
+        if sort_by: df = df.sort_values(by=sort_by, ascending=ascending)
+        if top_n is not None: df = df.head(top_n)
+        if columns: df = df[columns]
+    
+        return df
+    
     def run_fundamentals(self, allowedETFs:Optional[List[str]]=None):
         """Checks and logs the fundamentals and sets the results to the scanner results DataFrame."""
         self.tracker_df['allowedETF'] = False

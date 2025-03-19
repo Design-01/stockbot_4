@@ -238,6 +238,9 @@ class Signals(ABC):
             return self.return_series(df.index[-1:], self.get_score(0))
         
         lookback = min(self.lookBack, len(df))  # Include all rows in the lookback period
+        if lookback < 1:
+            return self.return_series(df.index[-1:], self.get_score(0))
+        
         result_series = pd.Series(np.nan, index=df.index[-lookback:])
         
         for i in range(lookback):
@@ -1281,6 +1284,8 @@ class GapSize(Signals):
 
     def _compute_row(self, df: pd.DataFrame) -> float:
         """Calculate the size of the gap relative to ATR."""
+        if len(df) < 10:
+            return 0.0
         current_open = df['open'].iloc[-1]
         prev_close = df['close'].iloc[-2]
         current_atr = df[self.atrCol].iloc[-1]

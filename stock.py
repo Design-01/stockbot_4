@@ -939,6 +939,8 @@ class StockX:
     tradeSizes: List[str] = field(default_factory=list)
     riskAmount: float = 100.00
     outsideRth: bool = False
+    isMarket: bool = False # to identify if this stock is used for main market eg SPY or QQQ
+
 
     def __post_init__(self):
         self.fundamentals = stock_fundamentals.Fundamentals(self.ib, self.symbol)
@@ -948,7 +950,7 @@ class StockX:
         self.trader = TraderX(self.ib, self.symbol)
         self.spy = None
         self.score_cols = StockScoreCols()  # a way of managing the various score columns produced and sharing accorss the different methods
-
+        self.isMarket = True if self.symbol in ['SPY', 'QQQ'] else False
     # ------ Get Methods ----------------
 
     def get_frame(self, timeframe:str):
