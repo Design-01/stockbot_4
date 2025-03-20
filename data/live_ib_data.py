@@ -89,19 +89,28 @@ class LiveData:
             return values[data]
         return tick
     
-    def format_bars_df( self, df, tz:str='US/Eastern'):
-        """ Checks 'open_' to 'open and 'time to 'date' and resets index and only returns OHLCV"""
+    def format_bars_df(self, df, tz:str=''):
+        """ Checks 'open_' to 'open and 'time to 'date' and resets index and only returns OHLCV.
+        tz : timezone to convert the index to. eg 'US/Eastern'. If empty, makes index timezone unaware while preserving original values. """
         
         if df is not None:
             amend_cols = {}
 
-            if 'open_'  in df.columns : amend_cols['open_']  = 'open'
-            if 'time'  in df.columns : amend_cols['time']  = 'date'
+            if 'open_' in df.columns: amend_cols['open_'] = 'open'
+            if 'time' in df.columns: amend_cols['time'] = 'date'
             df = df.rename(columns=amend_cols).set_index('date')
 
             # CHECK IF INDEX IS JUST A DATE (IF SO THEN DON'T TRY TO ADD TZ) OR IS A DATETIME, IN WHICH CASE ADD TZ 
-            if isinstance(df.index, pd.DatetimeIndex):  
-                df = df.tz_convert(tz)
+            if isinstance(df.index, pd.DatetimeIndex):
+                if tz != '':
+                    if df.index.tz is not None:
+                        df = df.tz_convert(tz)
+                    else:
+                        df = df.tz_localize(tz)
+                elif df.index.tz is not None:
+                    # Just strip off timezone info without changing the timestamp values
+                    df.index = pd.DatetimeIndex([t.replace(tzinfo=None) for t in df.index])
+            
             return df[['open', 'high', 'low', 'close', 'volume']].copy()
         # raise RuntimeError("SBIB :: format_bars_df Error : 'time' or 'date' not in columns. Cannot convert format ")
 
@@ -115,13 +124,14 @@ class LiveData:
         df.close.iat[-1] = price
         return df
 
-    def get_live_bar_df(self, ticker:str, format:bool=False, bsize:str='', tickUpdate:bool=True, tz:str='US/Eastern'):
+    def get_live_bar_df(self, ticker:str, format:bool=False, bsize:str='', tickUpdate:bool=True, tz:str=''):
         """ origonal columns are : time	endTime	open_	high	low	close	volume	wap	count.
         resets index from number to datetime using the time column. 
-        only uses columns: 'open_', 'high', 'low', 'close', 'volume'  """
+        only uses columns: 'open_', 'high', 'low', 'close', 'volume'.
+        tz : timezone to convert the index to. eg 'US/Eastern' """
 
-        if ticker not in self.bar_log: raise ValueError(f"SBIB Error :: {ticker} not Found")
-        if not self.live_bars_active: raise RuntimeError(f'SBIB :: Error : Streaming Bars Data not Active. Try self.reqLiveBars() ')
+        if ticker not in self.bar_log: raise ValueError(f"LiveData Error :: {ticker} not Found")
+        if not self.live_bars_active: raise RuntimeError(f'LiveData :: Error : Streaming Bars Data not Active. Try self.reqLiveBars() ')
         
         df  = self.bar_log[ticker]
         if df is None: raise ValueError(f"SBIB.get_live_bar_df :: Error :: no live bar data available") 

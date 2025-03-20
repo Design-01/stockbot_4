@@ -11,6 +11,7 @@ from frame.frame import Frame
 from scanner.scanner import StockbotScanner
 from stock import StockX
 from typing import Tuple
+from data.live_ib_data import LiveData
 
 
 
@@ -21,8 +22,10 @@ class StockBot:
        self.ib = IB()
        self.ma = ma.IBMarketAnalyzer(self.ib)
        self.scanner = StockbotScanner(self.ib)
+       self.livedata = LiveData(self.ib)
        self.stocks = {}
        self.stats_daily = []
+       self.stocksKeepLive = [] # list of symbols to keep live
 
        # --- store results
        self.tracker_df = pd.DataFrame()
@@ -108,6 +111,12 @@ class StockBot:
 
         return self.stocks
     
+    def setup_stocks(self, symbols:List[str], ls:str='LONG') -> List[StockX]:
+        for symbol in symbols:
+            self.stocks[symbol] = StockX(self.ib, symbol, ls=ls)
+        return self.stocks
+
+
     #£
     def run_stock_daily_analysis(self, limit:int=5):
         self.stocks['SPY'].RUN_DAILY(isMarket=True)
@@ -182,7 +191,21 @@ class StockBot:
             col_to_track = 'PBX_ALL_Scores'
             score = stock_data_last_row[col_to_track]
             self.insert_tracker_data(symbol, col_to_track, score)
-    
+
+    def run_live_data(self, symbols:List[str]):
+        """Runs the live data for the stocks in the list of symbols."""
+        self.stocksKeepLive = symbols
+        self.livedata.setup_tickers(self.stocksKeepLive)
+        self.livedata.setup_contracts()
+        self.livedata.reqLiveBars(show=False)
+
+    def run_live_frames(self, dataType:str='ohlcv'):
+        """Runs the live data for the stocks in the list of symbols."""
+        for symbol in self.stocksKeepLive:
+            self.stocksKeepLive[symbol].set_up_frame('1 min', 'mkt', start_date="1 D", end_date="now") 
+            self.stocksKeepLive[symbol].set_up_frame('1 min', 'primary_etf', start_date="1 D", end_date="now") 
+            self.stocksKeepLive[symbol].set_up_frame('1 min', dataType, start_date="1 D", end_date="now") 
+            self.stocksKeepLive[symbol].run_live_frame(lookback=300)
 
 
 

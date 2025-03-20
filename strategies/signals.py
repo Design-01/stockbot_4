@@ -843,12 +843,12 @@ class BarSW(Signals):
 
         # top = high - max(open, close)
         top = (high - max(open, close)) / 2 # give tails less weight
-        body = (close - open) / 2
+        body = (close - open) 
         # bot = min(open, close) - low
         bot = (min(open, close) - low) / 2 # give tails less weight
 
         score = (bot - top + body) / atr
-        # print(f"open: {open}, close: {close}, score: {score} ... ({top=} - {bot=} + {body=}) / ({high=} - {low=})")
+        # print(f"{df.index[-1]} open: {open}, close: {close}, score: {score} ... ({top=} - {bot=} + {body=}) / ({high=} - {low=})")
 
         return score
  
@@ -1177,46 +1177,55 @@ class GappedPivots(Signals):
 
 #£ Done
 @dataclass
-class GappedRetracement(Signals):
-    name: str = 'GRtc'
-    atrCol: str = ''
-    pointCol: str = ''
+class GappedWRBs(Signals):
+    name: str = 'GapWRBs'
+    bswCol: str = ''
+
+    def __post_init__(self):
+        self.name = f"{self.ls[0]}_{self.name}"
+        self.names = [self.name]
 
     def _compute_row(self, df: pd.DataFrame) -> float:
         """
-        Measures the shock value of a gap pivot crossover by calculating the retracement 
-        relative to ATR. A larger retracement indicates a more significant gap move.
+        Measures the shock value of a gap by getting the recent bars it gapped over and then adding their BarSW scores.
         """
-        # First check if we have a valid gap pivot crossover
-        has_crossover = is_gap_pivot_crossover(df, self.pointCol, self.ls)
-        if not has_crossover:
-            return 0.0
 
-        try:
-            # Get previous close and most recent pivot
-            prev_close = df['close'].iloc[-2]
-            prior_pivots = df.iloc[:-1][self.pointCol].dropna()
+        if self.ls == 'LONG':
+            # get the most recent bar price
+            price = df.close.iat[-1]
+            score_sum = 0.0
+
+            # iterate through the bars going back from the most recent bar
+            for i in range(len(df) - 2, -1, -1):  # Start from second-to-last bar and go backward
+                # if the price > high then add the BarSW score to the score_sum
+                if price > df.high.iat[i]:
+                    score_sum += df[self.bswCol].iat[i]
+                # if the price < low then break the loop and return the score_sum
+                elif price < df.low.iat[i]:
+                    break
             
-            if len(prior_pivots) == 0:
-                return 0.0
-                
-            pivot_value = prior_pivots.iloc[-1]
-            atr = df[self.atrCol].iloc[-1]
+            return score_sum
+        
+        elif self.ls == 'SHORT':
+            # get the most recent bar price
+            price = df.close.iat[-1]
+            score_sum = 0.0
+
+            # iterate through the bars going back from the most recent bar
+            for i in range(len(df) - 2, -1, -1):  # Start from second-to-last bar and go backward
+                # if the price < low then add the BarSW score to the score_sum
+                if price < df.low.iat[i]:
+                    score_sum += df[self.bswCol].iat[i]
+                # if the price > high then break the loop and return the score_sum
+                elif price > df.high.iat[i]:
+                    break
             
-            # Calculate retracement size relative to ATR
-            if self.ls == 'LONG':
-                # For longs: distance from pivot to previous close
-                retracement = pivot_value - prev_close
-            else:
-                # For shorts: distance from previous close to pivot
-                retracement = prev_close - pivot_value
-                
-            # Convert to percentage of ATR
-            shock_value = (retracement / atr) * 100
-            return shock_value
-                
-        except (IndexError, KeyError):
-            return 0.0
+            return score_sum
+        
+        # Default return if neither LONG nor SHORT
+        return 0.0
+
+
 
 
 

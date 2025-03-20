@@ -850,6 +850,7 @@ class SignalStatus:
 class StockStatsDaily:
     # Stock information
     symbol: str = ''
+    ls: str = '' # LONG or SHORT
     snapshotTime: datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     status: SignalStatus = SignalStatus.DAILY_TA
 
@@ -1296,7 +1297,7 @@ class StockX:
 
     def set_daily_stats(self, displayCharts:bool=False, printStats:bool=False, forceDownload:bool=False, incFundamentals:bool=True):
         # setup the daily stats
-        self.stats_daily = StockStatsDaily(self.symbol)  # auto sets the time to now
+        self.stats_daily = StockStatsDaily(self.symbol, self.ls)  # auto sets the time to now
         self.stats_daily.price = self.get_frame_data('1 day').iloc[-1]['close']
 
         # get the latest fundamentals
