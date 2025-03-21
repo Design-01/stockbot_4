@@ -204,7 +204,7 @@ class MA(TA):
     def __post_init__(self):
         self.name = f"MA_{self.maCol[:2]}_{self.period}"
         self.names = [self.name]
-        self.rowsToUpdate = self.period 
+        self.rowsToUpdate = 'max'
 
     @preprocess_data
     def run(self, data: pd.DataFrame) -> pd.Series:

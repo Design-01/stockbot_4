@@ -6,6 +6,9 @@ from chart.chart import Chart, ChartArgs # Use relative import for Chart
 import strategies.ta as ta
 from strategies.ta import TA
 from strategies.signals import Signals
+import numpy as np
+
+
 
 @dataclass
 class Frame:
@@ -36,6 +39,7 @@ class Frame:
             combined_data = pd.concat([self.data, ohlcv])
             # Drop duplicate indexes, keeping the last occurrence
             self.data = combined_data[~combined_data.index.duplicated(keep='last')].sort_index()
+
 
     def setup_chart(self):
         title = f"{self.symbol} ({self.name})" if self.name else self.symbol  
@@ -127,7 +131,8 @@ class Frame:
 
     def update_ta_data(self):
         """Updates the data for all the technical indicators in the frame"""
-        for ta, style, chart_type, row in self.ta:
+        for ta_group in self.ta:
+            ta = ta_group[0] # otehr items in ta_group are style, chart_type, row, nameCol, columns but only need ta object which is the first item
             self.data = self.update_data(ta.run(self.data))
     
     def import_data(self, import_df, importCols: list[str] = None, colsContain: list[str] = None, ffill:bool=False, prefix='_', merge_to_backtest: bool = False):

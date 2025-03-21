@@ -807,6 +807,7 @@ from data import historical_data as hd
 import compare
 from typing import Union, Tuple
 import pandas as pd
+import numpy as np
 
 
 
@@ -829,6 +830,8 @@ import stock_fundamentals
 import strategies.preset_strats as ps
 from trades.price_x import EntryX, StopX, TargetX, TrailX
 from trades.tradex import TraderX
+import time
+from data.live_ib_data import LiveData
 
 @dataclass
 class TAData:
@@ -949,6 +952,7 @@ class StockX:
         self.stats = StockStats(self.symbol)
         self.stats_daily = StockStatsDaily(self.symbol)
         self.trader = TraderX(self.ib, self.symbol)
+        self.livedata = LiveData(self.ib)
         self.spy = None
         self.score_cols = StockScoreCols()  # a way of managing the various score columns produced and sharing accorss the different methods
         self.isMarket = True if self.symbol in ['SPY', 'QQQ'] else False
@@ -987,6 +991,13 @@ class StockX:
 
     def get_stats(self) -> StockStats:
         return self.stats
+
+    def get_live_price(self):
+        contract = Stock(self.symbol, 'SMART', 'USD')
+        self.ib.cancelMktData(contract)
+        ticker = self.ib.reqMktData(contract)
+        self.ib.sleep(2)
+        return ticker.close
 
     #!------ Check Methods ---------------- Work in Progress
 
@@ -1054,7 +1065,7 @@ class StockX:
         self.ls = ls
         self.trader.set_ls(ls)
 
-    def setup_frame(self, timeframe, dataType:str='random', start_date:str="52 weeksAgo", end_date:str='now', force_download:bool=False, isIntradayFrame:bool=False, isTradeFrame:bool=False):
+    def setup_frame(self, timeframe, dataType:str='random', start_date:str="52 weeksAgo", end_date:str='now', force_download:bool=False, isIntradayFrame:bool=False, isTradeFrame:bool=False, isDayFrame:bool=False):
         if isIntradayFrame:
             self.intradaySizes.append(timeframe)
         if isTradeFrame:
@@ -1088,6 +1099,21 @@ class StockX:
         elif dataType == 'tick':
             # todo: implement tick data
             pass
+
+        if isDayFrame:
+            df_last = self.frames[name].data.index[-1].date()
+            today = datetime.now().date()
+            if today > df_last:
+                self.frames[name].data = self.add_today_row_live_data(self.frames[name].data)
+
+    def add_today_row_live_data(self, df):
+        today_date = datetime.now().strftime('%Y-%m-%d')
+        df.loc[today_date] = np.nan
+        live_price = self.get_live_price()
+        print(f"StockX::add_today_row_live_data: {self.symbol} {today_date} {live_price}")
+        df.loc[today_date, ['open', 'high', 'low', 'close']] = live_price
+        df.index = pd.to_datetime(df.index, format='%Y-%m-%d')
+        return df
 
     def setup_all_frames(self, dataType:str='ohlcv', end_date="now", force_download:bool=False):
         self.setup_frame('1 day', dataType, start_date="52 weeksAgo", end_date=end_date, force_download=force_download)
@@ -1256,7 +1282,7 @@ class StockX:
     #! -------- Run --------------------- Work in progress
 
     def RUN_DAILY(self, spy:object=None, isMarket:bool=False, displayCharts:bool=False, printStats:bool=False, forceDownload:bool=False):
-        self.setup_frame('1 day', 'ohlcv', start_date="52 weeksAgo", end_date='now', force_download=False)
+        self.setup_frame('1 day', 'ohlcv', start_date="52 weeksAgo", end_date='now', force_download=False, isDayFrame=True)
         self.setup_frame('1 hour', 'ohlcv', start_date="3 weeksAgo", end_date='now', force_download=False, isIntradayFrame=True)
         if isMarket:
             return
@@ -1393,18 +1419,23 @@ class StockX:
 
     #! ------- Update ------------------- Work in progress
 
-    def req_tick_data(self, timeframe):
+    def reqLiveBars(self):
         # request the tick data from the data source
-        pass
+        self.livedata.setup_tickers([self.symbol])
+        self.livedata.reqLiveBars(show=False)
+        self.ib.sleep(3)
 
-    def add_ohlcv(self, timeframe, ohlcv):
+    def updateLiveOHLCV(self, timeframes:List[str]=['5 mins'], spy:object=None):  
         # add the ohlcv to the data frame 
-        # can be used to add market data or other data not just the open high low close
-        pass
-
-    def add_rows(self, timeframe, rows):
-        # add the rows to the data frame.  eg if new data such as market data is added
-        pass
+        for barsize in timeframes:
+            ohlcv  = self.livedata.get_live_bar_df(ticker=self.symbol, format=True, bsize=barsize)
+            display(ohlcv)
+            self.frames[barsize].load_ohlcv(ohlcv)
+            self.import_all_market_data(spy)
+            self.frames[barsize].update_ta_data()
+            return self.frames[barsize].data
+    
+    
 
     #! ------- Trading ------------------- Work in progress
 
