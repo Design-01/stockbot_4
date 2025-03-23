@@ -1159,4 +1159,673 @@ class RequestTimer:
     def _remove_old_requests(self, current_time):
         while self.requests and current_time - self.requests[0] > 60:
             self.requests.popleft()
+
+
+##! ------>>>  Main function to get historical data <<<------ #
+#! TODO :  Check what is now redundant and remove it from the above code.  This new calls below should be the only ones needed.
+
+import pandas_market_calendars as mcal
+import pandas as pd
+import datetime as dt
+from typing import List, Tuple
+import time
+from project_paths import get_project_path
+import os
+import pytz
+import pandas_market_calendars as mcal
+
+INTERVAL_LIMITS = {
+    "1 min": 1,      # 1 day (in trading days)
+    "2 mins": 2,     # 2 days
+    "3 mins": 3,     # 3 days
+    "5 mins": 5,     # 5 days
+    "10 mins": 10,   # 10 days
+    "15 mins": 10,   # 10 days
+    "20 mins": 10,   # 10 days
+    "30 mins": 10,   # 10 days
+    "1 hour": 30,    # 30 days
+    "2 hours": 60,   # 60 days
+    "3 hours": 60,   # 60 days
+    "4 hours": 60,   # 60 days
+    "8 hours": 60,   # 60 days
+    "1 day": 365,    # 365 days
+    "1 week": 1000,  # Practically unlimited
+    "1 month": 1000  # Practically unlimited
+}
+
+
+STORAGE_MINUTE_INTERVALS = {'1 min', '2 mins', '3 mins', '5 mins', '10 mins', '15 mins', '20 mins', '30 mins'}
+STORAGE_HOUR_INTERVALS = {'1 hour', '2 hours', '3 hours', '4 hours', '8 hours'}
+STORAGE_DAY_INTERVALS = {'1 day', '1 week', '1 month'}
+
+
+
+class HistoricalData:
+    def __init__(self, ib:object=None):
+        self.ib = ib
+        self.new_data = []  # Store new data here
+        self.data_folder_path = 'data\historical_data_store' #! not linked yet.  see load_data()
     
+    def load_data(self, symbol, interval):
+        """
+        Load data from CSV with datetime index.
+        
+        Parameters:
+        symbol (str): Symbol identifier
+        interval (str): Data interval identifier
+        
+        Returns:
+        pd.DataFrame or None: Loaded data or None if file doesn't exist
+        """
+        interval = interval.lower().replace(' ', '_')
+        # file_path = get_project_path('data', 'historical_data_store', f'{symbol}_{interval}.csv')
+        file_path = get_project_path(self.data_folder_path, f'{symbol}_{interval}.csv')
+        if not os.path.exists(file_path):
+            print(f"File not found : {file_path}")
+            return None
+            
+        data = pd.read_csv(file_path, index_col='date', parse_dates=True)
+        
+        # Remove duplicates and sort
+        data = data[~data.index.duplicated(keep='last')].sort_index(ascending=True)
+        
+        return data
+
+    def save_data(self, data, symbol, interval):
+        """
+        Save data to CSV with consistent datetime index handling.
+        
+        Parameters:
+        data (pd.DataFrame): DataFrame to save
+        symbol (str): Symbol identifier
+        interval (str): Data interval identifier
+        """
+        # Make a copy to avoid modifying the original DataFrame
+        df = data.copy()
+        
+        # Case 1: DataFrame has no index name but has datetime index
+        if df.index.name is None and isinstance(df.index, pd.DatetimeIndex):
+            df.index.name = 'date'
+        
+        # Case 2: DataFrame has named index that's already datetime
+        elif isinstance(df.index, pd.DatetimeIndex):
+            df.index.name = 'date'  # Standardize the name
+        
+        # Case 3: Need to set datetime index from columns
+        else:
+            # Look for datetime column with various possible names
+            date_columns = [col for col in df.columns if col.lower() in ['date', 'datetime', 'time', 'timestamp']]
+            
+            if not date_columns:
+                raise ValueError("No datetime column found in DataFrame")
+            
+            # Use the first found date column
+            date_col = date_columns[0]
+            
+            # Convert to datetime if not already
+            try:
+                df[date_col] = pd.to_datetime(df[date_col])
+            except Exception as e:
+                raise ValueError(f"Failed to convert {date_col} to datetime: {str(e)}")
+            
+            # Set index
+            df.set_index(date_col, inplace=True)
+            df.index.name = 'date'
+        
+        # Sort index
+        df = df.sort_index(ascending=True)
+        
+        # Remove any duplicates in the index
+        df = df[~df.index.duplicated(keep='last')]
+        
+        # Save with date format that excludes time information if it exists
+        interval = interval.lower().replace(' ', '_')
+        filename = get_project_path(self.data_folder_path, f'{symbol}_{interval}.csv')
+        df.to_csv(filename)
+
+    def slice_data(self, df, date_list):
+        """
+        Slice a DataFrame with DatetimeIndex based on the min and max dates from a list.
+        
+        Parameters:
+        -----------
+        df : pandas.DataFrame
+            The DataFrame with DatetimeIndex to slice
+        date_list : list
+            List of date strings in format 'YYYY-MM-DD'
+        
+        Returns:
+        --------
+        pandas.DataFrame
+            Filtered DataFrame containing only rows between min and max dates (inclusive)
+        """
+        # Convert strings to datetime objects
+        date_list = pd.to_datetime(date_list)
+        
+        # Get min and max dates
+        min_date = min(date_list)
+        max_date = max(date_list)
+        
+        # Slice DataFrame using .loc
+        return df.loc[min_date:max_date]
+
+        # Example usage:
+        # date_list = ['2024-11-08', '2024-11-11', '2024-11-12']
+        # filtered_df = slice_data(time_indexed_dataframe, date_list)
+
+    def get_ib_data(self, symbol:str, interval:str, endDateTime:str, durationStr:str):
+        stock_contract = Stock(symbol, 'SMART', 'USD')
+        # rth  = False if not intraday
+        useRTH = True if interval  in ['1 day', '1W', '1M'] else False
+        bars = self.ib.reqHistoricalData(
+            stock_contract,
+            endDateTime=endDateTime,
+            barSizeSetting=interval,
+            durationStr=durationStr,
+            whatToShow='TRADES',
+            useRTH=useRTH,
+            formatDate=1)
+        return util.df(bars).set_index('date')
+    
+    def predict_ib_dates(self, end_datetime_str, duration_str, timezone_str="US/Eastern"):
+        # Parse the end date/time string
+        parts = end_datetime_str.split(' ')
+        date_str = parts[0]
+        time_str = parts[1] if len(parts) > 1 else "00:00:00"
+        tz_str = parts[2] if len(parts) > 2 else timezone_str
+        
+        # Parse into datetime object
+        end_date = dt.datetime.strptime(f"{date_str} {time_str}", '%Y%m%d %H:%M:%S')
+        
+        # Get the timezone
+        timezone = pytz.timezone(tz_str)
+        
+        # Localize the end date
+        end_date = timezone.localize(end_date)
+        
+        # Parse the duration string to get number of days
+        duration_parts = duration_str.split()
+        if len(duration_parts) != 2 or duration_parts[1] != 'D':
+            raise ValueError(f"Unsupported duration format: {duration_str}")
+        
+        duration_days = int(duration_parts[0])
+        
+        # Determine which exchange calendar to use based on the symbol
+        # This is a simplification - you may need more complex logic
+        exchange = 'NYSE'  # Default to NYSE
+
+        # Get the exchange calendar
+        calendar = mcal.get_calendar(exchange)
+        
+        # Convert to pandas Timestamp for easier date handling
+        end_timestamp = pd.Timestamp(end_date)
+        
+        # Get a date range that excludes holidays
+        # Start date is far enough back to ensure we get enough trading days
+        start_date = end_timestamp - pd.Timedelta(days=duration_days*2)  # Go back twice as many days to be safe
+        
+        # Get the market schedule between start and end dates
+        schedule = calendar.schedule(start_date=start_date.strftime('%Y-%m-%d'), 
+                                    end_date=end_timestamp.strftime('%Y-%m-%d'))
+        
+        # The schedule includes only valid trading days
+        # Take the last 'duration_days' trading days
+        if len(schedule) >= duration_days:
+            valid_days = schedule.index[-duration_days:]
+        else:
+            # Not enough trading days in the range
+            valid_days = schedule.index
+        
+        # Convert to string format
+        date_strings = [d.strftime('%Y-%m-%d') for d in valid_days]
+
+        return date_strings
+    
+    def get_unique_dates(self, data):
+        unique_dates = data.index.floor('D').unique()
+        return pd.DatetimeIndex(unique_dates).strftime('%Y-%m-%d').tolist()
+    
+    def generate_missing_data_requests(self,
+        end_datetime_str: str, 
+        duration_str: str, 
+        stored_dates: List[str],
+        timezone_str: str = "US/Eastern"
+    ) -> List[Tuple[str, str]]:
+        """
+        Generate request parameters for all missing data.
+        
+        Args:
+            symbol: Ticker symbol
+            interval: Data interval (e.g., '1 hour')
+            end_datetime_str: End date/time string
+            duration_str: Duration string
+            stored_dates: List of dates already stored in format 'YYYY-MM-DD'
+            timezone_str: Timezone string
+            
+        Returns:
+            List of (new_end_datetime, new_duration) tuples for all missing data
+        """
+        # Get expected dates based on original request
+        expected_dates = self.predict_ib_dates(end_datetime_str, duration_str, timezone_str)
+        
+        # Find missing dates
+        missing_dates = [date for date in expected_dates if date not in stored_dates]
+        
+        # If no missing dates, return empty list
+        if not missing_dates:
+            return []
+        
+        # Sort missing dates
+        missing_dates.sort()
+        
+        # Extract time and timezone from original request
+        parts = end_datetime_str.split(' ')
+        time_str = parts[1] if len(parts) > 1 else "23:59:59"
+        tz_str = parts[2] if len(parts) > 2 else timezone_str
+        
+        # Strategy 1: Try to get all missing dates in one request
+        # Check if all dates fall within a continuous business day period
+        all_missing_first = missing_dates[0]
+        all_missing_last = missing_dates[-1]
+        
+        # Count business days between first and last (inclusive)
+        first_date = dt.datetime.strptime(all_missing_first, '%Y-%m-%d')
+        last_date = dt.datetime.strptime(all_missing_last, '%Y-%m-%d')
+        
+        # Build a complete list of business days between first and last
+        business_days_between = []
+        current = first_date
+        while current <= last_date:
+            if current.weekday() < 5:  # Weekday
+                business_days_between.append(current.strftime('%Y-%m-%d'))
+            current += dt.timedelta(days=1)
+        
+        # If missing_dates == business_days_between, we can request all at once
+        if set(missing_dates) == set(business_days_between):
+            num_days = len(missing_dates)
+            new_end = last_date.strftime('%Y%m%d') + f" {time_str} {tz_str}"
+            return [(new_end, f"{num_days} D")]
+        
+        # Strategy 2: Split into groups of consecutive business days
+        requests = []
+        date_groups = []
+        current_group = [missing_dates[0]]
+        
+        for i in range(1, len(missing_dates)):
+            prev_date = dt.datetime.strptime(missing_dates[i-1], '%Y-%m-%d')
+            curr_date = dt.datetime.strptime(missing_dates[i], '%Y-%m-%d')
+            
+            # Check if dates are consecutive business days
+            day_diff = (curr_date - prev_date).days
+            is_consecutive = day_diff == 1 or (day_diff == 3 and prev_date.weekday() == 4)
+            
+            if is_consecutive:
+                current_group.append(missing_dates[i])
+            else:
+                date_groups.append(current_group)
+                current_group = [missing_dates[i]]
+        
+        date_groups.append(current_group)
+        
+        # Generate request parameters for each group
+        for group in date_groups:
+            group_size = len(group)
+            last_date_in_group = dt.datetime.strptime(group[-1], '%Y-%m-%d')
+            new_end = last_date_in_group.strftime('%Y%m%d') + f" {time_str} {tz_str}"
+            new_duration = f"{group_size} D"
+            requests.append((new_end, new_duration))
+        
+        return requests
+    
+    def consolidate_requests(self,
+        requests: List[Tuple[str, str]],
+        interval: str,
+        timezone_str: str = "US/Eastern"
+    ) -> List[Tuple[str, str]]:
+        """
+        Consolidate multiple IB data requests into fewer requests based on interval limits.
+        
+        Args:
+            requests: List of (end_datetime, duration) tuples
+            interval: Data interval (e.g., '1 hour')
+            timezone_str: Timezone string
+            
+        Returns:
+            List of consolidated (end_datetime, duration) tuples
+        """
+        if not requests:
+            return []
+        
+        # Get maximum duration allowed for this interval
+        max_days = INTERVAL_LIMITS.get(interval, 1)  # Default to 1 day if interval not found
+        
+        # Convert all request parameters to date objects for easier manipulation
+        request_dates = []
+        
+        for end_datetime, duration in requests:
+            # Parse end date
+            parts = end_datetime.split(' ')
+            date_str = parts[0]
+            time_str = parts[1] if len(parts) > 1 else "23:59:59"
+            tz_str = parts[2] if len(parts) > 2 else timezone_str
+            
+            end_date = dt.datetime.strptime(date_str, '%Y%m%d')
+            
+            # Parse duration
+            duration_parts = duration.split()
+            if len(duration_parts) != 2 or duration_parts[1] != 'D':
+                raise ValueError(f"Unsupported duration format: {duration}")
+            
+            duration_days = int(duration_parts[0])
+            
+            # Calculate start date (business days)
+            start_date = end_date
+            days_counted = 0
+            while days_counted < duration_days:
+                start_date -= dt.timedelta(days=1)
+                if start_date.weekday() < 5:  # 0-4 are Monday to Friday
+                    days_counted += 1
+            
+            request_dates.append({
+                'start_date': start_date,
+                'end_date': end_date,
+                'time_str': time_str,
+                'tz_str': tz_str,
+                'duration_days': duration_days
+            })
+        
+        # First, calculate the overall date range to check if everything fits in one request
+        overall_start = min(req['start_date'] for req in request_dates)
+        overall_end = max(req['end_date'] for req in request_dates)
+        
+        # Count business days between overall start and end
+        total_business_days = 0
+        date_check = overall_start
+        while date_check <= overall_end:
+            if date_check.weekday() < 5:  # Only count business days
+                total_business_days += 1
+            date_check += dt.timedelta(days=1)
+        
+        # If everything fits within the limit, create a single request
+        if total_business_days <= max_days:
+            # Find the request with the latest end date
+            latest_req = max(request_dates, key=lambda x: x['end_date'])
+            consolidated = [{
+                'start_date': overall_start,
+                'end_date': overall_end,
+                'time_str': latest_req['time_str'],
+                'tz_str': latest_req['tz_str'],
+                'duration_days': total_business_days
+            }]
+            
+        else:
+            # Need to split into multiple requests - sort by end_date descending (newest first)
+            request_dates.sort(key=lambda x: x['end_date'], reverse=True)
+            
+            # Consolidate overlapping or adjacent requests
+            consolidated = []
+            current = None
+            
+            for req in request_dates:
+                if not current:
+                    current = req
+                    continue
+                
+                # Check if this request can be merged with current
+                days_between = 0
+                date_check = req['end_date']
+                while date_check < current['start_date'] and days_between <= 3:  # Allow for weekend gap
+                    date_check += dt.timedelta(days=1)
+                    if date_check.weekday() < 5:  # Only count business days
+                        days_between += 1
+                
+                # Can be merged if directly adjacent (days_between <= 1)
+                # or separated only by a weekend (current start is Monday, req end is Friday)
+                mergeable = (days_between <= 1) or (
+                    days_between <= 3 and 
+                    current['start_date'].weekday() == 0 and  # Monday
+                    req['end_date'].weekday() == 4  # Friday
+                )
+                
+                # Check if merging would exceed max days
+                total_days = current['duration_days'] + req['duration_days'] + days_between
+                
+                if mergeable and total_days <= max_days:
+                    # Merge by extending current to include this request
+                    current['start_date'] = min(current['start_date'], req['start_date'])
+                    current['duration_days'] = total_days
+                else:
+                    # Can't merge, add current to consolidated and start new current
+                    consolidated.append(current)
+                    current = req
+            
+            # Add the last current
+            if 'current' in locals() and current:
+                consolidated.append(current)
+        
+        # Convert back to request parameters format
+        result = []
+        for req in consolidated:
+            # Calculate new duration (in business days)
+            duration_days = req['duration_days']
+            
+            # Format end datetime
+            end_datetime = req['end_date'].strftime('%Y%m%d') + f" {req['time_str']} {req['tz_str']}"
+            duration_str = f"{duration_days} D"
+            
+            result.append((end_datetime, duration_str))
+        
+        return result
+
+    def resample_data(self, data, original_interval):
+        """
+        Resample time series data to a specified interval.
+        
+        Parameters:
+        -----------
+        data : pandas.DataFrame
+            The DataFrame to resample, expected to have a DatetimeIndex and OHLCV columns
+        original_interval : str
+            The target interval to resample to (e.g., '1 min', '5 mins', '1 hour')
+            
+        Returns:
+        --------
+        pandas.DataFrame
+            The resampled DataFrame with OHLCV data aggregated appropriately
+        """
+        # Mapping from IB interval strings to pandas resample rule strings
+        resample_map = {
+            # Minutes
+            '1 min': '1T', '2 mins': '2T', '3 mins': '3T', '5 mins': '5T',
+            '10 mins': '10T', '15 mins': '15T', '20 mins': '20T', '30 mins': '30T',
+            # Hours
+            '1 hour': '1H', '2 hours': '2H', '3 hours': '3H', '4 hours': '4H', '8 hours': '8H',
+            # Days
+            '1 day': '1D', '1w': '1W', '1m': '1M'
+        }
+        
+        # Get the pandas resample rule
+        resample_rule = resample_map.get(original_interval)
+        
+        if resample_rule:
+            # Assuming OHLCV data structure - adjust these aggregations based on your data
+            resampled_data = data.resample(resample_rule).agg({
+                'open': 'first',
+                'high': 'max',
+                'low': 'min',
+                'close': 'last',
+                'volume': 'sum'
+            })
+            return resampled_data
+        else:
+            # If no mapping found, return the original data
+            return data
+
+    def normalize_interval(self, interval_str):
+        """
+        Normalizes interval strings to a consistent format accepted by the IB API.
+        
+        Converts various interval string formats to the standardized IB API format.
+        Examples:
+        - '1H', '1h', '1 h' → '1 hour'
+        - '2H', '2h', '2 h' → '2 hours'
+        - '5M', '5m', '5 m' → '5 mins'
+        - '1D', '1d', '1 d' → '1 day'
+        
+        Parameters:
+        -----------
+        interval_str : str
+            The interval string to normalize
+            
+        Returns:
+        --------
+        str
+            The normalized interval string in IB API compatible format
+        """
+        # Strip whitespace and convert to lowercase for consistent processing
+        interval = interval_str.strip().lower()
+        
+        # Extract the numeric part and the unit part
+        # Match one or more digits followed by optional whitespace and a unit
+        import re
+        match = re.match(r'(\d+)\s*([a-z]+)', interval)
+        
+        if not match:
+            # Return original if no match
+            return interval_str
+        
+        value, unit = match.groups()
+        value = int(value)  # Convert to integer
+        
+        # Normalize the unit part
+        if unit in ['s', 'sec', 'secs', 'second', 'seconds']:
+            unit_normalized = 'secs' if value > 1 else 'sec'
+            return f"{value} {unit_normalized}"
+            
+        elif unit in ['m', 'min', 'mins', 'minute', 'minutes']:
+            unit_normalized = 'mins' if value > 1 else 'min'
+            return f"{value} {unit_normalized}"
+            
+        elif unit in ['h', 'hr', 'hrs', 'hour', 'hours']:
+            unit_normalized = 'hours' if value > 1 else 'hour'
+            return f"{value} {unit_normalized}"
+            
+        elif unit in ['d', 'day', 'days']:
+            unit_normalized = 'days' if value > 1 else 'day'
+            return f"{value} {unit_normalized}"
+            
+        elif unit in ['w', 'wk', 'wks', 'week', 'weeks']:
+            # IB uses '1w' format for weeks
+            return f"{value}w"
+            
+        elif unit in ['mo', 'mon', 'month', 'months']:
+            # IB uses '1m' format for months
+            return f"{value}m"
+            
+        # Return the original if unit is not recognized
+        return interval_str
+
+    def get_data(self, symbol: str, interval: str, endDateTime: str, durationStr: str, print_info: bool = False):
+        """
+        Retrieve historical market data for a specific symbol by combining stored data with newly fetched data,
+        then slice it to the requested time range.
+        
+        This method follows a multi-step process:
+        1. Determine the appropriate storage interval based on the requested interval
+        2. Load existing data from storage
+        3. Identify missing date ranges that need to be requested
+        4. Consolidate those requests to minimize API calls
+        5. Fetch the missing data from Interactive Brokers
+        6. Combine new and stored data, removing duplicates
+        7. Save the consolidated dataset
+        8. Slice the data to return only the requested time period
+        9. Resample the data if the requested interval differs from the storage interval
+        
+        Parameters:
+        -----------
+        symbol : str
+            The trading symbol/ticker to fetch data for (e.g., 'AAPL', 'MSFT')
+        interval : str
+            The time interval for the data points (e.g., '1 min', '5 mins', '1 hour', '1 day')
+        endDateTime : str
+            The end date/time for the data in a format compatible with IB API (e.g., '20241108 16:00:00')
+        durationStr : str
+            The duration of data to fetch in a format compatible with IB API (e.g., '5 D', '2 W', '1 M')
+        print_info : bool, default=False
+            Whether to print information about the data retrieval process
+            
+        Returns:
+        --------
+        pandas.DataFrame
+            A DataFrame containing the historical market data for the specified symbol and time range,
+            with a DatetimeIndex, resampled to the requested interval
+        """
+        
+        # Step 1: Determine storage interval based on requested interval
+        interval = self.normalize_interval(interval)
+        original_interval = interval  # Store the original requested interval
+        
+        # Map the requested interval to the appropriate storage interval
+        if interval in STORAGE_MINUTE_INTERVALS:
+            storage_interval = '1 min'  # Store as minute data
+        elif interval in STORAGE_HOUR_INTERVALS:
+            storage_interval = '1 hour'  # Store as hourly data
+        elif interval in STORAGE_DAY_INTERVALS:
+            storage_interval = '1 day'  # Store as daily data
+        else:
+            # Default to the requested interval if not in any known category
+            storage_interval = interval
+        
+        # Step 2: Load previously stored data for this symbol and the determined storage interval
+        stored_data = self.load_data(symbol, storage_interval)
+        
+        # Step 3: Extract unique dates from stored data (if it exists)
+        stored_dates = self.get_unique_dates(stored_data) if stored_data is not None else []
+        
+        # Step 4: Determine what date ranges are missing and need to be requested
+        # This compares the stored dates with the date range requested by endDateTime and durationStr
+        missing_requests = self.generate_missing_data_requests(endDateTime, durationStr, stored_dates)
+        
+        # Step 5: Consolidate the missing date ranges to minimize the number of API calls
+        # This merges adjacent or overlapping date ranges
+        consolidated_requests = self.consolidate_requests(missing_requests, storage_interval)
+        
+        # Step 6: Fetch missing data from Interactive Brokers API using the storage interval
+        # Each request is a tuple of (end_date_time, duration_str)
+        for end_date_time, duration_str in consolidated_requests:
+            # Append each new dataset to self.new_data list, using the storage interval
+            self.new_data += [self.get_ib_data(symbol, storage_interval, end_date_time, duration_str)]
+            # Pause between requests to prevent hitting rate limits
+            time.sleep(1)
+
+        # Step 7: Combine all datasets (new and previously stored)
+        # Create a list containing all new data fetched in this session and the stored data
+        list_of_data = self.new_data + [stored_data]
+        
+        # Step 8: Merge the datasets, remove any duplicates, and ensure chronological order
+        all_data = pd.concat(list_of_data).drop_duplicates().sort_index()
+        
+        # Step 9: Save the consolidated dataset for future use with the storage interval
+        self.save_data(all_data, symbol, storage_interval)
+
+        # Step 10: Calculate the exact date range corresponding to the requested parameters
+        dates = self.predict_ib_dates(endDateTime, durationStr)
+        
+        # Step 11: Slice the full dataset to return only the requested date range
+        # This uses the DatetimeIndex of the DataFrame with .loc slicing
+        sliced_data = self.slice_data(all_data, dates)
+        
+        # Step 12: Resample the data if the original interval is different from the storage interval
+        if original_interval != storage_interval:
+            new_data = self.resample_data(sliced_data, original_interval)
+        else:
+            # No resampling needed
+            new_data = sliced_data
+        
+        # Step 13: Print information about the data retrieval if requested
+        if print_info:
+            print(f"{symbol} {original_interval} {durationStr} :: {dates[0]} to {dates[-1]} rows: {len(new_data)}, missing: {len(missing_requests)}, Data stored as {storage_interval} and resampled to {original_interval}")
+        
+        # Return the processed data
+        return new_data
+        
