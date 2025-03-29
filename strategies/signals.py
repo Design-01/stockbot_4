@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Union, Literal
 from collections import defaultdict
 from abc import ABC, abstractmethod
+from chart.chart import ChartArgs
 
 def trace(fromPrice:float, toPrice:float, priceNow:float):
     """ Determines how far a price has traced from one price to another price expressed as a % of the total dffernce between the fromPrice and toPrice. 
@@ -169,10 +170,15 @@ class Signals(ABC):
     normRange: Tuple[int, int] = (0, 100)
     ls: str = 'LONG'
     lookBack: int = 1
+    chartArgs: ChartArgs = None
 
     def __post_init__(self):
         self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]
+
+    def add_chart_args(self, chartArgs: ChartArgs):
+        self.chartArgs = chartArgs
+        return self
 
     def get_score(self, val):
         if isinstance(val, pd.Series):
@@ -393,8 +399,58 @@ class GetMaxSignalSincePoint(Signals):
 #£ Done
 @dataclass
 class PB_PctHLLH(Signals):
-    """Computes the % of bars that have a lower highs (BULL pullback, so downward)
-    Vice versa for BEAR case. So this is only for pullbacks not overall trends. """
+    """
+    Measures the percentage of pullback bars showing lower highs (LONG) or higher lows (SHORT).
+    
+    This signal evaluates the quality of a pullback by analyzing the sequence of price bars
+    to determine how many maintain the expected structure:
+    - For LONG setups: Counts bars with lower highs than the previous bar
+    - For SHORT setups: Counts bars with higher lows than the previous bar
+    
+    A higher percentage indicates a more consistent directional pullback with proper
+    price structure, which typically leads to better trade entries.
+    
+    Parameters
+    ----------
+    name : str, default 'PB_PctHLLH'
+        Base name for the signal. The final signal name will be constructed as
+        "{ls[0]}_{name}" where ls[0] is the first character of the trade direction.
+    
+    pointCol : str, default ''
+        Column name containing pivot points used to identify pullbacks.
+        Must be set to a valid column name in the DataFrame.
+    
+    atrCol : str, default ''
+        Column name containing ATR (Average True Range) values.
+        Used in pullback validation.
+    
+    atrMultiple : float, default 1.0
+        Minimum number of ATRs required between pointCol value and target column.
+        Used in pullback validation (handled by get_valid_pb function).
+    
+    minPbLen : int, default 3
+        Minimum number of bars required to consider a valid pullback.
+    
+    Attributes
+    ----------
+    names : list
+        List containing the signal name, used for identification in the signal system.
+    
+    prev_val : float
+        Stores the previously calculated value to maintain signal persistence
+        for one bar when no valid pullback is found.
+    
+    Methods
+    -------
+    _use_prev_if_none(val: float) -> float
+        Helper method that persists the previous signal value for one bar when
+        the current calculation yields no result (None or 0).
+        
+    _compute_row(df: pd.DataFrame) -> float
+        Calculates the percentage of bars in the pullback that maintain the proper
+        higher/lower structure based on trade direction.
+        Returns a value between 0 and 100.
+    """
     name: str = 'PB_PctHLLH'
     pointCol: str = ''
     atrCol: str = ''
@@ -450,10 +506,62 @@ class PB_PctHLLH(Signals):
 
 @dataclass
 class PB_ASC(Signals):
-    """Pullback All Same Colour : Retruns the ration of how many bars are of the same colour as the longshort direction. 
-    This class is the check the pullback is all in the same direction. 
-    eg if long then all the bars in the pullback are red.
-    eg if short then all the bars in the pullback are green.
+    """
+    Pullback All Same Color (ASC) Signal that measures color consistency in pullbacks.
+    
+    This class evaluates the quality of a pullback by calculating the percentage of
+    bars that have the same color (direction) as expected for the pullback type.
+    For a high-quality signal:
+    - In LONG setups: Pullback bars should be red (bearish)
+    - In SHORT setups: Pullback bars should be green (bullish)
+    
+    The signal returns a percentage value (0-100) representing how many bars in
+    the pullback match the expected color, with 100% indicating perfect consistency.
+    
+    Parameters
+    ----------
+    name : str, default 'PB_ASC'
+        Base name for the signal. The final signal name will be constructed as
+        "{ls[0]}_{name}" where ls[0] is the first character of the trade direction.
+    
+    pointCol : str, default ''
+        Column name containing pivot points used to identify pullbacks.
+        Must be set to a valid column name in the DataFrame.
+    
+    atrMultiple : float, default 1.0
+        Minimum number of ATRs required between pointCol low and target column.
+        Used in pullback validation (handled by get_valid_pb function).
+    
+    minPbLen : int, default 3
+        Minimum number of bars required to consider a valid pullback.
+    
+    Attributes
+    ----------
+    names : list
+        List containing the signal name, used for identification in the signal system.
+    
+    prev_val : float
+        Stores the previously calculated value to maintain signal persistence
+        for one bar when no valid pullback is found.
+    
+    Methods
+    -------
+    _use_prev_if_none(val: float) -> float
+        Helper method that persists the previous signal value for one bar when
+        the current calculation yields no result (None or 0).
+        
+    _compute_row(df: pd.DataFrame) -> float
+        Calculates the percentage of bars in the pullback that have the correct color
+        for the current trade direction (red for LONG, green for SHORT).
+        Returns a value between 0 and 100.
+    
+    Notes
+    -----
+    - A higher percentage indicates a more consistent directional pullback
+    - 100% means all bars in the pullback have the expected color
+    - The first bar of the pullback is excluded from the calculation
+    - Uses the get_valid_pb() function to identify valid pullbacks
+    - Signal persists for one additional bar after a valid pullback disappears
     """
     name: str = 'PB_ASC'
     pointCol: str = ''
@@ -499,9 +607,62 @@ class PB_ASC(Signals):
 
 @dataclass
 class PB_CoC_ByCountOpBars(Signals):
+    """
+    Change of Character (CoC) Signal based on opposite bars count within a pullback.
+    
+    This class identifies 'Change of Character' setups by analyzing the sequence
+    of candles in a pullback, specifically looking for a change in direction
+    (green to red or vice versa) at the end of a pullback. The signal strength
+    is calculated as the percentage of consecutive opposite-colored candles
+    preceding the signal bar.
+    
+    For LONG signals: Identifies when a pullback with consecutive red candles
+                      ends with a green candle (suggesting bullish reversal)
+    For SHORT signals: Identifies when a pullback with consecutive green candles
+                       ends with a red candle (suggesting bearish reversal)
+    
+    Parameters
+    ----------
+    name : str, default 'PB_CoC_OpBars'
+        Base name for the signal. The final signal name will be constructed as
+        "{ls[0]}_{name}" where ls[0] is the first character of the trade direction.
+    
+    pointCol : str, default ''
+        Column name containing pivot points used to identify pullbacks.
+        Must be set to a valid column name in the DataFrame.
+    
+    minPbLen : int, default 3
+        Minimum number of bars required to consider a valid pullback.
+        Lower values may produce more signals but with lower quality.
+    
+    Attributes
+    ----------
+    names : list
+        List containing the signal name, used for identification in the signal system.
+    
+    prev_window : pd.DataFrame, optional
+        Stores the previously identified pullback window to maintain continuity
+        across calculations when no new pullback is found.
+    
+    Methods
+    -------
+    _compute_row(df: pd.DataFrame) -> float
+        Calculates the signal strength based on the proportion of consecutive
+        opposite-colored candles in the pullback.
+        Returns a percentage value between 0 and 100.
+    
+    Notes
+    -----
+    - The signal requires the 'ls' (long/short) parameter to be set in the parent class
+    - Uses the get_valid_pb() function to identify pullbacks in price action
+    - Requires OHLC data in the input DataFrame
+    - The signal is triggered only when the current bar shows a change of character
+      (shift from bearish to bullish for LONG, or bullish to bearish for SHORT)
+    """
     name: str = 'PB_CoC_OpBars'
     pointCol: str = ''
     minPbLen: int = 3
+
     
     def __post_init__(self):
         self.name = f"{self.ls[0]}_{self.name}"
@@ -570,9 +731,60 @@ class PB_CoC_ByCountOpBars(Signals):
 #£ Done
 @dataclass
 class PB_Overlap(Signals):
-    """Computes the overlap as % from this high to prev low (BULL, so pullback is down) as ratio to prev bar range .
-    Then gets the mean % of all overlaps. Works very well to give a good guide for a smooth pullback
-    if the mean % is 50%. so the nearer to 50% the better """
+    """
+    Measures the quality of a pullback based on the overlap between consecutive bars.
+    
+    This signal analyzes pullbacks by calculating the percentage overlap between
+    consecutive bars, returning a score that indicates how "smooth" the pullback is.
+    A perfect pullback is considered one where bars consistently overlap by 50%
+    with the previous bar.
+    
+    The calculation differs based on trade direction:
+    - For LONG positions: Measures high of current bar to low of previous bar
+    - For SHORT positions: Measures high of previous bar to low of current bar
+    
+    The signal then averages these overlaps across the pullback and scores based
+    on how close the average is to the optimal 50% overlap.
+    
+    Parameters
+    ----------
+    name : str, default 'PB_Olap'
+        Base name for the signal. The final signal name will be constructed as
+        "{ls[0]}_{name}" where ls[0] is the first character of the trade direction.
+    
+    pointCol : str, default ''
+        Column name containing pivot points used to identify pullbacks.
+        Must be set to a valid column name in the DataFrame.
+    
+    minPbLen : int, default 3
+        Minimum number of bars required to consider a valid pullback.
+    
+    Attributes
+    ----------
+    names : list
+        List containing the signal name, used for identification in the signal system.
+    
+    prev_val : float
+        Stores the previously calculated value to maintain signal persistence
+        for one bar when no valid pullback is found.
+    
+    Methods
+    -------
+    _use_prev_if_none(val: float) -> float
+        Helper method that returns the previous value if the current value is None or 0.
+        This helps to persist the signal for one additional bar.
+        
+    _compute_row(df: pd.DataFrame) -> float
+        Calculates the overlap quality score for the pullback.
+        Returns a value between 0 and 100, where 100 represents a perfect 50% overlap.
+    
+    Notes
+    -----
+    - Scores closer to 100 indicate higher quality pullbacks with consistent overlap
+    - A score of 100 represents a pullback with exactly 50% average overlap
+    - The signal requires price bars with high/low values
+    - Uses the get_valid_pb() function to identify pullbacks
+    """
     name  : str = 'PB_Olap'
     pointCol: str = ''   
     minPbLen: int = 3 
@@ -791,33 +1003,105 @@ class TouchWithBar(Signals):
 
 @dataclass
 class Retest(Signals):
+    """
+    Identifies price retests of specific levels within an ATR-based range.
+    
+    This class detects when current price action (high or low depending on direction)
+    is testing a previously established level. It counts how many points or bars from the 
+    specified value column fall within a defined ATR range (are touched) of the current price.
+    So how may points or bars are touched. 
+    
+    Parameters
+    ----------
+    name : str, default 'Retest'
+        Base name for the signal. The final signal name will be constructed as 
+        "{name}_{direction}_{valCol}".
+    
+    direction : str, default 'down'
+        Direction of the retest:
+        - 'down': Uses the low price to test for support retests
+        - 'up': Uses the high price to test for resistance retests
+    
+    atrCol : str, default ''
+        Column name in the DataFrame containing ATR values. Used to define the
+        range for determining valid retests.
+    
+    valCol : str, default ''
+        Column name containing the values/levels to check for retests.
+        Often contains support/resistance levels or pivot points.
+    
+    withinAtrRange : Tuple[float, float], default (-0.15, 0.15)
+        Range multiplier for ATR to define the retest zone:
+        - First value: Range below current price (negative for below)
+        - Second value: Range above current price (positive for above)
+        
+        Example: (-0.15, 0.15) creates a zone from 0.15 ATR below to 0.15 ATR
+        above the current price.
+    
+    rollingLen : int, default 10
+        Number of most recent non-NaN values to examine from valCol.
+        Note: This looks back for the nth previous values, automatically
+        dropping any NaN values. When using a points column, this effectively
+        looks back for the nth number of points regardless of their bar position.
+    
+    Methods
+    -------
+    _compute_row(df: pd.DataFrame) -> float
+        Calculates the number of points within the ATR-defined range.
+        Returns the count as a float value.
+    
+    Examples
+    --------
+    >>> # Create a retest signal for detecting support retests
+    >>> support_retest = Retest(
+    ...     direction='down',
+    ...     atrCol='ATR_14',
+    ...     valCol='Support_Levels',
+    ...     withinAtrRange=(-0.2, 0.1),
+    ...     rollingLen=15
+    ... )
+    ...
+    >>> # Apply to DataFrame
+    >>> df['Support_Retest'] = df.apply(support_retest, axis=1)
+    """
     name: str = 'Retest'
     direction: str = 'down'
     atrCol: str = ''
     valCol: str = ''
-    withinAtrRange: Tuple[float, float] = (-0.15, 0.15) # range below , range above
-    rollingLen:int = 10
+    withinAtrRange: Tuple[float, float] = (-0.15, 0.15)  # (range below, range above)
+    rollingLen: int = 10
     
     def __post_init__(self):
+        # Create unique identifier name by combining base name, direction, and value column
         self.name = f"{self.name}_{self.direction}_{self.valCol}"
         self.names = [self.name]
 
     def _compute_row(self, df: pd.DataFrame) -> float:
+        # Ensure we have enough data to perform the calculation
         if len(df) < 10:
             return 0.0
 
+        # Determine reference price based on direction (low for down retests, high for up retests)
         bar_value = df.low.iat[-1] if self.direction == 'down' else df.high.iat[-1]
+        
+        # Get current ATR value
         atr = df[self.atrCol].iat[-1]
-        min_level = bar_value + (atr * self.withinAtrRange[0])
-        max_level = bar_value + (atr * self.withinAtrRange[1])
+        
+        # Calculate min and max boundaries of the retest zone using ATR multipliers
+        min_level = bar_value + (atr * self.withinAtrRange[0])  # Lower bound
+        max_level = bar_value + (atr * self.withinAtrRange[1])  # Upper bound
 
- 
+        # Get the most recent non-NaN values from the value column
+        # This automatically handles sparse data like pivot points
         vals = df[self.valCol].dropna().iloc[-self.rollingLen:]
+        
+        # Return 0 if no values are available
         if len(vals) < 1:
             return 0.0
 
+        # Count how many points fall within the retest zone
         points_in_range = vals[(vals >= min_level) & (vals <= max_level)]
-        return len(points_in_range) 
+        return len(points_in_range)
 
 
 

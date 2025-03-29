@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import numpy as np
 from typing import List, Tuple, Union, Dict, Optional, Any
+from chart.chart import ChartArgs
 
 def preprocess_data(func):
     def wrapper(self, data: pd.DataFrame, *args, **kwargs):
@@ -18,6 +19,11 @@ class TA(ABC):
     column: str = None
     name: str = None
     names: List[str] = field(default_factory=list)
+    chartArgs: ChartArgs = None
+
+    def add_chart_args(self, chartArgs: ChartArgs):
+        self.chartArgs = chartArgs
+        return self
 
     @abstractmethod
     def run(self, data: pd.DataFrame) -> pd.Series | pd.DataFrame:

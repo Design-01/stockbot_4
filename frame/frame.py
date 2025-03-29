@@ -2,10 +2,11 @@ from typing import Any, Dict, List, Tuple, Union, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 import pandas as pd
-from chart.chart import Chart, ChartArgs # Use relative import for Chart
+from chart.chart import Chart # Use relative import for Chart
 import strategies.ta as ta
 from strategies.ta import TA
 from strategies.signals import Signals
+from strategies.preset_strats import ChartArgs, TAPresets
 import numpy as np
 
 
@@ -17,6 +18,7 @@ class Frame:
     trading_hours: List[Tuple[str, str]] = field(default_factory=lambda: [("09:30", "16:00")])
     rowHeights: List[float] = field(default_factory=lambda: [0.1, 0.2, 0.2, 0.6])
     name: str = None
+    taPresets: TAPresets = TAPresets()
 
     def __post_init__(self):
         self.traders = []
@@ -51,10 +53,8 @@ class Frame:
         """
         Update the main DataFrame with new data by merging based on the datetime index.
         Ensures OHLCV columns are always first in the returned DataFrame.
-        Removed! : Only overwrites old data if new data is not NaN.
         
         Parameters:
-        df (pd.DataFrame): The main DataFrame to update
         new_data (pd.Series or pd.DataFrame): The new data to merge and update
         
         Returns:
@@ -70,19 +70,27 @@ class Frame:
         if not isinstance(new_data.index, pd.DatetimeIndex):
             raise ValueError("New data must have a datetime index")
         
-        # Create a copy of the main DataFrame to avoid modifying the original
+        # Create a fresh copy of the main DataFrame and deduplicate
         updated_df = self.data.copy()
+        updated_df = updated_df[~updated_df.index.duplicated(keep='last')]
+        
+        # Deduplicate new_data index if needed
+        if not new_data.index.is_unique:
+            new_data = new_data[~new_data.index.duplicated(keep='last')]
         
         # Update existing columns and add new columns
         for column in new_data.columns:
             if column in updated_df.columns:
-                # Update only where new data is not NaN
-                # mask = new_data.index.isin(updated_df.index) & ~new_data[column].isna() # ! This line is wrong
-                mask = new_data.index.isin(updated_df.index)
-                updated_df.loc[new_data.index[mask], column] = new_data.loc[mask, column]
+                # Find common indices
+                common_idx = updated_df.index.intersection(new_data.index)
+                # Update values
+                updated_df.loc[common_idx, column] = new_data.loc[common_idx, column]
             else:
-                # Add new column
-                updated_df[column] = new_data[column]
+                # Add new column with default NaN values
+                updated_df[column] = pd.NA
+                # Then update with available values
+                common_idx = updated_df.index.intersection(new_data.index)
+                updated_df.loc[common_idx, column] = new_data.loc[common_idx, column]
         
         # Define the order of OHLCV columns
         ohlcv_columns = ['open', 'high', 'low', 'close', 'volume']
@@ -96,15 +104,33 @@ class Frame:
         self.data = updated_df[reordered_columns]
         return self.data
 
-    def add_ta(self, ta: TA, style: Dict[str, Any] | List[Dict[str, Any]] = {}, chart_type: str = "line", row: int = 1, nameCol:str=None, columns:List[str]=None, runOnLoad:bool=True) -> TA:
+    # def add_ta_old(self, ta: TA, style: Dict[str, Any] | List[Dict[str, Any]] = {}, chart_type: str = "line", row: int = 1, nameCol:str=None, columns:List[str]=None, runOnLoad:bool=True) -> TA:
+    #     # Check for duplicates
+    #     for existing_ta, existing_style, existing_chart_type, existing_row, existing_nameCol, existing_columns in self.ta:
+    #         if (existing_ta == ta and 
+    #             existing_style == style and 
+    #             existing_chart_type == chart_type and 
+    #             existing_row == row and
+    #             existing_nameCol == nameCol and 
+    #             existing_columns == columns):
+    #             # Duplicate found, do not add
+    #             return ta
+        
+    #     # No duplicates found, add the new TA
+    #     if runOnLoad:
+    #         self.update_data(ta.run(self.data))
+        
+    #     self.ta.append((ta, style, chart_type, row, nameCol, columns))
+    #     # returning the ta object to allow it to be assigend and therefor access the name vaialbe in the ta object
+    #     # eg 
+    #     # ta1 = frame.add_ta(ta('close'), style, chart_type, row, nameCol)
+    #     # ta2 = frame.add_ta(ta(ta1.name), style, chart_type, row, nameCol)
+    #     return ta
+
+    def add_ta(self, ta: TA, chartArgs:ChartArgs, runOnLoad:bool=True) -> TA:
         # Check for duplicates
-        for existing_ta, existing_style, existing_chart_type, existing_row, existing_nameCol, existing_columns in self.ta:
-            if (existing_ta == ta and 
-                existing_style == style and 
-                existing_chart_type == chart_type and 
-                existing_row == row and
-                existing_nameCol == nameCol and 
-                existing_columns == columns):
+        for existing_ta in self.ta:
+            if existing_ta == ta:
                 # Duplicate found, do not add
                 return ta
         
@@ -112,12 +138,17 @@ class Frame:
         if runOnLoad:
             self.update_data(ta.run(self.data))
         
-        self.ta.append((ta, style, chart_type, row, nameCol, columns))
+        self.ta.append(ta)
         # returning the ta object to allow it to be assigend and therefor access the name vaialbe in the ta object
         # eg 
         # ta1 = frame.add_ta(ta('close'), style, chart_type, row, nameCol)
         # ta2 = frame.add_ta(ta(ta1.name), style, chart_type, row, nameCol)
         return ta
+    
+    def run_ta(self):
+        """Run all technical indicators in the frame."""
+        for ta in self.taPresets.ta_list:
+            self.data = self.update_data(ta.run(self.data))
 
     def add_multi_ta(self, ta: TA, chartArgs:List[ChartArgs], runOnLoad:bool=True):
         """Add multiple technical indicators to the frame.
@@ -238,12 +269,13 @@ class Frame:
         # Use existing plot logic
         self.chart.refesh(self.data)
         
-        for indicator, style, chart_type, row, nameCol, columns in self.ta:
-            if style == {}: 
+        # for indicator, style, chart_type, row, nameCol, columns in self.ta:
+        for ta in self.taPresets.ta_list:
+            if ta.chartArgs is None: 
                 continue
                 
             # Handle names whether they're in a list or string
-            names = indicator.names if columns is None else columns
+            names = ta.names if ta.chartArgs.columns is None else ta.chartArgs.columns
             if isinstance(names, str):
                 names = [names]
             elif not isinstance(names, list):
@@ -252,8 +284,8 @@ class Frame:
             available_columns = [name for name in names if name in self.data.columns]
             if available_columns:
                 indicator_data = self.data[available_columns]
-                nameData = self.data[nameCol] if nameCol in self.data.columns else None
-                self.chart.add_ta(indicator_data, style, chart_type, row, nameData)
+                nameData = self.data[ta.chartArgs.nameCol] if ta.chartArgs.nameCol in self.data.columns else None
+                self.chart.add_ta(indicator_data, ta.chartArgs.style, ta.chartArgs.chartType, ta.chartArgs.row, nameData)
         
         if trading_hours:
             self.chart.add_trading_hours(self.data, self.trading_hours)

@@ -1233,7 +1233,7 @@ class HistoricalData:
 
     def save_data(self, data, symbol, interval):
         """
-        Save data to CSV with consistent datetime index handling.
+        Save data to CSV with simple duplicate removal.
         
         Parameters:
         data (pd.DataFrame): DataFrame to save
@@ -1243,42 +1243,22 @@ class HistoricalData:
         # Make a copy to avoid modifying the original DataFrame
         df = data.copy()
         
-        # Case 1: DataFrame has no index name but has datetime index
-        if df.index.name is None and isinstance(df.index, pd.DatetimeIndex):
-            df.index.name = 'date'
+        # If 'date' is a column, set it as index
+        if 'date' in df.columns:
+            df.set_index('date', inplace=True)
         
-        # Case 2: DataFrame has named index that's already datetime
-        elif isinstance(df.index, pd.DatetimeIndex):
-            df.index.name = 'date'  # Standardize the name
+        # Ensure the index is named 'date'
+        df.index.name = 'date'
         
-        # Case 3: Need to set datetime index from columns
-        else:
-            # Look for datetime column with various possible names
-            date_columns = [col for col in df.columns if col.lower() in ['date', 'datetime', 'time', 'timestamp']]
-            
-            if not date_columns:
-                raise ValueError("No datetime column found in DataFrame")
-            
-            # Use the first found date column
-            date_col = date_columns[0]
-            
-            # Convert to datetime if not already
-            try:
-                df[date_col] = pd.to_datetime(df[date_col])
-            except Exception as e:
-                raise ValueError(f"Failed to convert {date_col} to datetime: {str(e)}")
-            
-            # Set index
-            df.set_index(date_col, inplace=True)
-            df.index.name = 'date'
+        # Convert index to datetime if it's not already
+        if not isinstance(df.index, pd.DatetimeIndex):
+            df.index = pd.to_datetime(df.index)
         
-        # Sort index
-        df = df.sort_index(ascending=True)
-        
-        # Remove any duplicates in the index
+        # Sort and remove duplicates
+        df = df.sort_index()
         df = df[~df.index.duplicated(keep='last')]
         
-        # Save with date format that excludes time information if it exists
+        # Save the file
         interval = interval.lower().replace(' ', '_')
         filename = get_project_path(self.data_folder_path, f'{symbol}_{interval}.csv')
         df.to_csv(filename)
@@ -1325,7 +1305,10 @@ class HistoricalData:
             whatToShow='TRADES',
             useRTH=useRTH,
             formatDate=1)
-        return util.df(bars).set_index('date')
+        df = util.df(bars)
+        if df is not None:
+            df.set_index('date', inplace=True)
+        return df
     
     def predict_ib_dates(self, end_datetime_str, duration_str, timezone_str="US/Eastern"):
         # Parse the end date/time string
@@ -1385,6 +1368,34 @@ class HistoricalData:
         unique_dates = data.index.floor('D').unique()
         return pd.DatetimeIndex(unique_dates).strftime('%Y-%m-%d').tolist()
     
+    def _filter_pre_market_dates(self, 
+            dates: List[str], 
+            timezone_str: str = "US/Eastern"
+        ) -> List[str]:
+            """
+            Filter out today's date if the current time is before market open.
+            
+            Args:
+                dates: List of dates in format 'YYYY-MM-DD'
+                timezone_str: Timezone string
+                
+            Returns:
+                Filtered list of dates
+            """
+            # Get current time in the specified timezone
+            now = dt.datetime.now(pytz.timezone(timezone_str))
+            today_str = now.strftime('%Y-%m-%d')
+            market_open_time = dt.time(5, 00)  # 05:00 AM ET
+            
+            # If today isn't in the dates list or it's after market open, no need to filter
+            if today_str not in dates or now.time() >= market_open_time:
+                return dates
+                
+            # If it's before market open, remove today from the list
+            filtered_dates = dates.copy()
+            filtered_dates.remove(today_str)
+            return filtered_dates
+    
     def generate_missing_data_requests(self,
         end_datetime_str: str, 
         duration_str: str, 
@@ -1407,6 +1418,9 @@ class HistoricalData:
         """
         # Get expected dates based on original request
         expected_dates = self.predict_ib_dates(end_datetime_str, duration_str, timezone_str)
+
+        # Filter out today's date if market is not open yet
+        expected_dates = self._filter_pre_market_dates(expected_dates, timezone_str)
         
         # Find missing dates
         missing_dates = [date for date in expected_dates if date not in stored_dates]
@@ -1725,7 +1739,97 @@ class HistoricalData:
         # Return the original if unit is not recognized
         return interval_str
 
-    def get_data(self, symbol: str, interval: str, endDateTime: str, durationStr: str, print_info: bool = False):
+    def normalize_date_for_ib(self, date_str, timezone='US/Eastern'):
+        """
+        Normalizes various date formats to the format required by Interactive Brokers API.
+        
+        Handles various input formats:
+        - ISO format: '2025-03-25' → '20250325 23:59:59 US/Eastern'
+        - ISO with time: '2025-03-25 13:00:00' → '20250325 13:00:00 US/Eastern'
+        - Compact format: '20250325' → '20250325 23:59:59 US/Eastern'
+        - Compact with time: '20250325 13:00:00' → '20250325 13:00:00 US/Eastern'
+        - Special case 'now': Returns current time in the required format
+        
+        Parameters:
+        -----------
+        date_str : str
+            The date string to normalize
+        timezone : str, default='US/Eastern'
+            The timezone to use for the output format
+            
+        Returns:
+        --------
+        str
+            The normalized date string in IB API compatible format
+        """
+        import re
+        import datetime
+        
+        # Handle the special case 'now'
+        if date_str.lower() == 'now':
+            now = datetime.datetime.now().strftime('%Y%m%d %H:%M:%S')
+            return f"{now} {timezone}"
+        
+        # Strip any leading/trailing whitespace
+        date_str = date_str.strip()
+        
+        # Check if the date_str already has time component
+        has_time = bool(re.search(r'\d+:\d+', date_str))
+        
+        # Different regex patterns for different input formats
+        iso_date_pattern = r'^\d{4}-\d{2}-\d{2}$'  # YYYY-MM-DD
+        iso_datetime_pattern = r'^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}$'  # YYYY-MM-DD HH:MM:SS
+        compact_date_pattern = r'^\d{8}$'  # YYYYMMDD
+        compact_datetime_pattern = r'^\d{8}\s+\d{2}:\d{2}:\d{2}$'  # YYYYMMDD HH:MM:SS
+        
+        # Parse based on the identified format
+        if re.match(iso_date_pattern, date_str):
+            # Format: YYYY-MM-DD
+            dt = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+            date_part = dt.strftime('%Y%m%d')
+            time_part = "23:59:59" if not has_time else "00:00:00"
+            return f"{date_part} {time_part} {timezone}"
+            
+        elif re.match(iso_datetime_pattern, date_str):
+            # Format: YYYY-MM-DD HH:MM:SS
+            dt = datetime.datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+            date_part = dt.strftime('%Y%m%d')
+            time_part = dt.strftime('%H:%M:%S')
+            return f"{date_part} {time_part} {timezone}"
+            
+        elif re.match(compact_date_pattern, date_str):
+            # Format: YYYYMMDD
+            dt = datetime.datetime.strptime(date_str, '%Y%m%d')
+            date_part = dt.strftime('%Y%m%d')
+            time_part = "23:59:59" if not has_time else "00:00:00"
+            return f"{date_part} {time_part} {timezone}"
+            
+        elif re.match(compact_datetime_pattern, date_str):
+            # Format: YYYYMMDD HH:MM:SS
+            dt = datetime.datetime.strptime(date_str, '%Y%m%d %H:%M:%S')
+            date_part = dt.strftime('%Y%m%d')
+            time_part = dt.strftime('%H:%M:%S')
+            return f"{date_part} {time_part} {timezone}"
+        
+        # Try to handle other potential formats with dateutil parser
+        try:
+            from dateutil import parser
+            dt = parser.parse(date_str)
+            date_part = dt.strftime('%Y%m%d')
+            
+            # If original had time, use it, otherwise use end of day
+            if has_time:
+                time_part = dt.strftime('%H:%M:%S')
+            else:
+                time_part = "23:59:59"
+                
+            return f"{date_part} {time_part} {timezone}"
+        except:
+            # If all else fails, return the original with the timezone appended
+            return f"{date_str} {timezone}"
+
+
+    def get_data(self, symbol:str, interval:str, endDateTime:str, durationStr:str, print_info: bool = False):
         """
         Retrieve historical market data for a specific symbol by combining stored data with newly fetched data,
         then slice it to the requested time range.
@@ -1763,6 +1867,7 @@ class HistoricalData:
         
         # Step 1: Determine storage interval based on requested interval
         interval = self.normalize_interval(interval)
+        endDateTime = self.normalize_date_for_ib(endDateTime)
         original_interval = interval  # Store the original requested interval
         
         # Map the requested interval to the appropriate storage interval
@@ -1794,16 +1899,29 @@ class HistoricalData:
         # Each request is a tuple of (end_date_time, duration_str)
         for end_date_time, duration_str in consolidated_requests:
             # Append each new dataset to self.new_data list, using the storage interval
-            self.new_data += [self.get_ib_data(symbol, storage_interval, end_date_time, duration_str)]
+            df  = self.get_ib_data(symbol, storage_interval, end_date_time, duration_str)
+            if df is None:
+                continue
+            df.index = pd.to_datetime(df.index)
+            self.new_data += [df]
             # Pause between requests to prevent hitting rate limits
             time.sleep(1)
 
         # Step 7: Combine all datasets (new and previously stored)
         # Create a list containing all new data fetched in this session and the stored data
         list_of_data = self.new_data + [stored_data]
+
+        # # Display the last date of each dataset
+        # print(f"new data   : {self.new_data[0].index[-1]}, type: {type(self.new_data[0].index[-1])}")
+        # print(f"stored data: {stored_data.index[-1]}, type: {type(stored_data.index[-1])}")
+
+        # for d in list_of_data:
+        #     print(d.index[-1])  #
+        #     print(type(d.index[-1]))  #
+        #     display(d)
         
         # Step 8: Merge the datasets, remove any duplicates, and ensure chronological order
-        all_data = pd.concat(list_of_data).drop_duplicates().sort_index()
+        all_data = pd.concat(list_of_data).loc[~pd.concat(list_of_data).index.duplicated(keep='last')].sort_index()
         
         # Step 9: Save the consolidated dataset for future use with the storage interval
         self.save_data(all_data, symbol, storage_interval)

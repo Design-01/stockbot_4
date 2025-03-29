@@ -19,6 +19,7 @@ from industry_classifications.sector import get_etf_from_sector_code
 import emails.email_client as email_client
 from project_paths import get_project_path
 from chart.chart import ChartArgs
+from strategies.preset_strats import TAPresets
 
 
 
@@ -832,12 +833,14 @@ from trades.price_x import EntryX, StopX, TargetX, TrailX
 from trades.tradex import TraderX
 import time
 from data.live_ib_data import LiveData
+from data.historical_data import HistoricalData
+from strategies.preset_strats import TAPresets
 
 @dataclass
 class TAData:
     ta: ta.TA
     style: Dict[str, Any] | List[Dict[str, Any]] = field(default_factory=dict)
-    chart_type: str = "line"
+    chartType: str = "line"
     row: int = 1
 
 class SignalStatus:
@@ -872,6 +875,14 @@ class StockStatsDaily:
     breaksAbove200MA: bool = False
     breaksBelow50MA: bool = False
     breaksBelow200MA: bool = False
+
+    # signals
+    sigGappedWRBs: float = 0.0
+    sigGappedPivs: float = 0.0
+    sigGappedPastPiv: float = 0.0
+    sigRTM: float = 0.0
+    sigRS: float = 0.0
+    sigVolume: float = 0.0
 
     # Scores
     scoreVol : float = 0.0
@@ -953,6 +964,7 @@ class StockX:
         self.stats_daily = StockStatsDaily(self.symbol)
         self.trader = TraderX(self.ib, self.symbol)
         self.livedata = LiveData(self.ib)
+        self.historicaldata = HistoricalData(self.ib)   
         self.spy = None
         self.score_cols = StockScoreCols()  # a way of managing the various score columns produced and sharing accorss the different methods
         self.isMarket = True if self.symbol in ['SPY', 'QQQ'] else False
@@ -994,7 +1006,15 @@ class StockX:
 
     def get_live_price(self):
         contract = Stock(self.symbol, 'SMART', 'USD')
-        self.ib.cancelMktData(contract)
+        
+        # Check if there's already an active market data request for this contract
+        existing_tickers = [ticker for ticker in self.ib.tickers() if ticker.contract == contract]
+        
+        if existing_tickers:
+            # If there's an existing ticker, cancel it first
+            self.ib.cancelMktData(existing_tickers[0].contract)
+        
+        # Request new market data
         ticker = self.ib.reqMktData(contract)
         self.ib.sleep(2)
         return ticker.close
@@ -1065,14 +1085,14 @@ class StockX:
         self.ls = ls
         self.trader.set_ls(ls)
 
-    def setup_frame(self, timeframe, dataType:str='random', start_date:str="52 weeksAgo", end_date:str='now', force_download:bool=False, isIntradayFrame:bool=False, isTradeFrame:bool=False, isDayFrame:bool=False):
+    def setup_frame(self, timeframe, dataType:str='random', duration:str="3 D", endDateTime:str='now', isIntradayFrame:bool=False, isTradeFrame:bool=False, isDayFrame:bool=False, taPresets:TAPresets=None):
         if isIntradayFrame:
             self.intradaySizes.append(timeframe)
         if isTradeFrame:
             self.tradeSizes.append(timeframe)
         name = timeframe          
         
-        self.frames[name] = Frame(self.symbol, name=name, rowHeights=[0.1, 0.1, 0.1, 0.1, 0.1, 0.5])
+        self.frames[name] = Frame(self.symbol, name=name, rowHeights=[0.1, 0.1, 0.1, 0.1, 0.1, 0.5], taPresets=taPresets)
         
         if dataType == 'random':
             df =  RandomOHLCV( 
@@ -1092,9 +1112,8 @@ class StockX:
             self.frames[timeframe].load_ohlcv(df)
 
         elif dataType == 'ohlcv':
-             df = hd.get_hist_data(self.symbol, start_date, end_date, timeframe, force_download=force_download)
-             print(f"StockX::setup_frame: {self.symbol} {timeframe} {dataType} {start_date} {end_date} {force_download=} : {df.shape}")
-             self.frames[name].load_ohlcv(df)
+            df = self.historicaldata.get_data(self.symbol, timeframe, endDateTime,  durationStr=duration, print_info=True)
+            self.frames[name].load_ohlcv(df)
 
         elif dataType == 'tick':
             # todo: implement tick data
@@ -1110,7 +1129,7 @@ class StockX:
         today_date = datetime.now().strftime('%Y-%m-%d')
         df.loc[today_date] = np.nan
         live_price = self.get_live_price()
-        print(f"StockX::add_today_row_live_data: {self.symbol} {today_date} {live_price}")
+        # print(f"StockX::add_today_row_live_data: {self.symbol} {today_date} {live_price}")
         df.loc[today_date, ['open', 'high', 'low', 'close']] = live_price
         df.index = pd.to_datetime(df.index, format='%Y-%m-%d')
         return df
@@ -1219,7 +1238,7 @@ class StockX:
                 """
 
                 f.add_multi_ta(strat, [
-                    ChartArgs({'dash': 'solid', 'color': 'cyan', 'width':5},     chart_type='lines+markers', row=5, columns=[strat.name_pct_complete])
+                    ChartArgs({'dash': 'solid', 'color': 'cyan', 'width':5},     chartType='lines+markers', row=5, columns=[strat.name_pct_complete])
                 ],
                 runOnLoad=False)
         
@@ -1233,14 +1252,14 @@ class StockX:
 
     def import_all_market_data(self, mktStockX:object):
         """takes a different StockX object such as SPY and imports all its data (OHLCV) into this StockX object.
-        Ttime frames are match from object to object and the data is imported with a prefix of the symbol of the imported StockX object.
+        Time frames are match from object to object and the data is imported with a prefix of the symbol of the imported StockX object.
 
         Args:
             mktStockX (StockX): StockX object must match the same timeframes as this object.
         """
         # check if timeframes match
         if self.frames.keys() != mktStockX.frames.keys():
-            raise ValueError("StockX::Timeframes do not match. Wehn importing market data the imported StcokX must have the same barsizes as this StockX object.")
+            raise ValueError("StockX::Timeframes do not match. When importing market data the imported StockX must have the same barsizes as this StockX object.")
 
         for barsize in self.frames.keys():
             mktDF = mktStockX.frames[barsize].data
@@ -1281,9 +1300,28 @@ class StockX:
     
     #! -------- Run --------------------- Work in progress
 
-    def RUN_DAILY(self, spy:object=None, isMarket:bool=False, displayCharts:bool=False, printStats:bool=False, forceDownload:bool=False):
-        self.setup_frame('1 day', 'ohlcv', start_date="52 weeksAgo", end_date='now', force_download=False, isDayFrame=True)
-        self.setup_frame('1 hour', 'ohlcv', start_date="3 weeksAgo", end_date='now', force_download=False, isIntradayFrame=True)
+    def RUN_DAILY(self, ls:str='', spy:object=None, isMarket:bool=False, displayCharts:bool=False, printStats:bool=False, forceDownload:bool=False):
+        print(f"------------ StockX::RUN_DAILY: {self.symbol} {self.ls}------------------------------------------------------------------------")
+
+        self.set_ls('SHORT')
+        if isMarket:
+            self.setup_frame('1 day', 'ohlcv', duration="200 D", endDateTime='now', isDayFrame=True,      taPresets=TAPresets(isMarket=True, barSize='1 day'))
+            self.setup_frame('1 hour', 'ohlcv', duration="15 D", endDateTime='now', isIntradayFrame=True, taPresets=TAPresets(isMarket=True, barSize='1 hour'))
+            self.frames['1 day'].run_ta()
+            self.frames['1 hour'].run_ta()
+
+        else:
+            self.setup_frame('1 day', 'ohlcv', duration="200 D", endDateTime='now', isDayFrame=True,      taPresets=TAPresets(isMarket=False, barSize='1 day'))
+            self.setup_frame('1 hour', 'ohlcv', duration="15 D", endDateTime='now', isIntradayFrame=True, taPresets=TAPresets(isMarket=False, barSize='1 hour'))
+            self.import_all_market_data(spy)
+            self.frames['1 day'].run_ta()
+            self.frames['1 hour'].run_ta()
+            
+
+    def RUN_DAILY_old(self, spy:object=None, isMarket:bool=False, displayCharts:bool=False, printStats:bool=False, forceDownload:bool=False):
+        print(f"------------ StockX::RUN_DAILY: {self.symbol} {self.ls}------------------------------------------------------------------------")
+        self.setup_frame('1 day', 'ohlcv', duration="200 D", endDateTime='now', force_download=False, isDayFrame=True)
+        self.setup_frame('1 hour', 'ohlcv', duration="15 D", endDateTime='now', force_download=False, isIntradayFrame=True)
         if isMarket:
             return
 

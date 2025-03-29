@@ -6,15 +6,15 @@ import datetime
 from plotly.colors import hex_to_rgb
 import numpy as np
 import plotly.io as pio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 # used to store the chart arguments for Chart.add_multi_ta
 @dataclass
 class ChartArgs:
-    style: Dict[str, Any] | list[Dict[str, Any]]
-    chart_type: str
-    row: int 
+    style: Dict[str, Any] | list[Dict[str, Any]] = field(default_factory=dict)
+    chartType: str = 'line'
+    row: int = 1
     nameCol: pd.Series = None
     columns: List[str] = None
 
@@ -444,13 +444,13 @@ class Chart:
         self.add_candles_and_volume(df)
         self.add_layout_and_format(df)
 
-    def add_ta(self, data: pd.Series | pd.DataFrame, style: Dict[str, Any] | list[Dict[str, Any]], chart_type: str, row:int=1, nameCol:pd.Series=None, columns:List[str]=None) -> None:
+    def add_ta(self, data: pd.Series | pd.DataFrame, style: Dict[str, Any] | list[Dict[str, Any]], chartType: str, row:int=1, nameCol:pd.Series=None, columns:List[str]=None) -> None:
         """Adds ta's to the chart
 
         args:
         data: pd.Series | pd.DataFrame: The data to be added to the chart
         style: Dict[str, Any]: The style of the data
-        chart_type: str: The type of chart to be added
+        chartType: str: The type of chart to be added
         """
 
         if style == {}: return
@@ -460,20 +460,20 @@ class Chart:
 
         columns = data.columns if columns is None else columns
 
-        if chart_type == 'line':
+        if chartType == 'line':
             if isinstance(data, pd.Series):
                 self.fig.add_trace(go.Scatter(x=data.index, y=data, name=data.name, line=style[0]), row=row, col=1)
             elif isinstance(data, pd.DataFrame):
                 for column, stl in zip(columns, style):
                     self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, line=stl), row=row, col=1)
 
-        if chart_type == 'lines+markers':
-            # print(f"Adding nameCol type: {type(nameCol)} nameCol: {nameCol},  {chart_type} to chart")
+        if chartType == 'lines+markers':
+            # print(f"Adding nameCol type: {type(nameCol)} nameCol: {nameCol},  {chartType} to chart")
             
             if isinstance(data, pd.Series):
             #     labels = ''
             #     if isinstance(nameCol, pd.Series):
-            #         print(f"Adding nameCol ... isinstance pd.Series... type: {type(nameCol)} nameCol: {nameCol},  {chart_type} to chart")
+            #         print(f"Adding nameCol ... isinstance pd.Series... type: {type(nameCol)} nameCol: {nameCol},  {chartType} to chart")
             #         labels = nameCol.to_list()
             #         print(labels)
                 self.fig.add_trace(go.Scatter(
@@ -481,18 +481,18 @@ class Chart:
                     y=data, 
                     name=data.name, 
                     line=style[0], 
-                    mode=chart_type,
+                    mode=chartType,
                     text='test'
                     ), row=row, col=1)
                 
             elif isinstance(data, pd.DataFrame):
                 for column, stl in zip(columns, style):
-                    self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, line=stl, mode=chart_type), row=row, col=1)
+                    self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, line=stl, mode=chartType), row=row, col=1)
 
 
 
         # Add MACD subplot if provided
-        if chart_type == 'macd' and isinstance(data, pd.DataFrame):
+        if chartType == 'macd' and isinstance(data, pd.DataFrame):
             macd_col = [col for col in columns if col.endswith('MACD')][0]
             signal_col = [col for col in columns if col.endswith('Signal')][0]
             hist_col = [col for col in columns if col.endswith('Histogram')][0]
@@ -504,7 +504,7 @@ class Chart:
             
             self.fig.update_layout()  # Adjust the height to accommodate the new subplot
         
-        if chart_type == 'points' and isinstance(data, pd.DataFrame):
+        if chartType == 'points' and isinstance(data, pd.DataFrame):
             for column, stl in zip(columns, style):
                 # Ensure 'size' and 'opacity' are set in the marker style if not provided
                 stl.setdefault('size', 10)  # Default size if not provided
@@ -525,13 +525,13 @@ class Chart:
                     text=labels
                 ), row=row, col=1)
 
-        if chart_type == 'support_resistance':
+        if chartType == 'support_resistance':
             self.add_support_resistance(data, style)
 
-        if chart_type.upper() in ['CONS', 'RECT']:
-            self.add_rectangle(data, style, chart_type.upper())
+        if chartType.upper() in ['CONS', 'RECT']:
+            self.add_rectangle(data, style, chartType.upper())
         
-        if chart_type == 'trendlines':
+        if chartType == 'trendlines':
             trend_cols = [col for col in columns if 'TREND' in col]
             for col in trend_cols:
                 mask = ~data[col].isna()
@@ -553,7 +553,7 @@ class Chart:
         chartArgs (List[ChartArgs]): List of ChartArgs objects containing indicator details
         """
         for chartArg in chartArgs:
-            self.add_ta(data, chartArg.style, chartArg.chart_type, chartArg.row, chartArg.nameCol)
+            self.add_ta(data, chartArg.style, chartArg.chartType, chartArg.row, chartArg.nameCol)
 
         
 
@@ -703,7 +703,7 @@ class Chart:
         add_traces([col for col in data.columns if col.startswith('Res_1')], resistance_style)
         add_traces([col for col in data.columns if col.startswith('Res_2')], resistance_style)
    
-    def add_rectangle(self, data: pd.DataFrame, style: List[Dict[str, Any]], chart_type='') -> None:
+    def add_rectangle(self, data: pd.DataFrame, style: List[Dict[str, Any]], chartType='') -> None:
         """
         Adds support and resistance levels to the chart with upper and lower bounds.
 
@@ -756,7 +756,7 @@ class Chart:
             )
 
         # Get all rectangle columns
-        name = chart_type.upper()
+        name = chartType.upper()
         rect_cols = [col for col in data.columns if col.startswith(name)]
         rect_pairs = []
         

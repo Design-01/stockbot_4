@@ -3,11 +3,10 @@ import pandas as pd
 import strategies.ta as ta
 import strategies.signals as sig
 from  strategies.ta import TAData
-from frame import Frame
 from data.random_data import RandomOHLCV
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, Any, List
-from chart.chart import ChartArgs 
+# from chart.chart import ChartArgs 
 
 #------------------------------------------------------------
 # ----------  H E L P E R S  --------------------------------
@@ -228,7 +227,6 @@ def TA_Daily(f, ls:str='LONG', pointCol:str='HP_hi_10', atrSpan:int=10, lookBack
         sig.GappedWRBs(ls=ls, bswCol='BarSW', normRange=(0,100), lookBack=lookBack),
         sig.GappedPivots(ls=ls, normRange=(0, 3), pointCol=pointCol, spanPivots=10, lookBack=lookBack),
         sig.GappedPastPivot(ls=ls, normRange=(0,100), atrCol=atr_col, pointCol=pointCol, lookBack=lookBack, maxAtrMultiple=10),
-        sig.GapSize(ls=ls, normRange=(0,300), atrCol=atr_col, lookBack=lookBack),
         sig.RoomToMove(ls=ls, tgetCol=rtm_tget_col, atrCol=atr_col, unlimitedVal=5, normRange=(0,5), lookBack=lookBack)
     ]
     batch_add_ta(f, gap_tas,  {'dash': 'solid', 'color': 'yellow', 'width': 2}, chart_type='line', row=TArow)
@@ -615,4 +613,315 @@ def req_for_price_x(f, entryName, stopName, targetName, riskName, stopNameCol='S
     f.add_ta(ta.AddColumn(stopName), [{'color': 'magenta', 'size': 5}], chart_type='points', row=1, nameCol=stopNameCol)
     f.add_ta(ta.AddColumn(targetName), {'dash': 'solid', 'color': 'cyan', 'width': 3}, chart_type='lines+markers', row=1)
     f.add_ta(ta.AddColumn(riskName), {'dash': 'solid', 'color': 'red', 'width': 3}, chart_type='lines+markers', row=3)
+
+
+
+
+## --------------------------------------------------------------
+## --------------- T A   C L A S S E S ---------------------------
+## --------------------------------------------------------------
+
+
+@dataclass
+class ChartArgItem:
+    style: Dict[str, Any] | List[Dict[str, Any]] = field(default_factory=dict)
+    chartType: str = 'line'
+    row: int = 1
+    nameCol: pd.Series = None
+    columns: List[str] = None
+
+@dataclass
+class ChartArgs:
+    HPLPMajor: ChartArgItem = ChartArgItem(style=[{'color': 'green', 'size': 10}, {'color': 'red', 'size': 10}], chartType='points', row=1)
+    HPLPMinor: ChartArgItem = ChartArgItem(style=[{'color': 'green', 'size': 5},  {'color': 'red', 'size': 5}], chartType='points', row=1)
+    MA200:     ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'darkslateblue', 'width': 5}, chartType='line', row=1)
+    MA150:     ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'cornflowerblue', 'width': 4}, chartType='line', row=1)
+    MA50:      ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'darkmagenta', 'width': 3}, chartType='line', row=1)
+    MA21:      ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'hotpink', 'width': 2}, chartType='line', row=1)
+    MA13:      ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'deepskyblue', 'width': 1}, chartType='line', row=1)
+    MA9:       ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'khaki', 'width': 1}, chartType='line', row=1)
+    SupRes:    ChartArgItem = ChartArgItem(style=[
+        {'dash': 'solid', 'main_line_colour': 'green', 'zone_edge_colour': 'rgba(0, 255, 0, 0.3)', 'fillcolour': "rgba(0, 255, 0, 0.1)", 'width': 1}, # support # green = rgba(0, 255, 0, 0.1)
+        {'dash': 'solid', 'main_line_colour': 'red', 'fillcolour': "red", 'zone_edge_colour': 'rgba(255, 0, 0, 0.3)', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
+        chartType='support_resistance', row=1)
+    ATR:       ChartArgItem = ChartArgItem(style={}, chartType='', row=1)
+    VWAP:      ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 2}, chartType='line', row=1)
+    volAcum:   ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 2}, chartType='line', row=1)
+    VolChgPct: ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 2}, chartType='line', row=2)
+    VolumeSpike: ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 2}, chartType='line', row=2)
+    VolumeROC: ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 2}, chartType='line', row=2)
+
+    LevPrevDay : ChartArgItem = ChartArgItem(style={'dash': 'dash', 'color': 'yellow', 'width': 1}, chartType='line', row=1)
+    LevPreMkt  : ChartArgItem = ChartArgItem(style={'dash': 'dash', 'color': 'yellow', 'width': 1}, chartType='line', row=1)
+    LevIntraDay: ChartArgItem = ChartArgItem(style={'dash': 'dash', 'color': 'yellow', 'width': 1}, chartType='line', row=1)
+
+    GappedWRBs      : ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'orange', 'width': 3}, chartType='line', row=3)
+    GappedPivots    : ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'orange', 'width': 3}, chartType='line', row=3)
+    GappedPastPivot : ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'orange', 'width': 3}, chartType='line', row=3)
+
+    BarSW      : ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=3)
+    RoomToMove : ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'pink', 'width': 3}, chartType='line', row=3)
+    RS         : ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'cyan', 'width': 3}, chartType='line', row=3)
+
+    TouchWithBar: ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=3)
+    Retest:       ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=3)
+
+    Strategy1:           ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=4)
+    Strategy2:           ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=4)
+    Strategy3:           ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=4)
+
+
+    PB_PctHLLH:           ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=3)
+    PB_ASC:               ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=3)
+    PB_CoC_ByCountOpBars: ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=3)
+    PB_Overlap:           ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=3)
+
+    Score1:               ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+    Score2:               ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+    Score3:               ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+
+    Validation1:          ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=5)
+    Validation2:          ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=5)
+    Validation3:          ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=5)
+
+    ScoreValidation1:     ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+    ScoreValidation2:     ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+    ScoreValidation3:     ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+
+    scoreTouchWithBar1:   ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=5)
+    scoreTouchWithBar2:   ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=5)
+    scoreTouchWithBar3:   ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=5)
+
+    ScoreRetest1:         ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+    ScoreRetest2:         ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+    ScoreRetest3:         ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+
+    ScoreStrategy1:       ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+    ScoreStrategy2:       ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+    ScoreStrategy3:       ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+
+
+from typing import Tuple
+
+@dataclass
+class ValArgs:
+    ta : ta.TA | sig.Signals # object that has the name of the column etc and can get the values from the dataframe . eg ta.ATR.get_val(df, norm=(0,100))
+    norm : Tuple[int, int] | None = None # normalisation range. If none then just get rwa data. eg ta.ATR.get_val(df)
+    chartName: str = '' # name of how this is displayed in the chart eg 'ATR'
+    dataName: str = '' # name of the column in the dataframe eg 'ATR_14'
+
+
+
+@dataclass
+class TAPresets:
+    ca: ChartArgs = ChartArgs()
+    atrSpan: int = 14
+    # direction
+    ls: str = 'LONG'
+
+    # Check the type of data
+    barSize: str = '1 day'
+    isMarket: bool = False
+
+    # TA
+    pointSpanMajor: int = 10
+    pointSpanMinor: int = 3
+    supResTolerance: int = 1
+    vwapInterval: str = 'session'
+    lookBackDay: int = 10
+    lookBackIntra: int = 10
+    rsMA: int = 14
+
+    # Levels
+    prevDay: bool = True
+    preMarket: bool = True
+    intraday: bool = True
+
+    # Touches
+    toTouchAtrScale: int = 1
+    pastTouchAtrScale: int = 1
+
+    # r = Raw Data, s = Score,  v = Validation , sv = Score Validation
+  
+
+
+    def __post_init__(self):
+        self.ATR       = ta.ATR(span=self.atrSpan).add_chart_args(self.ca.ATR)
+        self.HPLPMajor = ta.HPLP(hi_col='high', lo_col='low', span=self.pointSpanMajor).add_chart_args(self.ca.HPLPMajor)
+        self.HPLPMinor = ta.HPLP(hi_col='high', lo_col='low', span=self.pointSpanMinor).add_chart_args(self.ca.HPLPMinor)
+        self.SupRes    = ta.SupRes(hi_point_col=self.HPLPMajor.name_hp, lo_point_col=self.HPLPMajor.name_lp, tolerance=self.supResTolerance, atr_col=self.ATR.name, rowsToUpdate=10).add_chart_args(self.ca.SupRes)
+        self.BarSW     = sig.BarSW(ls=self.ls, normRange=(-3,3), atrCol=self.ATR.name, lookBack=self.lookBackIntra).add_chart_args(self.ca.BarSW)
+        self.list_all = [self.ATR, self.HPLPMajor, self.HPLPMinor, self.SupRes, self.BarSW]
+
+        if not self.isMarket:
+            self.RoomToMove = sig.RoomToMove(ls=self.ls, tgetCol='Res_1_Lower' if self.ls == 'LONG' else 'Sup_1_Upper', atrCol=self.ATR.name, unlimitedVal=5, normRange=(0,5), lookBack=self.lookBackDay).add_chart_args(self.ca.RoomToMove)
+            self.RS         = ta.RS(comparisonPrefix='SPY', ma=self.rsMA, atr=self.atrSpan).add_chart_args(self.ca.RS)
+            self.list_all += [self.RoomToMove, self.RS]
+
+            # MA
+            if self.barSize in ['1 hour', '30 mins', '15 mins']:
+                self.MA21 = ta.MA(maCol='close', period=21).add_chart_args(self.ca.MA21)
+                self.MA50 = ta.MA(maCol='close', period=50).add_chart_args(self.ca.MA50)
+                self.list_all += [self.MA21, self.MA50]
+
+            if self.barSize in ['5 mins', '2 mins', '1 min']:
+                self.MA9 = ta.MA(maCol='close', period=9).add_chart_args(self.ca.MA9)
+                self.MA21 = ta.MA(maCol='close', period=21).add_chart_args(self.ca.MA21)
+                self.list_all += [self.MA9, self.MA21]
+
+            if self.barSize in ['1 day']:
+                self.MA50   = ta.MA(maCol='close', period=50).add_chart_args(self.ca.MA50)
+                self.MA150  = ta.MA(maCol='close', period=150).add_chart_args(self.ca.MA150)
+                self.MA200  = ta.MA(maCol='close', period=200).add_chart_args(self.ca.MA200)
+                self.list_all += [self.MA50, self.MA150, self.MA200]
+
+
+            # # Pullback
+            # if self.barSize in ['5 mins', '2 mins', '1 min']:
+            #     self.MA9                  = ta.MA(maCol='close', period=9)
+            #     self.MA21                 = ta.MA(maCol='close', period=21)
+            #     self.MA50                 = ta.MA(maCol='close', period=50)
+            #     self.PB_PctHLLH           = sig.PB_PctHLLH(ls=self.ls, hiCol='high', loCol='low', lookBack=self.lookBackIntra)
+            #     self.PB_ASC               = sig.PB_ASC(ls=self.ls, hiCol='high', loCol='low', lookBack=self.lookBackIntra)
+            #     self.PB_CoC_ByCountOpBars = sig.PB_CoC_ByCountOpBars(ls=self.ls, hiCol='high', loCol='low', lookBack=self.lookBackIntra)
+            #     self.PB_Overlap           = sig.PB_Overlap(ls=self.ls, hiCol='high', loCol='low', lookBack=self.lookBackIntra)
+            #     self.list_all += [self.PB_PctHLLH, self.PB_ASC, self.PB_CoC_ByCountOpBars, self.PB_Overlap]
+
+
+            # Gaps
+            if self.barSize == '1 day':
+                self.GappedWRBs        = sig.GappedWRBs(ls=self.ls, bswCol=self.BarSW.name, normRange=(0,100), lookBack=self.lookBackDay).add_chart_args(self.ca.GappedWRBs)
+                self.GappedPivots      = sig.GappedPivots(ls=self.ls, normRange=(0, 3), pointCol=self.HPLPMajor.name, spanPivots=10, lookBack=self.lookBackDay).add_chart_args(self.ca.GappedPivots)
+                self.GappedPastPivot   = sig.GappedPastPivot(ls=self.ls, normRange=(0,100), atrCol=self.ATR.name, pointCol=self.HPLPMajor.name, lookBack=self.lookBackDay, maxAtrMultiple=10).add_chart_args(self.ca.GappedPastPivot)
+                self.list_all += [self.GappedWRBs, self.GappedPivots, self.GappedPastPivot]
+                self.list_r_1D = [self.GappedWRBs, self.GappedPivots, self.GappedPastPivot, self.RS, self.RoomToMove]
+                
+                self.v_GappedWRBs      = sig.Validate(val1=self.GappedWRBs.name,      operator='>', val2=50, lookBack=self.lookBackDay),  # gapped retracement of 50% or more
+                self.v_GappedPivots    = sig.Validate(val1=self.GappedPivots.name,    operator='>', val2=1,  lookBack=self.lookBackDay),  # gapped pivots in the last 10 bars
+                self.v_GappedPastPivot = sig.Validate(val1=self.GappedPastPivot.name, operator='>', val2=80, lookBack=self.lookBackDay),  # gapped past pivot
+                self.list_all += [self.v_GappedWRBs, self.v_GappedPivots, self.v_GappedPastPivot]
+                self.list_v_1D = [self.v_GappedWRBs, self.v_GappedPivots, self.v_GappedPastPivot, self.RS, self.RoomToMove]
+
+                for_scores = [self.v_GappedWRBs, self.v_GappedPivots, self.v_GappedPastPivot, self.RS, self.RoomToMove]
+                for_scores_v = [self.v_GappedWRBs, self.v_GappedPivots, self.v_GappedPastPivot, self.RS, self.RoomToMove]   
+                cols = [t.name for t in for_scores]
+                self.s_1D = sig.Score(name='Score_1D', cols=cols, scoreType='mean', weight=1, lookBack=self.lookBackDay)
+                self.sv_1D_v = sig.Score(name='Score_1D_valid', cols=cols, scoreType='mean', weight=1, lookBack=self.lookBackDay)
+
+            # # VWAP
+            # if self.barSize in ['2 hours', '1 hour', '30 mins', '15 mins', '5 mins', '2 mins', '1 min']:
+            #     self.VWAP = ta.VWAP(column='close', interval=self.vwapInterval)
+
+            # # Volume
+            # if self.barSize in ['1 hour', '30 mins', '15 mins']:
+            #     self.volAcum   = ta.VolumeAccumulation()
+            #     self.VolChgPct = ta.VolumeTimeOfDayChangePct(lookbackDays=self.lookBackDay)
+            #     self.list_all += [self.VolChgPct, self.volAcum]
+
+            # # Levels
+            # if self.barSize in ['5 mins', '2 mins', '1 min']:
+            #     if self.prevDay:
+            #         self.LevelPrevDayHi   = ta.Levels(level='prev_day_high', ffill=True)
+            #         self.LevelPrevDayLo   = ta.Levels(level='prev_day_low', ffill=True)
+            #         self.list_all += [self.LevelPrevDayHi, self.LevelPrevDayLo]
+            #     if self.preMarket:
+            #         self.LevelPreMktHi    = ta.Levels(level='pre_mkt_high', ffill=True)
+            #         self.LevelPreMktLo    = ta.Levels(level='pre_mkt_low', ffill=True)
+            #         self.list_all += [self.LevelPreMktHi, self.LevelPreMktLo]
+            #     if self.intraday:
+            #         self.LevelIntraHi0935 = ta.Levels(level='intraday_high_9.35', ffill=False)
+            #         self.LevelIntraLo0935 = ta.Levels(level='intraday_low_9.35', ffill=False)
+            #         self.LevelIntraHi     = ta.Levels(level='intraday_high', ffill=False)
+            #         self.LevelIntraLo     = ta.Levels(level='intraday_low', ffill=False)
+            #         self.list_all += [self.LevelIntraHi0935, self.LevelIntraLo0935, self.LevelIntraHi, self.LevelIntraLo]
+
+            # # Touch with Bar (support/resistance this imported 1 day data, imported 1 hour data
+            # if self.barSize in ['5 mins', '2 mins', '1 min']:
+            #         direction = 'down' if self.ls == 'LONG' else 'up'
+            #         col1 = 'Sup_1_Upper'        if direction == 'down' else 'Res_1_Lower'
+            #         col2 = '1 hour_Sup_1_Upper' if direction == 'down' else '1 hour_Res_1_Lower'
+            #         col3 = '1 day_Sup_1_Upper'  if direction == 'down' else '1 day_Res_1_Lower'
+            #         self.touchSupRes      = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol=col1, direction=direction, toTouchAtrScale=self.toTouchAtrScale, pastTouchAtrScale=self.pastTouchAtrScale, lookBack=self.lookBackIntra)
+            #         self.touchSupRes1Hour = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol=col2, direction=direction, toTouchAtrScale=self.toTouchAtrScale, pastTouchAtrScale=self.pastTouchAtrScale, lookBack=self.lookBackIntra)
+            #         self.touchSupRes1Day  = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol=col3, direction=direction, toTouchAtrScale=self.toTouchAtrScale, pastTouchAtrScale=self.pastTouchAtrScale, lookBack=self.lookBackIntra)
+            #         self.touchPrevDayLo   = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol='prev_day_low', direction=direction, toTouchAtrScale=self.toTouchAtrScale, pastTouchAtrScale=self.pastTouchAtrScale, lookBack=self.lookBackIntra)
+            #         self.touchPrevDayHi   = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol='prev_day_high', direction=direction, toTouchAtrScale=self.toTouchAtrScale, pastTouchAtrScale=self.pastTouchAtrScale, lookBack=self.lookBackIntra)
+            
+            # x = False
+            # if x is  True: 
+            #     #!  Idea is to run the startegy on every timeframe and then asses all strategies accross all timeframes from StockX
+            #     #!  So needs to use the strategy to alos log what it used to alos log the scores so this can also be assesse . not just validsation but scores also
+
+            #     strat = sig.Strategy('PB', lookBack=100)
+
+            #     strat.pass_if(step=1, 
+            #                   val1=ValArgs(self.BarSW, chartName='BSW', dataName=self.BarSW.name), 
+            #                   operator='>', 
+            #                   datum=ValArgs(self.BarSW, chartName='BSW', dataName=self.BarSW.name))
+                
+            #     strat.pass_if(step=2, 
+            #                   val1=ValArgs(self.RS, norm=(0,100)), 
+            #                   operator='>', 
+            #                   datum=ValArgs(30, norm=(0,100)))
+
+            #     """
+            #     -- premarket higher volume than average
+            #     -- time > 9:35 (wait for first 5 mins to play out)
+            #     -- breaks premkt high
+            #     -- price moves above first 5 min bar high
+            #     -- price pulls back 
+            #         a. to max 50% of the first 5 min bar
+            #         b. 2 or more lower highs (LH)
+            #         c. sequential pullback with less than 50% overlap on any bar
+            #         d. touches a support level (prev day high, this day low, daily Res 1 lower )
+            #     -- bullish bar completes (BSW ..  bot tail or CoC)
+            #     -- buy signal is confirmed (RTM, RS, break prev bar high)
+            #     """
+
+            #     # validates various metris. each step must be fully validated before moving to the next step
+
+
+            #     # PreMkt - get validated once for the day and then used for all steps
+            #     # volume is already run in the daily setup
+            #     strat.pass_if(step=1, scoreCol=self.score_cols.time,   operator='>', threshold=1)
+                
+            #     # Step 1) - Moves up
+            #     strat.pass_if(step=2, scoreCol=self.score_cols.level_premkt_gt, operator='>', threshold=1)
+
+            #     # Step 2) - Pulls back and touches a level
+            #     strat.pass_if(step=3, scoreCol=self.score_cols.touches, operator='>', threshold=1)
+
+            #     # Step 3) - Pullback Quality
+            #     strat.pass_if(step=4, scoreCol=self.score_cols.pullback, operator='>', threshold=1)
+
+            #     # Step 4) - Buy Signals
+            #     strat.pass_if(step=5, scoreCol=self.score_cols.buysetup, operator='>', threshold=1)
+            #     strat.pass_if(step=5, scoreCol=self.score_cols.buy,      operator='>', threshold=1)
+            #     strat.pass_if(step=5, scoreCol=self.score_cols.rtm,      operator='>', threshold=1)
+
+
+            #     # resets all steps if any of the following events are true. can be applied to a step or all steps
+            #     """
+            #     -- Buysetup fails
+            #     -- price breaks below the first 5 min bar low
+            #     -- price breaks below days lows 
+            #     """
+            #     strat.reset_if(step=2, scoreCol='L_BuySetup_isFail',  operator='>', threshold=1, startFromStep=2)
+            #     strat.reset_if(step=5, scoreCol=self.score_cols.reset_if_breaks, operator='>', threshold=1, startFromStep=2)
+
+            #     """
+            #     Retruns:
+            #     -- current step: the step that is being evaluated
+            #     -- steps passed: the number of steps that have been passed
+            #     -- conditions met: the number of conditions that have been met
+            #     -- action: 'BUY' or 'SELL'
+            #     """
+
+            #     #     f.add_multi_ta(strat, [
+            #     #         ChartArgs({'dash': 'solid', 'color': 'cyan', 'width':5},     chartType='lines+markers', row=5, columns=[strat.name_pct_complete])
+            #     #     ],
+            #     #     runOnLoad=False)
+            
+            #     # self.stats.status = SignalStatus.PRE_MARKET
+            #     # self.stats.status_why = f"Intraday TA is set up {self.intradaySizes}"
 

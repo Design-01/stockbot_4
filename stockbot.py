@@ -118,20 +118,22 @@ class StockBot:
 
 
     #£
-    def run_stock_daily_analysis(self, limit:int=5):
+    def run_stock_daily_analysis(self, ls:str='LONG', limit:int=5):
         self.stocks['SPY'].RUN_DAILY(isMarket=True)
         count = 0
 
         for stock in self.stocks.values():
             if count == limit: break
             if stock.isMarket: continue # automatically skip the market. gets set to True within StockX when the stock is SPY or QQQ
-            stock.RUN_DAILY(self.stocks['SPY'])
-            stock.set_daily_stats()
-            self.stats_daily.append(stock.stats_daily)
+            stock.RUN_DAILY(ls='LONG', spy=self.stocks['SPY'])
+            # stock.set_daily_stats()
+            # self.stats_daily.append(stock.stats_daily)
             
             count += 1
 
         self.save_stats_daily_to_csv()
+
+        print(f"Daily analysis complete:: {count} stocks analyzed")
         
 
     def get_daily_stats(self, query=None, sort_by='score_1D', ascending=False, top_n=None, columns=None):
