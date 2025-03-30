@@ -6,7 +6,7 @@ from chart.chart import Chart # Use relative import for Chart
 import strategies.ta as ta
 from strategies.ta import TA
 from strategies.signals import Signals
-from strategies.preset_strats import ChartArgs, TAPresets
+from strategies.preset_strats import ChartArgs, TAPresets1D, TAPresets1H, TAPresets5M2M1M
 import numpy as np
 
 
@@ -18,7 +18,7 @@ class Frame:
     trading_hours: List[Tuple[str, str]] = field(default_factory=lambda: [("09:30", "16:00")])
     rowHeights: List[float] = field(default_factory=lambda: [0.1, 0.2, 0.2, 0.6])
     name: str = None
-    taPresets: TAPresets = TAPresets()
+    taPresets: TAPresets1D | TAPresets1H | TAPresets5M2M1M = None
 
     def __post_init__(self):
         self.traders = []

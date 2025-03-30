@@ -269,13 +269,76 @@ class Signals(ABC):
 
 @dataclass
 class Score(Signals):
+    """
+    Calculates and evaluates scores from multiple signals or column values based on a specified scoring method.
+    
+    Score Types:
+    - Basic Aggregations:
+      - 'mean': Average value across all specified columns
+      - 'sum': Sum of values across all specified columns
+      - 'max': Maximum value across all specified columns
+      - 'min': Minimum value across all specified columns
+    
+    - All Conditions (all columns must meet condition):
+      - 'all_gt': All values are greater than the threshold
+      - 'all_ge': All values are greater than or equal to the threshold
+      - 'all_lt': All values are less than the threshold
+      - 'all_le': All values are less than or equal to the threshold
+      - 'all_eq': All values are equal to the threshold
+      - 'all_ne': All values are not equal to the threshold
+    
+    - Any Conditions (at least one column must meet condition):
+      - 'any_gt': Any value is greater than the threshold
+      - 'any_ge': Any value is greater than or equal to the threshold
+      - 'any_lt': Any value is less than the threshold
+      - 'any_le': Any value is less than or equal to the threshold
+      - 'any_eq': Any value is equal to the threshold
+      - 'any_ne': Any value is not equal to the threshold
+    
+    - Special Types:
+      - 'cumsum': Cumulative sum of values, maintaining state between calls
+    
+    For aggregation types (mean, sum, max, min, cumsum), the score is considered 'passed'
+    when the result is >= validThreshold.
+    
+    For conditional types (all_* and any_*), the result is already a boolean and used directly
+    as the 'passed' value.
+    
+    Parameters:
+    -----------
+    sigs : List[Signals]
+        List of signal objects whose names will be used as columns to evaluate
+    cols : List[str]
+        Direct list of column names to use (cannot be used together with sigs)
+    weight : float
+        Multiplier applied to the final score value
+    scoreType : str
+        Type of score calculation to perform
+    validThreshold : int
+        Threshold value for determining if score passes
+    containsString : str
+        Filter to only include columns containing this string
+    containsAllStrings : List[str]
+        Filter to only include columns containing all of these strings
+    rawName : str
+        Override the default score name
+    cumsum : float
+        Initial value for cumulative sum (for 'cumsum' scoreType)
+    passed : bool
+        Whether the score passes its threshold check
+    """
+    sigs: List[Signals] = field(default_factory=list)
     cols: List[str] = field(default_factory=list)
     weight: float = 1.0
     scoreType: str = 'mean'  # 'mean', 'sum', 'max', 'min'
     validThreshold: int = 1
+    geThreshold: float = 0.0
+    leThreshold: float = 0.0
     containsString: str = ''
     containsAllStrings: List[str] = field(default_factory=list)
     rawName: str = ''
+    cumsum: float = 0.0
+    passed: bool = False
     
     def __post_init__(self):
         """Initialize the Score class and validate inputs."""
@@ -286,9 +349,21 @@ class Score(Signals):
         self.names = [self.name]
         self._filtered_cols = None  # Cache for filtered columns
     
+    def reset_cumsum(self):
+        self.cumsum = 0.0
+    
+    def reset_passed(self):
+        self.passed = False
+    
     def _get_filtered_columns(self, df: pd.DataFrame) -> List[str]:
         """Get and cache filtered columns to avoid recomputation."""
         if self._filtered_cols is None:
+            if len(self.sigs) > 0:
+                cols = [sig.name for sig in self.sigs]
+
+            if len(self.cols) > 0 and len(self.sigs) > 0:
+                raise ValueError("Score::Cannot provide both sigs and cols")
+
             cols = self.cols if self.cols else list(df.columns)
             
             if self.containsString:
@@ -300,6 +375,12 @@ class Score(Signals):
             self._filtered_cols = cols
             
         return self._filtered_cols
+    
+    def _passed(self, val:float):
+        if self.geThreshold > 0: self.passed = val >= self.geThreshold
+        if self.leThreshold > 0: self.passed = val <= self.leThreshold
+        else: self.passed = val >= self.validThreshold
+
     
     def _compute_row(self, df: pd.DataFrame) -> float:
         """Compute score for the current window of data."""
@@ -315,20 +396,56 @@ class Score(Signals):
         # Compute the score based on type
         if self.scoreType == 'mean':
             val = rows_to_score.mean(axis=1).iloc[0]  # Mean across filtered columns, including NaNs as 0
+            self._passed(val)
         elif self.scoreType == 'sum':
             val = rows_to_score.sum(axis=1).iloc[0]
+            self._passed(val)
         elif self.scoreType == 'max':
             val = rows_to_score.max(axis=1).iloc[0]
+            self._passed(val)
         elif self.scoreType == 'min':
             val = rows_to_score.min(axis=1).iloc[0]
+            self._passed(val)
         elif self.scoreType == 'all_gt':
             val = rows_to_score.gt(self.validThreshold).all(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'all_ge':
+            val = rows_to_score.ge(self.validThreshold).all(axis=1).iloc[0]
+            self.passed = val
         elif self.scoreType == 'all_lt':
             val = rows_to_score.lt(self.validThreshold).all(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'all_le':
+            val = rows_to_score.le(self.validThreshold).all(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'all_eq':
+            val = rows_to_score.eq(self.validThreshold).all(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'all_ne':
+            val = rows_to_score.ne(self.validThreshold).all(axis=1).iloc[0]
+            self.passed = val
         elif self.scoreType == 'any_gt':
             val = rows_to_score.gt(self.validThreshold).any(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'any_ge':
+            val = rows_to_score.ge(self.validThreshold).any(axis=1).iloc[0]
+            self.passed = val
         elif self.scoreType == 'any_lt':
             val = rows_to_score.lt(self.validThreshold).any(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'any_le':
+            val = rows_to_score.le(self.validThreshold).any(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'any_eq':
+            val = rows_to_score.eq(self.validThreshold).any(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'any_ne':
+            val = rows_to_score.ne(self.validThreshold).any(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'cumsum':
+            self.cumsum += rows_to_score.sum(axis=1).iloc[0]
+            val = self.cumsum
+            self.passed = val >= self.validThreshold
         else:
             val = np.nan
         
@@ -895,7 +1012,75 @@ class Trace(Signals):
         return 0
 
 
+@dataclass
+class Lower:
+    name     : str = 'Lower'
+    col : str = ''
+    span: int = 1
+    allLower: bool = False
 
+    def __post_init__(self):
+        self.name = f"{self.name}_{self.col}_{self.span}"
+        self.names = [self.name]  
+
+    def _compute_row(self, df:pd.DataFrame=pd.DataFrame()):
+        """Computes the % of bars that have a lower highs (BULL pullback, so downward)
+        Vice versa for BEAR case. So this is only for pullbacks not overall trends. """
+
+        if not df.empty:
+            if len(df) > self.span:
+                if self.allLower:
+                    window = df[self.col].iloc[-self.span:]
+                    mask = window[self.col] < window[self.col].shift(1)
+                    return mask.all() 
+                else:
+                    return df[self.col].iloc[-1] < df[self.col].iloc[-self.span]
+        return 0  
+    
+
+@dataclass
+class Higher:
+    name     : str = 'Higher'
+    col : str = ''
+    span: int = 1
+    allHigher: bool = False
+
+    def __post_init__(self):
+        self.name = f"{self.name}_{self.col}_{self.span}"
+        self.names = [self.name]  
+
+    def _compute_row(self, df:pd.DataFrame=pd.DataFrame()):
+        """Computes the % of bars that have a lower highs (BULL pullback, so downward)
+        Vice versa for BEAR case. So this is only for pullbacks not overall trends. """
+
+        if not df.empty:
+            if len(df) > self.span:
+                if self.allHigher:
+                    window = df[self.col].iloc[-self.span:]
+                    mask = window[self.col] > window[self.col].shift(1)
+                    return mask.all()
+                else:
+                    return df[self.col].iloc[-1] > df[self.col].iloc[-self.span]
+        return 0
+    
+
+@dataclass
+class ColourWithLS:
+    """Chceks if the current bar is the same colour as the trade direction."""
+    name: str = 'ColourWithLS'
+    ls: str = 'LONG'
+
+    def __post_init__(self):
+        self.name = f"{self.ls[0]}_{self.name}"
+        self.names = [self.name]
+
+    def _compute_row(self, df:pd.DataFrame=pd.DataFrame()):
+        if not df.empty:
+            if self.ls == 'LONG':
+                return df['open'].iat[-1] > df['close'].iat[-1]
+            elif self.ls == 'SHORT':
+                return df['open'].iat[-1] < df['close'].iat[-1]
+        return 0
 
 # --------------------------------------------------------------
 # ------- R E V E R S A L   S I G N A L S ----------------------

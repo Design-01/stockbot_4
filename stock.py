@@ -19,7 +19,7 @@ from industry_classifications.sector import get_etf_from_sector_code
 import emails.email_client as email_client
 from project_paths import get_project_path
 from chart.chart import ChartArgs
-from strategies.preset_strats import TAPresets
+from strategies.preset_strats import TAPresets1D, TAPresets1H, TAPresets5M2M1M
 
 
 
@@ -834,7 +834,7 @@ from trades.tradex import TraderX
 import time
 from data.live_ib_data import LiveData
 from data.historical_data import HistoricalData
-from strategies.preset_strats import TAPresets
+
 
 @dataclass
 class TAData:
@@ -1085,7 +1085,14 @@ class StockX:
         self.ls = ls
         self.trader.set_ls(ls)
 
-    def setup_frame(self, timeframe, dataType:str='random', duration:str="3 D", endDateTime:str='now', isIntradayFrame:bool=False, isTradeFrame:bool=False, isDayFrame:bool=False, taPresets:TAPresets=None):
+    #! Not Used
+    def get_ta_preset(self, barSize:str):
+        if barSize == '1 day': return TAPresets1D()
+        if barSize == '1 hour': return TAPresets1H()
+        if barSize in ['5 mins', '2 mins', '1 min']: return TAPresets5M2M1M()
+
+
+    def setup_frame(self, timeframe, dataType:str='random', duration:str="3 D", endDateTime:str='now', isIntradayFrame:bool=False, isTradeFrame:bool=False, isDayFrame:bool=False, taPresets:TAPresets1D | TAPresets1H | TAPresets5M2M1M=None):
         if isIntradayFrame:
             self.intradaySizes.append(timeframe)
         if isTradeFrame:
