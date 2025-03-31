@@ -358,13 +358,15 @@ class Score(Signals):
     def _get_filtered_columns(self, df: pd.DataFrame) -> List[str]:
         """Get and cache filtered columns to avoid recomputation."""
         if self._filtered_cols is None:
-            if len(self.sigs) > 0:
-                cols = [sig.name for sig in self.sigs]
-
             if len(self.cols) > 0 and len(self.sigs) > 0:
                 raise ValueError("Score::Cannot provide both sigs and cols")
+            
+            # Use signal names if provided, otherwise use column names
+            if len(self.sigs) > 0:
+                cols = [sig.name for sig in self.sigs]
+            else:
+                cols = self.cols if self.cols else list(df.columns)
 
-            cols = self.cols if self.cols else list(df.columns)
             
             if self.containsString:
                 cols = [col for col in cols if self.containsString in col]
@@ -378,7 +380,7 @@ class Score(Signals):
     
     def _passed(self, val:float):
         if self.geThreshold > 0: self.passed = val >= self.geThreshold
-        if self.leThreshold > 0: self.passed = val <= self.leThreshold
+        elif self.leThreshold > 0: self.passed = val <= self.leThreshold
         else: self.passed = val >= self.validThreshold
 
     
@@ -388,6 +390,9 @@ class Score(Signals):
         if not filtered_cols:
             return np.nan
         
+
+        # print(f'{self.name=} {filtered_cols=}')
+        
         rows_to_score = df[filtered_cols].iloc[-1:]  # Latest row
         
         # Replace NaN with 0 to include them in calculations
@@ -396,6 +401,7 @@ class Score(Signals):
         # Compute the score based on type
         if self.scoreType == 'mean':
             val = rows_to_score.mean(axis=1).iloc[0]  # Mean across filtered columns, including NaNs as 0
+            # print(f'{self.name=} {val=}')
             self._passed(val)
         elif self.scoreType == 'sum':
             val = rows_to_score.sum(axis=1).iloc[0]

@@ -735,6 +735,7 @@ class TAPresets1D(TAPresetsBase):
     GappedPastPivot_normRange: tuple[int, int] = (0,100)
     BarSW_normRange:           tuple[int, int] = (-3,3)
     RoomToMove_normRange:      tuple[int, int] = (0,5)
+    isSpy: bool = False
 
     def __post_init__(self):
         super().__post_init__()
@@ -745,20 +746,36 @@ class TAPresets1D(TAPresetsBase):
         self.l_ma = [self.MA50, self.MA150, self.MA200]
 
         # Signals (Primary)
-        self.BarSW           = sig.BarSW(ls=self.ls, normRange=self.BarSW_normRange, atrCol=self.ATR.name, lookBack=self.lookBack).add_chart_args(self.ca.BarSW)
+        self.BarSW           = sig.BarSW(ls=self.ls, normRange=self.BarSW_normRange, atrCol=self.ATR.name, lookBack=self.lookBack).add_chart_args(self.ca.BarSW) 
+        self.add_to_ta_list([self.BarSW])
+
+
+        self.l_sigs = []
+
+        if not self.isSpy:
+            self.RS = ta.RS(comparisonPrefix='SPY', ma=10, atr=50).add_chart_args(self.ca.RS)
+            # ! TODO make the RS into a score with Norm range  
+            self.l_sigs += [self.RS]
+ 
         self.RoomToMove      = sig.RoomToMove(ls=self.ls, tgetCol='Res_1_Lower' if self.ls == 'LONG' else 'Sup_1_Upper', atrCol=self.ATR.name, unlimitedVal=5, normRange=self.RoomToMove_normRange, lookBack=self.lookBack).add_chart_args(self.ca.RoomToMove)
         self.GappedWRBs      = sig.GappedWRBs(ls=self.ls, bswCol=self.BarSW.name, normRange=self.GappedWRBs_normRange, lookBack=self.lookBack).add_chart_args(self.ca.GappedWRBs)
         self.GappedPivots    = sig.GappedPivots(ls=self.ls, normRange=self.GappedPivots_normRange, pointCol=self.HPLPMajor.name, spanPivots=10, lookBack=self.lookBack).add_chart_args(self.ca.GappedPivots)
         self.GappedPastPivot = sig.GappedPastPivot(ls=self.ls, normRange=self.GappedPastPivot_normRange, atrCol=self.ATR.name, pointCol=self.HPLPMajor.name, lookBack=self.lookBack, maxAtrMultiple=10).add_chart_args(self.ca.GappedPastPivot)
-        self.l_sigs = [self.BarSW, self.RoomToMove, self.GappedWRBs, self.GappedPivots, self.GappedPastPivot] # NOTE Order of list is important when one sig refernecs anotehr sig
+        self.l_sigs += [self.RoomToMove, self.GappedWRBs, self.GappedPivots, self.GappedPastPivot] # NOTE Order of list is important when one sig refernecs anotehr sig
+        # self.l_sigs = [self.RoomToMove, self.GappedWRBs, self.GappedPivots, self.GappedPastPivot] # NOTE Order of list is important when one sig refernecs anotehr sig
 
         # Validate Signals
-        self.v_BarSW           = sig.Validate(ls=self.ls, val1=self.BarSW.name,           operator='>', val2=1,  lookBack=self.lookBack) # .add_chart_args(self.ca.BarSW)  # bar strength
+        self.l_vads = []
+        if not self.isSpy:
+            self.v_RS = sig.Validate(ls=self.ls, val1=self.RS.name, operator='>', val2=1, lookBack=self.lookBack).add_chart_args(self.ca.RS)
+            self.l_vads += [self.v_RS]
+
         self.v_RoomToMove      = sig.Validate(ls=self.ls, val1=self.RoomToMove.name,      operator='>', val2=1,  lookBack=self.lookBack)  # room to move
         self.v_GappedWRBs      = sig.Validate(ls=self.ls, val1=self.GappedWRBs.name,      operator='>', val2=50, lookBack=self.lookBack)  # gapped retracement of 50% or more
         self.v_GappedPivots    = sig.Validate(ls=self.ls, val1=self.GappedPivots.name,    operator='>', val2=1,  lookBack=self.lookBack)  # gapped pivots in the last 10 bars
         self.v_GappedPastPivot = sig.Validate(ls=self.ls, val1=self.GappedPastPivot.name, operator='>', val2=80, lookBack=self.lookBack)  # gapped past pivot
-        self.l_vads = [self.v_GappedWRBs, self.v_GappedPivots, self.v_GappedPastPivot, self.v_BarSW, self.v_RoomToMove]
+        # self.l_vads = [self.v_GappedWRBs, self.v_GappedPivots, self.v_GappedPastPivot, self.v_RS, self.v_RoomToMove]
+        self.l_vads += [self.v_GappedWRBs, self.v_GappedPivots, self.v_GappedPastPivot, self.v_RoomToMove]
 
         # Scores
         # self.s_1D  = sig.Score(ls=self.ls, name='s_1D',  cols=[s.name for s in self.l_sigs], scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.Score1D)
@@ -776,6 +793,8 @@ class TAPresets1H(TAPresetsBase):
     name: str = '1H'
     ls: str = 'LONG'
     lookBack: int = 10
+    volChgPctThreshold: int = 80
+    isSpy: bool = False
 
     def __post_init__(self):
         super().__post_init__()
@@ -788,14 +807,14 @@ class TAPresets1H(TAPresetsBase):
         self.l_sigs = [self.VolAcum, self.VolChgPct]
 
         # Validate Signals
-        self.v_VolChgPct = sig.Validate(val1=self.VolChgPct.name, operator='>', val2=1, lookBack=self.lookBack)
+        self.v_VolChgPct = sig.Validate(val1=self.VolChgPct.name, operator='>', val2=self.volChgPctThreshold, lookBack=self.lookBack)
         self.l_vads = [self.v_VolChgPct]
 
         # Scores
-        self.s  = sig.Score(name='s_1H',  cols=[s.name for s in self.l_sigs], scoreType='mean', weight=1, lookBack=self.lookBack)
-        self.sv = sig.Score(name='sv_1H', cols=[v.name for v in self.l_vads], scoreType='mean', weight=1, lookBack=self.lookBack)
+        self.s_1H  = sig.Score(name='s_1H_TODC',  normRange=(0,100), sigs=[self.VolChgPct], scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
+        self.sv_1H = sig.Score(name='sv_1H_TODC', normRange=(0,100), sigs=[self.v_VolChgPct], scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1H)
 
-        self.add_to_ta_list(self.l_sigs + self.l_vads + [self.s, self.sv])
+        self.add_to_ta_list(self.l_sigs + self.l_vads + [self.s_1H, self.sv_1H])
 
 
 @dataclass

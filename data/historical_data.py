@@ -1282,9 +1282,12 @@ class HistoricalData:
         # Convert strings to datetime objects
         date_list = pd.to_datetime(date_list)
         
-        # Get min and max dates
+        # Get min and max dates 
+        #  add last 
         min_date = min(date_list)
-        max_date = max(date_list)
+
+        # make hours 23:59:59
+        max_date = max(date_list).replace(hour=23, minute=59, second=59)
         
         # Slice DataFrame using .loc
         return df.loc[min_date:max_date]
@@ -1306,15 +1309,28 @@ class HistoricalData:
             useRTH=useRTH,
             formatDate=1)
         df = util.df(bars)
+
         if df is not None:
             df.set_index('date', inplace=True)
+            df.index = pd.to_datetime(df.index)
+
+            # The data returned is always UTC time (Current local time) 
+            # so need to covert to US/Eastern but without the timezone info
+            
+            # 1. create tz aware index
+            # 2. convert to US/Eastern
+            # 3. remove timezone info
+            est = pytz.timezone('US/Eastern')
+            df.index = df.index.tz_localize('UTC').tz_convert(est)
+            df.index = df.index.tz_localize(None)
+
         return df
     
     def predict_ib_dates(self, end_datetime_str, duration_str, timezone_str="US/Eastern"):
         # Parse the end date/time string
         parts = end_datetime_str.split(' ')
         date_str = parts[0]
-        time_str = parts[1] if len(parts) > 1 else "00:00:00"
+        time_str = parts[1] if len(parts) > 1 else "23:59:59"
         tz_str = parts[2] if len(parts) > 2 else timezone_str
         
         # Parse into datetime object
@@ -1864,12 +1880,12 @@ class HistoricalData:
             A DataFrame containing the historical market data for the specified symbol and time range,
             with a DatetimeIndex, resampled to the requested interval
         """
-        
+        original_endDateTime = endDateTime
         # Step 1: Determine storage interval based on requested interval
         interval = self.normalize_interval(interval)
         endDateTime = self.normalize_date_for_ib(endDateTime)
         original_interval = interval  # Store the original requested interval
-        
+
         # Map the requested interval to the appropriate storage interval
         if interval in STORAGE_MINUTE_INTERVALS:
             storage_interval = '1 min'  # Store as minute data
@@ -1942,7 +1958,7 @@ class HistoricalData:
         
         # Step 13: Print information about the data retrieval if requested
         if print_info:
-            print(f"{symbol} {original_interval} {durationStr} :: {dates[0]} to {dates[-1]} rows: {len(new_data)}, missing: {len(missing_requests)}, Data stored as {storage_interval} and resampled to {original_interval}")
+            print(f"{symbol} {original_interval} {durationStr} :: {new_data.index[0]} to {new_data.index[-1]} rows: {len(new_data)}, missing: {len(missing_requests)}, Data stored as {storage_interval} and resampled to {original_interval}")
         
         # Return the processed data
         return new_data
