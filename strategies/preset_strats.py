@@ -645,11 +645,11 @@ class ChartArgs:
         {'dash': 'solid', 'main_line_colour': 'red', 'fillcolour': "red", 'zone_edge_colour': 'rgba(255, 0, 0, 0.3)', 'fillcolour': "rgba(255, 0, 0, 0.1)", 'width': 1}], # resistance # red = rgba(255, 0, 0, 0.1)
         chartType='support_resistance', row=1)
     ATR:       ChartArgItem = ChartArgItem(style={}, chartType='', row=1)
-    VWAP:      ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 2}, chartType='line', row=1)
-    volAcum:   ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 2}, chartType='line', row=1)
-    VolChgPct: ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 2}, chartType='line', row=2)
-    VolumeSpike: ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 2}, chartType='line', row=2)
-    VolumeROC: ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 2}, chartType='line', row=2)
+    VWAP:      ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 1}, chartType='line', row=1)
+    volAcum:   ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 1}, chartType='line', row=2)
+    VolChgPct: ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 1}, chartType='line', row=3)
+    VolumeSpike: ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 1}, chartType='line', row=3)
+    VolumeROC: ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 1}, chartType='line', row=3)
 
     LevPrevDay : ChartArgItem = ChartArgItem(style={'dash': 'dash', 'color': 'yellow', 'width': 1}, chartType='line', row=1)
     LevPreMkt  : ChartArgItem = ChartArgItem(style={'dash': 'dash', 'color': 'yellow', 'width': 1}, chartType='line', row=1)
@@ -676,9 +676,10 @@ class ChartArgs:
     PB_CoC_ByCountOpBars: ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=3)
     PB_Overlap:           ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=3)
 
-    Score1:               ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
-    Score2:               ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
-    Score3:               ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+    Score1D:              ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 2}, chartType='line', row=4)
+    ScoreV1D:             ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'cyan',    'width': 2}, chartType='line', row=4)
+    Score1H:              ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 2}, chartType='line', row=4)
+    ScoreV1H:             ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'cyan',    'width': 2}, chartType='line', row=4)
 
     Validation1:          ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=5)
     Validation2:          ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=5)
@@ -714,6 +715,14 @@ class TAPresetsBase:
         self.HPLPMajor = ta.HPLP(hi_col='high', lo_col='low', span=self.pointSpanMajor).add_chart_args(self.ca.HPLPMajor)
         self.HPLPMinor = ta.HPLP(hi_col='high', lo_col='low', span=self.pointSpanMinor).add_chart_args(self.ca.HPLPMinor)
         self.SupRes    = ta.SupRes(hi_point_col=self.HPLPMajor.name_hp, lo_point_col=self.HPLPMajor.name_lp, tolerance=self.supResTolerance, atr_col=self.ATR.name, rowsToUpdate=10).add_chart_args(self.ca.SupRes)
+        self.l_base = [self.ATR, self.HPLPMajor, self.HPLPMinor, self.SupRes]
+        self.ta_list = self.l_base
+
+    def get_ta_list(self):
+        return self.ta_list
+    
+    def add_to_ta_list(self, ta):
+        self.ta_list += ta # #! Do not use append as it will create a list of lists
 
 
 @dataclass
@@ -729,31 +738,35 @@ class TAPresets1D(TAPresetsBase):
 
     def __post_init__(self):
         super().__post_init__()
+        print(f'{self.name} :: {self.ls} :: {self.lookBack}')
         self.MA50   = ta.MA(maCol='close', period=50).add_chart_args(self.ca.MA50)
         self.MA150  = ta.MA(maCol='close', period=150).add_chart_args(self.ca.MA150)
         self.MA200  = ta.MA(maCol='close', period=200).add_chart_args(self.ca.MA200)
+        self.l_ma = [self.MA50, self.MA150, self.MA200]
 
         # Signals (Primary)
         self.BarSW           = sig.BarSW(ls=self.ls, normRange=self.BarSW_normRange, atrCol=self.ATR.name, lookBack=self.lookBack).add_chart_args(self.ca.BarSW)
-        self.RoomToMove      = sig.RoomToMove(ls=self.ls, tgetCol='Res_1_Lower' if self.ls == 'LONG' else 'Sup_1_Upper', atrCol=self.ATR.name, unlimitedVal=5, normRange=self.RoomToMove_normRange, lookBack=self.lookBack)
+        self.RoomToMove      = sig.RoomToMove(ls=self.ls, tgetCol='Res_1_Lower' if self.ls == 'LONG' else 'Sup_1_Upper', atrCol=self.ATR.name, unlimitedVal=5, normRange=self.RoomToMove_normRange, lookBack=self.lookBack).add_chart_args(self.ca.RoomToMove)
         self.GappedWRBs      = sig.GappedWRBs(ls=self.ls, bswCol=self.BarSW.name, normRange=self.GappedWRBs_normRange, lookBack=self.lookBack).add_chart_args(self.ca.GappedWRBs)
         self.GappedPivots    = sig.GappedPivots(ls=self.ls, normRange=self.GappedPivots_normRange, pointCol=self.HPLPMajor.name, spanPivots=10, lookBack=self.lookBack).add_chart_args(self.ca.GappedPivots)
         self.GappedPastPivot = sig.GappedPastPivot(ls=self.ls, normRange=self.GappedPastPivot_normRange, atrCol=self.ATR.name, pointCol=self.HPLPMajor.name, lookBack=self.lookBack, maxAtrMultiple=10).add_chart_args(self.ca.GappedPastPivot)
-        self.l_sigs = [self.GappedWRBs, self.GappedPivots, self.GappedPastPivot, self.BarSW, self.RoomToMove]
+        self.l_sigs = [self.BarSW, self.RoomToMove, self.GappedWRBs, self.GappedPivots, self.GappedPastPivot] # NOTE Order of list is important when one sig refernecs anotehr sig
 
         # Validate Signals
-        self.v_BarSW           = sig.Validate(val1=self.BarSW.name,           operator='>', val2=1,  lookBack=self.lookBack)  # bar strength
-        self.v_RoomToMove      = sig.Validate(val1=self.RoomToMove.name,      operator='>', val2=1,  lookBack=self.lookBack)  # room to move
-        self.v_GappedWRBs      = sig.Validate(val1=self.GappedWRBs.name,      operator='>', val2=50, lookBack=self.lookBack)  # gapped retracement of 50% or more
-        self.v_GappedPivots    = sig.Validate(val1=self.GappedPivots.name,    operator='>', val2=1,  lookBack=self.lookBack)  # gapped pivots in the last 10 bars
-        self.v_GappedPastPivot = sig.Validate(val1=self.GappedPastPivot.name, operator='>', val2=80, lookBack=self.lookBack)  # gapped past pivot
+        self.v_BarSW           = sig.Validate(ls=self.ls, val1=self.BarSW.name,           operator='>', val2=1,  lookBack=self.lookBack) # .add_chart_args(self.ca.BarSW)  # bar strength
+        self.v_RoomToMove      = sig.Validate(ls=self.ls, val1=self.RoomToMove.name,      operator='>', val2=1,  lookBack=self.lookBack)  # room to move
+        self.v_GappedWRBs      = sig.Validate(ls=self.ls, val1=self.GappedWRBs.name,      operator='>', val2=50, lookBack=self.lookBack)  # gapped retracement of 50% or more
+        self.v_GappedPivots    = sig.Validate(ls=self.ls, val1=self.GappedPivots.name,    operator='>', val2=1,  lookBack=self.lookBack)  # gapped pivots in the last 10 bars
+        self.v_GappedPastPivot = sig.Validate(ls=self.ls, val1=self.GappedPastPivot.name, operator='>', val2=80, lookBack=self.lookBack)  # gapped past pivot
         self.l_vads = [self.v_GappedWRBs, self.v_GappedPivots, self.v_GappedPastPivot, self.v_BarSW, self.v_RoomToMove]
 
         # Scores
-        self.s  = sig.Score(name='s_1D',  cols=[s.name for s in self.l_sigs], scoreType='mean', weight=1, lookBack=self.lookBack)
-        self.sv = sig.Score(name='sv_1D', cols=[v.name for v in self.l_vads], scoreType='mean', weight=1, lookBack=self.lookBack)
+        # self.s_1D  = sig.Score(ls=self.ls, name='s_1D',  cols=[s.name for s in self.l_sigs], scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.Score1D)
+        # self.sv_1D = sig.Score(ls=self.ls, name='sv_1D', cols=[v.name for v in self.l_vads], scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1D)
+        self.s_1D  = sig.Score(ls=self.ls, name='s_1D',  sigs=self.l_sigs, scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.Score1D) #! not showing on chart 
+        self.sv_1D = sig.Score(ls=self.ls, name='sv_1D', sigs=self.l_vads, scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1D) #! not showing on chart
 
-        self.L_all = [self.ATR, self.HPLPMajor, self.HPLPMinor, self.SupRes, self.MA50, self.MA150, self.MA200] + self.l_sigs + self.l_vads + [self.s, self.sv]
+        self.add_to_ta_list(self.l_ma + self.l_sigs + self.l_vads + [self.s_1D, self.sv_1D])
 
         #! TODO: Add the stratgey
 
@@ -772,15 +785,17 @@ class TAPresets1H(TAPresetsBase):
         # Signals (Primary) - Volume
         self.VolAcum   = ta.VolumeAccumulation().add_chart_args(self.ca.volAcum)
         self.VolChgPct = ta.VolumeTimeOfDayChangePct(lookbackDays=self.lookBack).add_chart_args(self.ca.VolChgPct)
-        self.l_sigs += [self.VolAcum, self.VolChgPct]
+        self.l_sigs = [self.VolAcum, self.VolChgPct]
 
         # Validate Signals
         self.v_VolChgPct = sig.Validate(val1=self.VolChgPct.name, operator='>', val2=1, lookBack=self.lookBack)
-        self.l_vads += [self.v_VolChgPct]
+        self.l_vads = [self.v_VolChgPct]
 
         # Scores
         self.s  = sig.Score(name='s_1H',  cols=[s.name for s in self.l_sigs], scoreType='mean', weight=1, lookBack=self.lookBack)
         self.sv = sig.Score(name='sv_1H', cols=[v.name for v in self.l_vads], scoreType='mean', weight=1, lookBack=self.lookBack)
+
+        self.add_to_ta_list(self.l_sigs + self.l_vads + [self.s, self.sv])
 
 
 @dataclass

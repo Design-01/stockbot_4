@@ -34,11 +34,12 @@ class StockBot:
     def insert_tracker_data(self, whereValue:str, insertAtColumn:float, newValue:float):
         self.tracker_df.loc[self.tracker_df['symbol'] == whereValue, insertAtColumn] = newValue
 
-    def connect_to_ib(self, paper:bool=True, clientId:int=10, runFromNotebook:bool=True):
+    def connect_to_ib(self, paper:bool=True, clientId:int=10, runFromNotebook:bool=True, useIBGateway:bool=False):
         if paper: 
             if runFromNotebook:
                 util.startLoop()
-            self.ib.connect('127.0.0.1', 7496, clientId=clientId)
+            port = 4002 if useIBGateway else 7497
+            self.ib.connect('127.0.0.1', port, clientId=clientId)
 
     def disiconnect_from_ib(self):
         self.ib.disconnect()

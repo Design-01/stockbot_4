@@ -2067,6 +2067,7 @@ class RoomToMove(Signals):
     unlimitedVal: int = 10
 
     def __post_init__(self):
+        
         self.name = f"{self.name}_{self.ls[0]}_{self.tgetCol}"
         self.names = [self.name]
 

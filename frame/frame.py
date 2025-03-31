@@ -147,7 +147,9 @@ class Frame:
     
     def run_ta(self):
         """Run all technical indicators in the frame."""
-        for ta in self.taPresets.ta_list:
+        for ta in self.taPresets.get_ta_list():
+            # print(f'Frame :: run_ta : Running {ta} ')
+            # print(f'Frame :: run_ta : Running {ta.name=} ')
             self.data = self.update_data(ta.run(self.data))
 
     def add_multi_ta(self, ta: TA, chartArgs:List[ChartArgs], runOnLoad:bool=True):
