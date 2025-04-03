@@ -1004,7 +1004,7 @@ class StockX:
     def get_stats(self) -> StockStats:
         return self.stats
 
-    def get_live_price(self):
+    def get_today_ohlcv(self):
         contract = Stock(self.symbol, 'SMART', 'USD')
         
         # Check if there's already an active market data request for this contract
@@ -1017,7 +1017,7 @@ class StockX:
         # Request new market data
         ticker = self.ib.reqMktData(contract)
         self.ib.sleep(2)
-        return ticker.close
+        return ticker.open, ticker.high, ticker.low, ticker.last, ticker.volume
 
     #!------ Check Methods ---------------- Work in Progress
 
@@ -1093,6 +1093,7 @@ class StockX:
 
 
     def setup_frame(self, timeframe, dataType:str='random', duration:str="3 D", endDateTime:str='now', isIntradayFrame:bool=False, isTradeFrame:bool=False, isDayFrame:bool=False, taPresets:TAPresets1D | TAPresets1H | TAPresets5M2M1M=None):
+        print(f"StockX::setup_frame:  -------- testing ------- {self.symbol=} {timeframe=} {dataType=} {duration=} {endDateTime=} --------- ")
         if isIntradayFrame:
             self.intradaySizes.append(timeframe)
         if isTradeFrame:
@@ -1119,6 +1120,7 @@ class StockX:
             self.frames[timeframe].load_ohlcv(df)
 
         elif dataType == 'ohlcv':
+
             df = self.historicaldata.get_data(self.symbol, timeframe, endDateTime,  durationStr=duration, print_info=True)
             self.frames[name].load_ohlcv(df)
 
@@ -1135,10 +1137,9 @@ class StockX:
     def add_today_row_live_data(self, df):
         today_date = datetime.now().strftime('%Y-%m-%d')
         df.loc[today_date] = np.nan
-        live_price = self.get_live_price()
-        # print(f"StockX::add_today_row_live_data: {self.symbol} {today_date} {live_price}")
-        df.loc[today_date, ['open', 'high', 'low', 'close']] = live_price
-        df.index = pd.to_datetime(df.index, format='%Y-%m-%d')
+        op, hi, lo, cl, vol = self.get_today_ohlcv()
+        df.loc[today_date, ['open', 'high', 'low', 'close', 'volume']] = op, hi, lo, cl, vol
+        df.index = pd.to_datetime(df.index, format='%Y-%m-%d') 
         return df
 
     def setup_all_frames(self, dataType:str='ohlcv', end_date="now", force_download:bool=False):
@@ -1310,16 +1311,16 @@ class StockX:
     def RUN_DAILY(self, ls:str='', spy:object=None, isMarket:bool=False, displayCharts:bool=False, printStats:bool=False, forceDownload:bool=False):
         print(f"------------ StockX::RUN_DAILY: {self.symbol} {self.ls}------------------------------------------------------------------------")
 
-        self.set_ls('SHORT')
+        self.set_ls(ls)
         if isMarket:
-            self.setup_frame('1 day', 'ohlcv', duration="200 D", endDateTime='now', isDayFrame=True,      taPresets=TAPresets(isMarket=True, barSize='1 day'))
-            self.setup_frame('1 hour', 'ohlcv', duration="15 D", endDateTime='now', isIntradayFrame=True, taPresets=TAPresets(isMarket=True, barSize='1 hour'))
+            self.setup_frame('1 day', 'ohlcv', duration="200 D", endDateTime='now', isDayFrame=True,      taPresets=TAPresets1D(ls=self.ls, isSpy=True))
+            self.setup_frame('1 hour', 'ohlcv', duration="15 D", endDateTime='now', isIntradayFrame=True, taPresets=TAPresets1H(ls=self.ls, isSpy=True))
             self.frames['1 day'].run_ta()
             self.frames['1 hour'].run_ta()
 
         else:
-            self.setup_frame('1 day', 'ohlcv', duration="200 D", endDateTime='now', isDayFrame=True,      taPresets=TAPresets(isMarket=False, barSize='1 day'))
-            self.setup_frame('1 hour', 'ohlcv', duration="15 D", endDateTime='now', isIntradayFrame=True, taPresets=TAPresets(isMarket=False, barSize='1 hour'))
+            self.setup_frame('1 day', 'ohlcv', duration="200 D", endDateTime='now', isDayFrame=True,      taPresets=TAPresets1D(ls=self.ls, lookBack=100))
+            self.setup_frame('1 hour', 'ohlcv', duration="15 D", endDateTime='now', isIntradayFrame=True, taPresets=TAPresets1H(ls=self.ls, lookBack=100, volChgPctThreshold=50))
             self.import_all_market_data(spy)
             self.frames['1 day'].run_ta()
             self.frames['1 hour'].run_ta()

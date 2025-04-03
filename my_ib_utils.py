@@ -179,3 +179,25 @@ ib.connect('127.0.0.1', 7497, clientId=1)
 is_trading = is_within_trading_hours(ib, 'TSLA', debug=True)
 print(f"TSLA is {'within' if is_trading else 'outside'} trading hours")
 """
+
+
+def get_current_date(tz=None):
+    """
+    Get the current date in a specific timezone.
+    
+    Args:
+        tz (str, optional): Timezone name (e.g., 'UTC', 'US/Eastern', 'Europe/London').
+                           If None, returns date in UTC.
+    
+    Returns:
+        datetime.date: The current date in the specified timezone
+    
+    Raises:
+        pytz.exceptions.UnknownTimeZoneError: If the timezone name is invalid
+    """
+    if tz is None:
+        tz = 'UTC'
+    
+    timezone = pytz.timezone(tz)
+    current_datetime = datetime.now(timezone)
+    return current_datetime.date()

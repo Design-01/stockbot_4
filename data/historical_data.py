@@ -1312,17 +1312,17 @@ class HistoricalData:
 
         if df is not None:
             df.set_index('date', inplace=True)
-            df.index = pd.to_datetime(df.index)
-
-            # The data returned is always UTC time (Current local time) 
-            # so need to covert to US/Eastern but without the timezone info
             
-            # 1. create tz aware index
-            # 2. convert to US/Eastern
-            # 3. remove timezone info
-            est = pytz.timezone('US/Eastern')
-            df.index = df.index.tz_localize('UTC').tz_convert(est)
-            df.index = df.index.tz_localize(None)
+            # If working with daily data, just convert to datetime without time component
+            if interval in ['1 day', '1W', '1M']:
+                df.index = pd.to_datetime(df.index).normalize()
+            else:
+                # For intraday data, handle timezone conversion
+                df.index = pd.to_datetime(df.index)
+                # Assume the data is already in the exchange timezone
+                # Just make it timezone-naive if needed
+                if df.index.tzinfo is not None:
+                    df.index = df.index.tz_localize(None)
 
         return df
     
@@ -1928,8 +1928,12 @@ class HistoricalData:
         list_of_data = self.new_data + [stored_data]
 
         # # Display the last date of each dataset
-        # print(f"new data   : {self.new_data[0].index[-1]}, type: {type(self.new_data[0].index[-1])}")
-        # print(f"stored data: {stored_data.index[-1]}, type: {type(stored_data.index[-1])}")
+        # print(f"get_data :: endDateTime: {endDateTime}")
+        # print(f"get_data :: stored_dates         : {stored_dates}")
+        # print(f"get_data :: missing requests     : {missing_requests}")
+        # print(f"get_data :: consolidated_requests: {consolidated_requests}")
+        # print(f"get_data :: list_of_data: {list_of_data}")
+
 
         # for d in list_of_data:
         #     print(d.index[-1])  #

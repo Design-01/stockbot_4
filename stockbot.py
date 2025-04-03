@@ -120,7 +120,7 @@ class StockBot:
 
     #£
     def run_stock_daily_analysis(self, ls:str='LONG', limit:int=5):
-        self.stocks['SPY'].RUN_DAILY(isMarket=True)
+        self.stocks['SPY'].RUN_DAILY(isMarket=True, ls=ls)
         count = 0
 
         for stock in self.stocks.values():

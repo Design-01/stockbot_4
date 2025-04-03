@@ -12,8 +12,6 @@ def preprocess_data(func):
     return wrapper
 
 
-
-
 @dataclass
 class TA(ABC):
     column: str = None

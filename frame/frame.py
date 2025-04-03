@@ -42,7 +42,6 @@ class Frame:
             # Drop duplicate indexes, keeping the last occurrence
             self.data = combined_data[~combined_data.index.duplicated(keep='last')].sort_index()
 
-
     def setup_chart(self):
         title = f"{self.symbol} ({self.name})" if self.name else self.symbol  
         self.chart = Chart(title=title, rowHeights=self.rowHeights, height=800, width=800)
@@ -68,7 +67,9 @@ class Frame:
         if not isinstance(self.data.index, pd.DatetimeIndex):
             raise ValueError("Main DataFrame must have a datetime index")
         if not isinstance(new_data.index, pd.DatetimeIndex):
-            raise ValueError("New data must have a datetime index")
+            print('---- Error: New data must have a datetime index. Skipping update!.')
+            print(f"New data index that threw this error {new_data.index}.")
+            pass
         
         # Create a fresh copy of the main DataFrame and deduplicate
         updated_df = self.data.copy()
