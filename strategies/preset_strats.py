@@ -661,7 +661,8 @@ class ChartArgs:
 
     BarSW      : ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=3)
     RoomToMove : ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'pink', 'width': 3}, chartType='line', row=3)
-    RS         : ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'cyan', 'width': 3}, chartType='line', row=3)
+    RS         : ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'purple', 'width': 3}, chartType='line', row=3)
+    RSScore    : ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'cyan', 'width': 3}, chartType='line', row=4)
 
     TouchWithBar: ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=3)
     Retest:       ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'yellow', 'width': 3}, chartType='line', row=3)
@@ -754,8 +755,9 @@ class TAPresets1D(TAPresetsBase):
 
         if not self.isSpy:
             self.RS = ta.RS(comparisonPrefix='SPY', ma=10, atr=50).add_chart_args(self.ca.RS)
-            # ! TODO make the RS into a score with Norm range  
-            self.l_sigs += [self.RS]
+            normRange = (0, 5) if self.ls == 'LONG' else (-5, 0)
+            self.s_RSScore = sig.Score(ls=self.ls, name='RS', normRange=normRange, invertScoreIfShort=True, cols=[self.RS.name], scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.RSScore)
+            self.l_sigs += [self.RS, self.s_RSScore]
  
         self.RoomToMove      = sig.RoomToMove(ls=self.ls, tgetCol='Res_1_Lower' if self.ls == 'LONG' else 'Sup_1_Upper', atrCol=self.ATR.name, unlimitedVal=5, normRange=self.RoomToMove_normRange, lookBack=self.lookBack).add_chart_args(self.ca.RoomToMove)
         self.GappedWRBs      = sig.GappedWRBs(ls=self.ls, bswCol=self.BarSW.name, normRange=self.GappedWRBs_normRange, lookBack=self.lookBack).add_chart_args(self.ca.GappedWRBs)

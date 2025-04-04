@@ -171,6 +171,7 @@ class Signals(ABC):
     ls: str = 'LONG'
     lookBack: int = 1
     chartArgs: ChartArgs = None
+    invertScoreIfShort: bool = False
 
     def __post_init__(self):
         self.name = f"{self.ls[0]}_{self.name}"
@@ -240,7 +241,6 @@ class Signals(ABC):
     def run(self, df: pd.DataFrame = pd.DataFrame()) -> pd.Series:
         """Generate signal scores for the lookback period."""
         if len(df) < 10:
-            # return self.return_series(df.index[-1:], self.get_score(0))
             return self.return_series(df.index[-1:], self.get_score(0))
         
         lookback = min(self.lookBack, len(df))  # Include all rows in the lookback period
@@ -262,8 +262,9 @@ class Signals(ABC):
             if not pd.isna(val):
                 result_series.iloc[i] = float(val)
 
-
-        return self.return_series(df.index[-lookback:], self.get_score(result_series))
+        #  if the invertScoreIfShort is True then invert the score if also SHORT.  Allows for example Relative market weakness to be turned int strength if shorting
+        score = self.get_score(result_series)*-1 if self.invertScoreIfShort and self.ls=='SHORT' else self.get_score(result_series) 
+        return self.return_series(df.index[-lookback:], score)
 
 
 
@@ -1653,52 +1654,144 @@ class GappedPivots(Signals):
 #£ Done
 @dataclass
 class GappedWRBs(Signals):
+    """
+    Measures the shock value of price gaps by calculating a cumulative score based on the strength/weakness
+    of prior price bars that have been "gapped over" by the current bar.
+    
+    This class evaluates price action after a gap (up for LONG signals, down for SHORT signals) and
+    calculates a score by summing the strength/weakness values of relevant historical bars that meet
+    specific criteria. The calculation gives higher scores to gaps that move beyond multiple significant
+    prior bars with strong price action in the opposite direction.
+    
+    Attributes:
+        name (str): Base name for the signal, defaults to 'GapWRBs'
+        bswCol (str): Column name in the dataframe containing bar strength/weakness values
+        ls (str): Signal direction, either 'LONG' or 'SHORT' (inherited from Signals parent class)
+        names (list): List containing the formatted signal name
+    
+    Notes:
+        - The class expects a pandas DataFrame with OHLC data and a bar strength/weakness column
+        - The calculation only applies when there is a true gap (current low > previous high for LONG,
+          current high < previous low for SHORT)
+        - For performance reasons, the calculation stops evaluating prior bars when certain boundary
+          conditions are met
+    """
     name: str = 'GapWRBs'
     bswCol: str = ''
 
     def __post_init__(self):
+        """
+        Initialize the signal name by prepending the first letter of the signal direction ('L' or 'S')
+        to the base name.
+        """
         self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]
 
     def _compute_row(self, df: pd.DataFrame) -> float:
         """
-        Measures the shock value of a gap by getting the recent bars it gapped over and then adding their BarSW scores.
+        Calculates the shock value score for a price gap by analyzing prior bars.
+        
+        For LONG signals:
+            1. Confirms a true gap exists (current bar's low > previous bar's high)
+            2. Establishes boundaries for evaluation:
+               - upper_bound: Current bar's close price
+               - lower_bound: Previous bar's close price
+               - cancel_price: Previous bar's low price
+            3. Iterates backward through prior bars and adds to the score when:
+               - The bar's high is below the upper_bound (hasn't exceeded current close)
+               - The bar's high is above the cancel_price (hasn't gone too low)
+               - The bar's high is above the lower_bound (is relevant to the gap zone)
+               - The bar is a down bar (close < open), representing counter-trend strength
+            4. Breaks iteration when a bar's high exceeds upper_bound or falls below cancel_price
+        
+        For SHORT signals:
+            1. Confirms a true gap exists (current bar's high < previous bar's low)
+            2. Establishes boundaries for evaluation:
+               - upper_bound: Previous bar's close price
+               - lower_bound: Current bar's close price
+               - cancel_price: Previous bar's high price
+            3. Iterates backward through prior bars and adds to the score when:
+               - The bar's low is above the lower_bound (hasn't gone below current close)
+               - The bar's low is below the cancel_price (hasn't gone too high)
+               - The bar's low is below the upper_bound (is relevant to the gap zone)
+               - The bar is an up bar (close > open), representing counter-trend strength
+            4. Breaks iteration when a bar's low falls below lower_bound or exceeds cancel_price
+        
+        Args:
+            df (pd.DataFrame): DataFrame containing OHLC data and the bar strength/weakness column.
+                               The most recent bar is assumed to be at the end of the DataFrame.
+        
+        Returns:
+            float: The cumulative score representing the shock value of the gap. Returns 0.0 if 
+                  there is no valid gap or if no prior bars meet the criteria.
         """
+        score_sum = 0.0
 
         if self.ls == 'LONG':
-            # get the most recent bar price
-            price = df.close.iat[-1]
-            score_sum = 0.0
+            # Check if there's a true gap up (current low > previous high)
+            this_lo = df.low.iat[-1]
+            prev_hi = df.high.iat[-2]
+            is_gap = this_lo > prev_hi
+            if not is_gap:
+                return 0.0
 
-            # iterate through the bars going back from the most recent bar
-            for i in range(len(df) - 2, -1, -1):  # Start from second-to-last bar and go backward
-                # if the price > high then add the BarSW score to the score_sum
-                if price > df.high.iat[i]:
-                    score_sum += df[self.bswCol].iat[i]
-                # if the price < low then break the loop and return the score_sum
-                elif price < df.low.iat[i]:
+            # Define evaluation boundaries
+            upper_bound = df.close.iat[-1]  # Current bar close as ceiling
+            lower_bound = df.close.iat[-2]  # Previous bar close as floor
+            cancel_price = df.low.iat[-2]   # Previous bar low as invalidation level
+
+            # Iterate through bars backward from the second-to-last bar
+            for i in range(len(df) - 2, -1, -1):
+                # Stop if bar high exceeds the upper bound (current close)
+                if df.high.iat[i] > upper_bound:
                     break
-            
-            return score_sum
-        
+
+                # Stop if bar high is below the cancel price (too low to be relevant)
+                if df.high.iat[i] < cancel_price:
+                    break
+
+                # Skip bars where high is below lower bound (not relevant to gap zone)
+                if df.high.iat[i] < lower_bound:
+                    continue
+
+                # Only count down bars (close < open) as they represent counter-trend strength
+                if df.close.iat[i] < df.open.iat[i]:
+                    score_sum += abs(df[self.bswCol].iat[i])
+
         elif self.ls == 'SHORT':
-            # get the most recent bar price
-            price = df.close.iat[-1]
-            score_sum = 0.0
-
-            # iterate through the bars going back from the most recent bar
-            for i in range(len(df) - 2, -1, -1):  # Start from second-to-last bar and go backward
-                # if the price < low then add the BarSW score to the score_sum
-                if price < df.low.iat[i]:
-                    score_sum += df[self.bswCol].iat[i]
-                # if the price > high then break the loop and return the score_sum
-                elif price > df.high.iat[i]:
-                    break
+            # Check if there's a true gap down (current high < previous low)
+            this_hi = df.high.iat[-1]
+            prev_lo = df.low.iat[-2]
+            is_gap = this_hi < prev_lo
+            if not is_gap:
+                return 0.0
             
-            return score_sum
+            # Define evaluation boundaries
+            upper_bound = df.close.iat[-2]  # Previous bar close as ceiling
+            lower_bound = df.close.iat[-1]  # Current bar close as floor
+            cancel_price = df.high.iat[-2]  # Previous bar high as invalidation level
+            
+            # Iterate through bars backward from the second-to-last bar
+            for i in range(len(df) - 2, -1, -1):
+                # Stop if bar low falls below the lower bound (current close)
+                if df.low.iat[i] < lower_bound:
+                    break
+
+                # Stop if bar low exceeds the cancel price (too high to be relevant)
+                if df.low.iat[i] > cancel_price:
+                    break
+
+                # Skip bars where low is above upper bound (not relevant to gap zone)
+                if df.low.iat[i] > upper_bound:
+                    continue
+
+                # Only count up bars (close > open) as they represent counter-trend strength
+                if df.close.iat[i] > df.open.iat[i]:
+                    score_sum += abs(df[self.bswCol].iat[i])
+            
+        return score_sum
         
-        # Default return if neither LONG nor SHORT
-        return 0.0
+
 
 
 
@@ -1910,7 +2003,9 @@ class SentimentMAvsPrice(Signals):
         normalized_price_change = price_change / current_atr
 
         return normalized_price_change
-    
+
+
+
 
 # -----------------------------------------------------------------------
 # ---- V O L U M E ------------------------------------------------------
