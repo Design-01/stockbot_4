@@ -268,199 +268,7 @@ class Signals(ABC):
 
 
 
-@dataclass
-class Score(Signals):
-    """
-    Calculates and evaluates scores from multiple signals or column values based on a specified scoring method.
-    
-    Score Types:
-    - Basic Aggregations:
-      - 'mean': Average value across all specified columns
-      - 'sum': Sum of values across all specified columns
-      - 'max': Maximum value across all specified columns
-      - 'min': Minimum value across all specified columns
-    
-    - All Conditions (all columns must meet condition):
-      - 'all_gt': All values are greater than the threshold
-      - 'all_ge': All values are greater than or equal to the threshold
-      - 'all_lt': All values are less than the threshold
-      - 'all_le': All values are less than or equal to the threshold
-      - 'all_eq': All values are equal to the threshold
-      - 'all_ne': All values are not equal to the threshold
-    
-    - Any Conditions (at least one column must meet condition):
-      - 'any_gt': Any value is greater than the threshold
-      - 'any_ge': Any value is greater than or equal to the threshold
-      - 'any_lt': Any value is less than the threshold
-      - 'any_le': Any value is less than or equal to the threshold
-      - 'any_eq': Any value is equal to the threshold
-      - 'any_ne': Any value is not equal to the threshold
-    
-    - Special Types:
-      - 'cumsum': Cumulative sum of values, maintaining state between calls
-    
-    For aggregation types (mean, sum, max, min, cumsum), the score is considered 'passed'
-    when the result is >= validThreshold.
-    
-    For conditional types (all_* and any_*), the result is already a boolean and used directly
-    as the 'passed' value.
-    
-    Parameters:
-    -----------
-    sigs : List[Signals]
-        List of signal objects whose names will be used as columns to evaluate
-    cols : List[str]
-        Direct list of column names to use (cannot be used together with sigs)
-    weight : float
-        Multiplier applied to the final score value
-    scoreType : str
-        Type of score calculation to perform
-    validThreshold : int
-        Threshold value for determining if score passes
-    containsString : str
-        Filter to only include columns containing this string
-    containsAllStrings : List[str]
-        Filter to only include columns containing all of these strings
-    rawName : str
-        Override the default score name
-    cumsum : float
-        Initial value for cumulative sum (for 'cumsum' scoreType)
-    passed : bool
-        Whether the score passes its threshold check
-    """
-    sigs: List[Signals] = field(default_factory=list)
-    cols: List[str] = field(default_factory=list)
-    weight: float = 1.0
-    scoreType: str = 'mean'  # 'mean', 'sum', 'max', 'min'
-    validThreshold: int = 1
-    geThreshold: float = 0.0
-    leThreshold: float = 0.0
-    containsString: str = ''
-    containsAllStrings: List[str] = field(default_factory=list)
-    rawName: str = ''
-    cumsum: float = 0.0
-    passed: bool = False
-    
-    def __post_init__(self):
-        """Initialize the Score class and validate inputs."""
-        if self.scoreType not in ['mean', 'sum', 'max', 'min', 'all_gt', 'all_lt', 'any_gt', 'any_lt']:
-            raise ValueError(f"Invalid scoreType: {self.scoreType}")
-            
-        self.name = self.rawName if self.rawName else f"Score_{self.name}"
-        self.names = [self.name]
-        self._filtered_cols = None  # Cache for filtered columns
-    
-    def reset_cumsum(self):
-        self.cumsum = 0.0
-    
-    def reset_passed(self):
-        self.passed = False
-    
-    def _get_filtered_columns(self, df: pd.DataFrame) -> List[str]:
-        """Get and cache filtered columns to avoid recomputation."""
-        if self._filtered_cols is None:
-            if len(self.cols) > 0 and len(self.sigs) > 0:
-                raise ValueError("Score::Cannot provide both sigs and cols")
-            
-            # Use signal names if provided, otherwise use column names
-            if len(self.sigs) > 0:
-                cols = [sig.name for sig in self.sigs]
-            else:
-                cols = self.cols if self.cols else list(df.columns)
 
-            
-            if self.containsString:
-                cols = [col for col in cols if self.containsString in col]
-            
-            if self.containsAllStrings:
-                cols = [col for col in cols if all(s in col for s in self.containsAllStrings)]
-                
-            self._filtered_cols = cols
-            
-        return self._filtered_cols
-    
-    def _passed(self, val:float):
-        if self.geThreshold > 0: self.passed = val >= self.geThreshold
-        elif self.leThreshold > 0: self.passed = val <= self.leThreshold
-        else: self.passed = val >= self.validThreshold
-
-    
-    def _compute_row(self, df: pd.DataFrame) -> float:
-        """Compute score for the current window of data."""
-        filtered_cols = self._get_filtered_columns(df)
-        if not filtered_cols:
-            return np.nan
-        
-
-        # print(f'{self.name=} {filtered_cols=}')
-        
-        rows_to_score = df[filtered_cols].iloc[-1:]  # Latest row
-        
-        # Replace NaN with 0 to include them in calculations
-        rows_to_score = rows_to_score.fillna(0)
-        
-        # Compute the score based on type
-        if self.scoreType == 'mean':
-            val = rows_to_score.mean(axis=1).iloc[0]  # Mean across filtered columns, including NaNs as 0
-            # print(f'{self.name=} {val=}')
-            self._passed(val)
-        elif self.scoreType == 'sum':
-            val = rows_to_score.sum(axis=1).iloc[0]
-            self._passed(val)
-        elif self.scoreType == 'max':
-            val = rows_to_score.max(axis=1).iloc[0]
-            self._passed(val)
-        elif self.scoreType == 'min':
-            val = rows_to_score.min(axis=1).iloc[0]
-            self._passed(val)
-        elif self.scoreType == 'all_gt':
-            val = rows_to_score.gt(self.validThreshold).all(axis=1).iloc[0]
-            self.passed = val
-        elif self.scoreType == 'all_ge':
-            val = rows_to_score.ge(self.validThreshold).all(axis=1).iloc[0]
-            self.passed = val
-        elif self.scoreType == 'all_lt':
-            val = rows_to_score.lt(self.validThreshold).all(axis=1).iloc[0]
-            self.passed = val
-        elif self.scoreType == 'all_le':
-            val = rows_to_score.le(self.validThreshold).all(axis=1).iloc[0]
-            self.passed = val
-        elif self.scoreType == 'all_eq':
-            val = rows_to_score.eq(self.validThreshold).all(axis=1).iloc[0]
-            self.passed = val
-        elif self.scoreType == 'all_ne':
-            val = rows_to_score.ne(self.validThreshold).all(axis=1).iloc[0]
-            self.passed = val
-        elif self.scoreType == 'any_gt':
-            val = rows_to_score.gt(self.validThreshold).any(axis=1).iloc[0]
-            self.passed = val
-        elif self.scoreType == 'any_ge':
-            val = rows_to_score.ge(self.validThreshold).any(axis=1).iloc[0]
-            self.passed = val
-        elif self.scoreType == 'any_lt':
-            val = rows_to_score.lt(self.validThreshold).any(axis=1).iloc[0]
-            self.passed = val
-        elif self.scoreType == 'any_le':
-            val = rows_to_score.le(self.validThreshold).any(axis=1).iloc[0]
-            self.passed = val
-        elif self.scoreType == 'any_eq':
-            val = rows_to_score.eq(self.validThreshold).any(axis=1).iloc[0]
-            self.passed = val
-        elif self.scoreType == 'any_ne':
-            val = rows_to_score.ne(self.validThreshold).any(axis=1).iloc[0]
-            self.passed = val
-        elif self.scoreType == 'cumsum':
-            self.cumsum += rows_to_score.sum(axis=1).iloc[0]
-            val = self.cumsum
-            self.passed = val >= self.validThreshold
-        else:
-            val = np.nan
-        
-        return round(val * self.weight, 1) if not pd.isna(val) else np.nan
-    
-    def reset_cache(self):
-        """Reset the filtered columns cache if needed (e.g., if columns change)."""
-        self._filtered_cols = None
             
 
 #£ Done
@@ -2522,12 +2330,18 @@ class MultiSignals(ABC):
     ls: str = 'LONG'
     lookBack: int = 1
     columnStartsWith: str = ''
+    chartArgs: ChartArgs = None
+    invertScoreIfShort: bool = False
 
     def __post_init__(self):
         """Initialize with empty signal names - will be populated during setup."""
         self.names = []
         self.source_columns = []
         self.column_mapping = {}
+
+    def add_chart_args(self, chartArgs: ChartArgs):
+        self.chartArgs = chartArgs
+        return self
 
     def setup_columns(self, df: pd.DataFrame):
         """Set up column mappings and signal names."""
@@ -2540,23 +2354,36 @@ class MultiSignals(ABC):
             self.names.append(signal_name)
             self.column_mapping[col] = signal_name
 
-    def get_score(self, val):
-        """Normalize values efficiently using vectorized operations."""
-        def normalize_vec(x):
-                if x is None:
-                    return np.nan  # or another suitable default value, like np.nan
-                normalized = (x - self.normRange[0]) / (self.normRange[1] - self.normRange[0]) * 100
-                clamped = np.clip(normalized, 0, 100)  # Clamp the values between 0 and 100
-                return np.round(clamped, 2)  # Added rounding to match single-value function
+    # def get_score(self, val):
+    #     """Normalize values efficiently using vectorized operations."""
+    #     def normalize_vec(x):
+    #             if x is None:
+    #                 return np.nan  # or another suitable default value, like np.nan
+    #             normalized = (x - self.normRange[0]) / (self.normRange[1] - self.normRange[0]) * 100
+    #             clamped = np.clip(normalized, 0, 100)  # Clamp the values between 0 and 100
+    #             return np.round(clamped, 2)  # Added rounding to match single-value function
         
-        # if norm range is ste to None, return the value as is
-        if self.normRange is None:
-            return val
+    #     # if norm range is ste to None, return the value as is
+    #     if self.normRange is None:
+    #         return val
 
 
-        if isinstance(val, (pd.Series, pd.DataFrame)):
-            return val.apply(normalize_vec)
-        return normalize_vec(val)
+    #     if isinstance(val, (pd.Series, pd.DataFrame)):
+    #         return val.apply(normalize_vec)
+    #     return normalize_vec(val)
+    
+    def get_score(self, val):
+        if isinstance(val, pd.Series):
+            # Apply the function to each element in the series
+            # return val.apply(lambda x: 0 if x == 0 else normalize(x, self.normRange[0], self.normRange[1]))
+            return val.apply(lambda x: 0 if x == 0 else (np.nan if pd.isna(x) else normalize(x, self.normRange[0], self.normRange[1])))
+        else:
+            # Handle single value
+            if pd.isna(val):
+                return np.nan
+            if val == 0:
+                return 0
+            return normalize(val, self.normRange[0], self.normRange[1])
 
     @abstractmethod
     def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -2588,15 +2415,226 @@ class MultiSignals(ABC):
         for name in self.names:
             if name not in signals.columns:
                 signals[name] = np.nan
-                
+
+
         # Normalize the results
         for col in signals.columns:
-            signals[col] = self.get_score(signals[col])
+            s1 = self.get_score(signals[col])
+            #  if the invertScoreIfShort is True then invert the score if also SHORT.  Allows for example Relative market weakness to be turned int strength if shorting
+            signals[col] = s1*-1 if self.invertScoreIfShort and self.ls=='SHORT' else s1
+
+
+        # # Normalize the results
+        # for col in signals.columns:
+        #     signals[col] = self.get_score(signals[col])
 
         return signals
 #$ -------  Cosnsolidation and Trend Signals ---------------
 
+@dataclass
+class Score(MultiSignals):
+    """
+    Calculates and evaluates scores from multiple signals or column values based on a specified scoring method.
+    
+    Score Types:
+    - Basic Aggregations:
+      - 'mean': Average value across all specified columns
+      - 'sum': Sum of values across all specified columns
+      - 'max': Maximum value across all specified columns
+      - 'min': Minimum value across all specified columns
+    
+    - All Conditions (all columns must meet condition):
+      - 'all_gt': All values are greater than the threshold
+      - 'all_ge': All values are greater than or equal to the threshold
+      - 'all_lt': All values are less than the threshold
+      - 'all_le': All values are less than or equal to the threshold
+      - 'all_eq': All values are equal to the threshold
+      - 'all_ne': All values are not equal to the threshold
+    
+    - Any Conditions (at least one column must meet condition):
+      - 'any_gt': Any value is greater than the threshold
+      - 'any_ge': Any value is greater than or equal to the threshold
+      - 'any_lt': Any value is less than the threshold
+      - 'any_le': Any value is less than or equal to the threshold
+      - 'any_eq': Any value is equal to the threshold
+      - 'any_ne': Any value is not equal to the threshold
+    
+    - Special Types:
+      - 'cumsum': Cumulative sum of values, maintaining state between calls
+    
+    For aggregation types (mean, sum, max, min, cumsum), the score is considered 'passed'
+    when the result is >= validThreshold.
+    
+    For conditional types (all_* and any_*), the result is already a boolean and used directly
+    as the 'passed' value.
+    
+    Parameters:
+    -----------
+    sigs : List[Signals]
+        List of signal objects whose names will be used as columns to evaluate
+    cols : List[str]
+        Direct list of column names to use (cannot be used together with sigs)
+    weight : float
+        Multiplier applied to the final score value
+    scoreType : str
+        Type of score calculation to perform
+    validThreshold : int
+        Threshold value for determining if score passes
+    containsString : str
+        Filter to only include columns containing this string
+    containsAllStrings : List[str]
+        Filter to only include columns containing all of these strings
+    rawName : str
+        Override the default score name
+    cumsum : float
+        Initial value for cumulative sum (for 'cumsum' scoreType)
+    passed : bool
+        Whether the score passes its threshold check
+    """
+    sigs: List[Signals] = field(default_factory=list)
+    cols: List[str] = field(default_factory=list)
+    weight: float = 1.0
+    scoreType: str = 'mean'  # 'mean', 'sum', 'max', 'min'
+    validThreshold: int = 1
+    geThreshold: float = 0.0
+    leThreshold: float = 0.0
+    containsString: str = ''
+    containsAllStrings: List[str] = field(default_factory=list)
+    rawName: str = ''
+    cumsum: float = 0.0
+    passed: bool = False
+    
+    def __post_init__(self):
+        """Initialize the Score class and validate inputs."""
+        if self.scoreType not in ['mean', 'sum', 'max', 'min', 'all_gt', 'all_lt', 'any_gt', 'any_lt']:
+            raise ValueError(f"Invalid scoreType: {self.scoreType}")
+            
+        self.name = self.rawName if self.rawName else f"Score_{self.name}"
+        self.name_passed = f"{self.name}_passed"
+        self.names = [self.name, self.name_passed]
+        self._filtered_cols = None  # Cache for filtered columns
+    
+    def reset_cumsum(self):
+        self.cumsum = 0.0
+    
+    def reset_passed(self):
+        self.passed = False
+    
+    def _get_filtered_columns(self, df: pd.DataFrame) -> List[str]:
+        """Get and cache filtered columns to avoid recomputation."""
+        if self._filtered_cols is None:
+            if len(self.cols) > 0 and len(self.sigs) > 0:
+                raise ValueError("Score::Cannot provide both sigs and cols")
+            
+            # Use signal names if provided, otherwise use column names
+            if len(self.sigs) > 0:
+                cols = [sig.name for sig in self.sigs]
+            else:
+                cols = self.cols if self.cols else list(df.columns)
 
+            
+            if self.containsString:
+                cols = [col for col in cols if self.containsString in col]
+            
+            if self.containsAllStrings:
+                cols = [col for col in cols if all(s in col for s in self.containsAllStrings)]
+                
+            self._filtered_cols = cols
+            
+        return self._filtered_cols
+    
+    def _passed(self, val:float):
+        if self.geThreshold > 0: self.passed = val >= self.geThreshold
+        elif self.leThreshold > 0: self.passed = val <= self.leThreshold
+        else: self.passed = val >= self.validThreshold
+
+    
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """Compute score for the current window of data."""
+        # Initialize results DataFrame
+
+        filtered_cols = self._get_filtered_columns(df)
+        if not filtered_cols:
+            return pd.Series(np.nan, index=self.names)
+        
+
+        # print(f'{self.name=} {filtered_cols=}')
+        
+        rows_to_score = df[filtered_cols].iloc[-1:]  # Latest row
+        
+        # Replace NaN with 0 to include them in calculations
+        rows_to_score = rows_to_score.fillna(0)
+        
+        # Compute the score based on type
+        if self.scoreType == 'mean':
+            val = rows_to_score.mean(axis=1).iloc[0]  # Mean across filtered columns, including NaNs as 0
+            # print(f'{self.name=} {val=}')
+            self._passed(val)
+        elif self.scoreType == 'sum':
+            val = rows_to_score.sum(axis=1).iloc[0]
+            self._passed(val)
+        elif self.scoreType == 'max':
+            val = rows_to_score.max(axis=1).iloc[0]
+            self._passed(val)
+        elif self.scoreType == 'min':
+            val = rows_to_score.min(axis=1).iloc[0]
+            self._passed(val)
+        elif self.scoreType == 'all_gt':
+            val = rows_to_score.gt(self.validThreshold).all(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'all_ge':
+            val = rows_to_score.ge(self.validThreshold).all(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'all_lt':
+            val = rows_to_score.lt(self.validThreshold).all(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'all_le':
+            val = rows_to_score.le(self.validThreshold).all(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'all_eq':
+            val = rows_to_score.eq(self.validThreshold).all(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'all_ne':
+            val = rows_to_score.ne(self.validThreshold).all(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'any_gt':
+            val = rows_to_score.gt(self.validThreshold).any(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'any_ge':
+            val = rows_to_score.ge(self.validThreshold).any(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'any_lt':
+            val = rows_to_score.lt(self.validThreshold).any(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'any_le':
+            val = rows_to_score.le(self.validThreshold).any(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'any_eq':
+            val = rows_to_score.eq(self.validThreshold).any(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'any_ne':
+            val = rows_to_score.ne(self.validThreshold).any(axis=1).iloc[0]
+            self.passed = val
+        elif self.scoreType == 'cumsum':
+            self.cumsum += rows_to_score.sum(axis=1).iloc[0]
+            val = self.cumsum
+            self.passed = val >= self.validThreshold
+        else:
+            val = np.nan
+
+        score = round(val * self.weight, 1) if not pd.isna(val) else np.nan
+        
+        return pd.Series([score, self.passed], index=self.names)
+    
+    def reset_cache(self):
+        """Reset the filtered columns cache if needed (e.g., if columns change)."""
+        self._filtered_cols = None
+
+    def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        results = pd.DataFrame(index=df.index, columns=self.names)
+        for i in range(len(df)):
+            results.iloc[i] = self._compute_row(df.iloc[:i+1])
+        return results
 
 @dataclass
 class CountTouches(MultiSignals):

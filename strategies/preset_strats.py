@@ -717,7 +717,7 @@ class TAPresetsBase:
         self.ATR       = ta.ATR(span=self.atrSpan).add_chart_args(self.ca.ATR)
         self.HPLPMajor = ta.HPLP(hi_col='high', lo_col='low', span=self.pointSpanMajor).add_chart_args(self.ca.HPLPMajor)
         self.HPLPMinor = ta.HPLP(hi_col='high', lo_col='low', span=self.pointSpanMinor).add_chart_args(self.ca.HPLPMinor)
-        # self.SupRes    = ta.SupRes(hi_point_col=self.HPLPMajor.name_hp, lo_point_col=self.HPLPMajor.name_lp, tolerance=self.supResTolerance, atr_col=self.ATR.name, rowsToUpdate=self.lookBack).add_chart_args(self.ca.SupRes) #! in production this can uses as it only looks at the last row
+        # self.SupRes    = ta.SupRes(hi_point_col=self.HPLPMajor.name_hp, lo_point_col=self.HPLPMajor.name_lp, tolerance=self.supResTolerance, atr_col=self.ATR.name, rowsToUpdate=self.lookBack).add_chart_args(self.ca.SupRes) #! in production this can be used as it only looks at the last row
         self.SupRes    = ta.SupResAllRows(hi_point_col=self.HPLPMajor.name_hp, lo_point_col=self.HPLPMajor.name_lp, tolerance=self.supResTolerance, separation=self.supResSeparation, atr_col=self.ATR.name, rowsToUpdate=self.lookBack).add_chart_args(self.ca.SupRes)
         self.l_base = [self.ATR, self.HPLPMajor, self.HPLPMinor, self.SupRes]
         self.add_to_ta_list(self.l_base)
@@ -729,6 +729,9 @@ class TAPresetsBase:
         if not hasattr(self, 'ta_list'):
             self.ta_list = []
         self.ta_list += ta_list # #! Do not use append as it will create a list of lists
+
+
+
 
 
 @dataclass
@@ -787,10 +790,8 @@ class TAPresets1D(TAPresetsBase):
         self.l_vads += [self.v_GappedWRBs, self.v_GappedPivots, self.v_GappedPastPivot, self.v_RoomToMove]
 
         # Scores
-        # self.s_1D  = sig.Score(ls=self.ls, name='s_1D',  cols=[s.name for s in self.l_sigs], scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.Score1D)
-        # self.sv_1D = sig.Score(ls=self.ls, name='sv_1D', cols=[v.name for v in self.l_vads], scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1D)
-        self.s_1D  = sig.Score(ls=self.ls, name='s_1D',  sigs=self.l_sigs, scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.Score1D) #! not showing on chart 
-        self.sv_1D = sig.Score(ls=self.ls, name='sv_1D', sigs=self.l_vads, scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1D) #! not showing on chart
+        self.s_1D  = sig.Score(ls=self.ls, name='s_1D',  sigs=self.l_sigs, scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.Score1D) 
+        self.sv_1D = sig.Score(ls=self.ls, name='sv_1D', sigs=self.l_vads, scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1D)
 
         self.add_to_ta_list(self.l_ma + self.l_sigs + self.l_vads + [self.s_1D, self.sv_1D])
 
@@ -820,10 +821,13 @@ class TAPresets1H(TAPresetsBase):
         self.l_vads = [self.v_VolChgPct]
 
         # Scores
-        self.s_1H  = sig.Score(name='s_1H_TODC',  normRange=(0,100), sigs=[self.VolChgPct], scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
-        self.sv_1H = sig.Score(name='sv_1H_TODC', normRange=(0,100), sigs=[self.v_VolChgPct], scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1H)
+        self.s_1H  = sig.Score(name='s_1H_TODC',  normRange=(0,100), sigs=[self.VolChgPct], scoreType='mean', geThreshold=50, lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
+        self.sv_1H = sig.Score(name='sv_1H_TODC', normRange=(0,1), sigs=[self.v_VolChgPct], scoreType='mean', geThreshold=100, lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1H)
 
-        self.add_to_ta_list(self.l_sigs + self.l_vads + [self.s_1H, self.sv_1H])
+        # fails
+        self.s_1H_fail  = sig.Score(name='s_1H_TODC_F',  normRange=(0,100), sigs=[self.VolChgPct], scoreType='mean', leThreshold=50, lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
+
+        self.add_to_ta_list(self.l_sigs + self.l_vads + [self.s_1H, self.sv_1H, self.s_1H_fail])
 
 
 @dataclass
