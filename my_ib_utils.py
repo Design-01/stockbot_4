@@ -49,11 +49,16 @@ class IBRateLimiter:
         """Wait using IB_insync's sleep method"""
         self.ib.sleep(self.min_interval)
 
+# -----------------------------------------------------------------------------
+# ------- T I M E    H E L P E R S --------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 from datetime import datetime, timezone
 import pytz
 from ib_insync import Stock
+import pandas as pd
+import pandas_market_calendars as mcal
 
 def is_within_trading_hours(ib, symbol: str, exchange: str = 'SMART', debug: bool = False) -> bool:
     """
@@ -201,3 +206,37 @@ def get_current_date(tz=None):
     timezone = pytz.timezone(tz)
     current_datetime = datetime.now(timezone)
     return current_datetime.date()
+
+
+def is_market_day(date: str = None, today: bool = False) -> bool:
+    """
+    Check if the given date or today is a market day.
+
+    Args:
+        date (str): The date to check in 'YYYY-MM-DD' format. Ignored if today is True.
+        today (bool): If True, checks if today (in New York Eastern Time) is a market day.
+
+    Returns:
+        bool: True if the date is a market day, False otherwise.
+    """
+    # Create a calendar
+    nyse = mcal.get_calendar('NYSE')
+
+    # Determine the date to check
+    if today:
+        # Use get_current_date to get today's date in US/Eastern timezone
+        input_date = pd.Timestamp(get_current_date(tz='US/Eastern'))
+    else:
+        # Convert the input date to a pandas Timestamp
+        input_date = pd.Timestamp(date)
+
+    # Get the NYSE trading schedule for the year
+    year = input_date.year
+    schedule = nyse.schedule(start_date=f'{year}-01-01', end_date=f'{year}-12-31')
+
+    # Check if the input date is in the schedule
+    return input_date in schedule.index
+
+# # Example usage
+# print(is_market_day(today=True))  # Check if today is a market day
+# print(is_market_day('2024-01-01'))  # Check if a specific date is a market day

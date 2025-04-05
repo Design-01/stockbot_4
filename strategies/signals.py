@@ -1579,7 +1579,50 @@ class RelativeStrengthWeakness(Signals):
         elif longshort == 'SHORT':
             self.val = df[self.rsiCol].iat[-1] *-1
 
-#$ ------- Gaps ---------------
+#$ ----------------------------------------------------------------------------
+#$ ------------ G A P S -------------------------------------------------------
+#$ ----------------------------------------------------------------------------
+
+
+#$ ------ Gaps Helper Functions -----------------------------------
+@dataclass
+class GapBase:
+    def is_gap(self, df, ls:Literal['LONG', 'SHORT']) -> bool:
+        """Determine if there is a gap based on the given direction (LONG or SHORT)."""
+        if ls == "LONG":
+            this_lo = df.low.iat[-1]
+            prev_hi = df.high.iat[-2]
+            return this_lo > prev_hi
+        elif ls == "SHORT":
+            this_hi = df.high.iat[-1]
+            prev_lo = df.low.iat[-2]
+            return this_hi < prev_lo
+
+    def get_gap_bounds_and_cancel_price(self, df, ls:Literal['LONG', 'SHORT']):
+        if ls == 'LONG':
+            upper_bound = df.close.iat[-1]  # Current bar close as ceiling
+            lower_bound = df.close.iat[-2]  # Previous bar close as floor
+            cancel_price = df.low.iat[-2]   # Previous bar high as invalidation level
+        elif ls == 'SHORT':
+            upper_bound = df.close.iat[-2]  # Previous bar close as ceiling
+            lower_bound = df.close.iat[-1]  # Current bar close as floor
+            cancel_price = df.high.iat[-2]  # Previous bar high as invalidation level
+        
+        return upper_bound, lower_bound, cancel_price
+    
+    def has_crossed_over_pivot(self, df, pointCol: str, ls:Literal['LONG', 'SHORT']) -> bool:
+        """Check if the current bar has gapped over a pivot point."""
+        pivots = df[pointCol].iloc[:-2].dropna()
+        if len(pivots) == 0:
+            return False
+        
+        prior_piv = pivots.iat[-1]
+
+        if ls == 'LONG':
+            return df.close.iat[-1] > prior_piv and df.high.iat[-2] < prior_piv
+        elif ls == 'SHORT':
+            return df.close.iat[-1] < prior_piv and df.low.iat[-2] > prior_piv
+
 # Used for checking if this works correctly. 
 @dataclass
 class IsGappedOverPivot(Signals):
@@ -1602,7 +1645,7 @@ class IsGappedOverPivot(Signals):
 
 #£ Done
 @dataclass
-class GappedPivots(Signals):
+class GappedPivots(Signals, GapBase):
     """
     Computes the ratio or count of pivots that fall within the gap between
     previous close and current open.
@@ -1626,8 +1669,8 @@ class GappedPivots(Signals):
     def _compute_row(self, df: pd.DataFrame) -> tuple[int, int]:
         """Count pivots that fall within the gap range."""
 
-        if not is_gap_pivot_crossover(df, self.pointCol, self.ls):
-            return 0
+        if not self.is_gap(df, self.ls):
+            return 0.0
         
         pivots = df[self.pointCol].iloc[:-2].dropna()
         
@@ -1653,7 +1696,7 @@ class GappedPivots(Signals):
 
 #£ Done
 @dataclass
-class GappedWRBs(Signals):
+class GappedWRBs(Signals, GapBase):
     """
     Measures the shock value of price gaps by calculating a cumulative score based on the strength/weakness
     of prior price bars that have been "gapped over" by the current bar.
@@ -1725,20 +1768,15 @@ class GappedWRBs(Signals):
             float: The cumulative score representing the shock value of the gap. Returns 0.0 if 
                   there is no valid gap or if no prior bars meet the criteria.
         """
+
         score_sum = 0.0
 
-        if self.ls == 'LONG':
-            # Check if there's a true gap up (current low > previous high)
-            this_lo = df.low.iat[-1]
-            prev_hi = df.high.iat[-2]
-            is_gap = this_lo > prev_hi
-            if not is_gap:
-                return 0.0
+        if not self.is_gap(df, self.ls):
+            return 0.0
+        
+        upper_bound, lower_bound, cancel_price = self.get_gap_bounds_and_cancel_price(df, self.ls)
 
-            # Define evaluation boundaries
-            upper_bound = df.close.iat[-1]  # Current bar close as ceiling
-            lower_bound = df.close.iat[-2]  # Previous bar close as floor
-            cancel_price = df.low.iat[-2]   # Previous bar low as invalidation level
+        if self.ls == 'LONG':
 
             # Iterate through bars backward from the second-to-last bar
             for i in range(len(df) - 2, -1, -1):
@@ -1759,17 +1797,6 @@ class GappedWRBs(Signals):
                     score_sum += abs(df[self.bswCol].iat[i])
 
         elif self.ls == 'SHORT':
-            # Check if there's a true gap down (current high < previous low)
-            this_hi = df.high.iat[-1]
-            prev_lo = df.low.iat[-2]
-            is_gap = this_hi < prev_lo
-            if not is_gap:
-                return 0.0
-            
-            # Define evaluation boundaries
-            upper_bound = df.close.iat[-2]  # Previous bar close as ceiling
-            lower_bound = df.close.iat[-1]  # Current bar close as floor
-            cancel_price = df.high.iat[-2]  # Previous bar high as invalidation level
             
             # Iterate through bars backward from the second-to-last bar
             for i in range(len(df) - 2, -1, -1):
@@ -1793,14 +1820,9 @@ class GappedWRBs(Signals):
         
 
 
-
-
-
-
-
 #£Done
 @dataclass
-class GappedPastPivot(Signals):
+class GappedPastPivot(Signals, GapBase):
     """
     Assess the quality of gaps past pivot points by evaluating gap size relative to ATR.
     Uses a diminishing returns approach for oversized gaps.
@@ -1821,7 +1843,10 @@ class GappedPastPivot(Signals):
             Score between 0 and 100, with higher scores indicating better gaps
         """
         # First check if there's a valid gap over pivot
-        if not is_gap_pivot_crossover(df, self.pointCol, self.ls):
+        if not self.is_gap(df, self.ls):
+            return 0.0
+        
+        if not self.has_crossed_over_pivot(df, self.pointCol, self.ls):
             return 0.0
             
         try:

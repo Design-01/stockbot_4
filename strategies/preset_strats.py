@@ -710,20 +710,25 @@ class TAPresetsBase:
     pointSpanMajor: int = 10
     pointSpanMinor: int = 3
     supResTolerance: int = 1
+    supResSeparation: int = 2
+    lookBack: int = 100
 
     def __post_init__(self):
         self.ATR       = ta.ATR(span=self.atrSpan).add_chart_args(self.ca.ATR)
         self.HPLPMajor = ta.HPLP(hi_col='high', lo_col='low', span=self.pointSpanMajor).add_chart_args(self.ca.HPLPMajor)
         self.HPLPMinor = ta.HPLP(hi_col='high', lo_col='low', span=self.pointSpanMinor).add_chart_args(self.ca.HPLPMinor)
-        self.SupRes    = ta.SupRes(hi_point_col=self.HPLPMajor.name_hp, lo_point_col=self.HPLPMajor.name_lp, tolerance=self.supResTolerance, atr_col=self.ATR.name, rowsToUpdate=10).add_chart_args(self.ca.SupRes)
+        # self.SupRes    = ta.SupRes(hi_point_col=self.HPLPMajor.name_hp, lo_point_col=self.HPLPMajor.name_lp, tolerance=self.supResTolerance, atr_col=self.ATR.name, rowsToUpdate=self.lookBack).add_chart_args(self.ca.SupRes) #! in production this can uses as it only looks at the last row
+        self.SupRes    = ta.SupResAllRows(hi_point_col=self.HPLPMajor.name_hp, lo_point_col=self.HPLPMajor.name_lp, tolerance=self.supResTolerance, separation=self.supResSeparation, atr_col=self.ATR.name, rowsToUpdate=self.lookBack).add_chart_args(self.ca.SupRes)
         self.l_base = [self.ATR, self.HPLPMajor, self.HPLPMinor, self.SupRes]
-        self.ta_list = self.l_base
+        self.add_to_ta_list(self.l_base)
 
     def get_ta_list(self):
         return self.ta_list
     
-    def add_to_ta_list(self, ta):
-        self.ta_list += ta # #! Do not use append as it will create a list of lists
+    def add_to_ta_list(self, ta_list:list):
+        if not hasattr(self, 'ta_list'):
+            self.ta_list = []
+        self.ta_list += ta_list # #! Do not use append as it will create a list of lists
 
 
 @dataclass
@@ -758,11 +763,13 @@ class TAPresets1D(TAPresetsBase):
             normRange = (0, 5) if self.ls == 'LONG' else (-5, 0)
             self.s_RSScore = sig.Score(ls=self.ls, name='RS', normRange=normRange, invertScoreIfShort=True, cols=[self.RS.name], scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.RSScore)
             self.l_sigs += [self.RS, self.s_RSScore]
+
+        piv_name = self.HPLPMajor.name_hp if self.ls == 'LONG' else self.HPLPMajor.name_lp
  
         self.RoomToMove      = sig.RoomToMove(ls=self.ls, tgetCol='Res_1_Lower' if self.ls == 'LONG' else 'Sup_1_Upper', atrCol=self.ATR.name, unlimitedVal=5, normRange=self.RoomToMove_normRange, lookBack=self.lookBack).add_chart_args(self.ca.RoomToMove)
         self.GappedWRBs      = sig.GappedWRBs(ls=self.ls, bswCol=self.BarSW.name, normRange=self.GappedWRBs_normRange, lookBack=self.lookBack).add_chart_args(self.ca.GappedWRBs)
-        self.GappedPivots    = sig.GappedPivots(ls=self.ls, normRange=self.GappedPivots_normRange, pointCol=self.HPLPMajor.name, spanPivots=10, lookBack=self.lookBack).add_chart_args(self.ca.GappedPivots)
-        self.GappedPastPivot = sig.GappedPastPivot(ls=self.ls, normRange=self.GappedPastPivot_normRange, atrCol=self.ATR.name, pointCol=self.HPLPMajor.name, lookBack=self.lookBack, maxAtrMultiple=10).add_chart_args(self.ca.GappedPastPivot)
+        self.GappedPivots    = sig.GappedPivots(ls=self.ls, normRange=self.GappedPivots_normRange, pointCol=piv_name, spanPivots=10, lookBack=self.lookBack).add_chart_args(self.ca.GappedPivots)
+        self.GappedPastPivot = sig.GappedPastPivot(ls=self.ls, normRange=self.GappedPastPivot_normRange, atrCol=self.ATR.name, pointCol=piv_name, lookBack=self.lookBack, maxAtrMultiple=10).add_chart_args(self.ca.GappedPastPivot)
         self.l_sigs += [self.RoomToMove, self.GappedWRBs, self.GappedPivots, self.GappedPastPivot] # NOTE Order of list is important when one sig refernecs anotehr sig
         # self.l_sigs = [self.RoomToMove, self.GappedWRBs, self.GappedPivots, self.GappedPastPivot] # NOTE Order of list is important when one sig refernecs anotehr sig
 

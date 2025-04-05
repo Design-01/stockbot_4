@@ -834,6 +834,7 @@ from trades.tradex import TraderX
 import time
 from data.live_ib_data import LiveData
 from data.historical_data import HistoricalData
+import my_ib_utils
 
 
 @dataclass
@@ -1132,7 +1133,8 @@ class StockX:
             df_last = self.frames[name].data.index[-1].date()
             today = datetime.now().date()
             if today > df_last:
-                self.frames[name].data = self.add_today_row_live_data(self.frames[name].data)
+                if my_ib_utils.is_market_day(today=True):
+                    self.frames[name].data = self.add_today_row_live_data(self.frames[name].data)
 
     def add_today_row_live_data(self, df):
         today_date = datetime.now().strftime('%Y-%m-%d')

@@ -840,10 +840,92 @@ class SupRes(TA):
 
 @dataclass
 class SupResAllRows(TA):
+    """
+    Support and Resistance Level Calculator for Technical Analysis
+    
+    This class identifies key price levels where market participants have historically shown interest,
+    calculating both support (price floors) and resistance (price ceilings) levels with their
+    associated tolerance zones.
+    
+    The algorithm works by scanning high and low points in the price data and identifying levels
+    where price has reacted in the past. It differentiates between support and resistance based on
+    the current price position, and ensures meaningful separation between identified levels.
+    
+    Key Concepts:
+    -------------
+    1. Tolerance Zones:
+       Each identified level has a tolerance zone (upper and lower bounds) calculated as
+       level ± (tolerance * ATR). This zone represents a price range around the exact level
+       where market reactions are expected, accounting for natural market volatility.
+       
+    2. Level Separation:
+       The 'separation' parameter ensures identified levels are sufficiently distant from each other
+       to avoid clustering. It requires each new level to be at least 'separation' × ATR units away
+       from previously identified levels, but will fall back to closer levels if necessary to
+       meet the requested number of levels.
+       
+    3. Level Finding Algorithm:
+       The algorithm first looks for candidates beyond the current price (above for resistance, 
+       below for support), then applies tolerance and separation filters to find significant 
+       levels. For each level, it identifies the actual pivot point as well as the surrounding
+       zone where price reactions are likely to occur.
+       
+    4. Fallback Mechanism:
+       If strict separation criteria would result in fewer levels than requested, the algorithm
+       will fall back to using the closest available levels, ensuring the requested number
+       of levels are always returned when possible.
+       
+    Parameters:
+    -----------
+    hi_point_col: str, default 'HP'
+        Column name containing high pivot points
+    
+    lo_point_col: str, default 'LP'
+        Column name containing low pivot points
+    
+    atr_col: str, default 'ATR'
+        Column name containing Average True Range values
+    
+    tolerance: float, default 1
+        Multiplier for ATR to determine the size of the tolerance zone around each level
+        Higher values create wider zones that capture more price action but may be less precise
+        Lower values create tighter zones for more precise level identification
+    
+    separation: float, default 2
+        Minimum distance between levels in ATR units
+        Higher values force levels to be more spread out, identifying only major levels
+        Lower values allow levels to be closer together, potentially identifying minor levels
+    
+    rowsToUpdate: int, default 200
+        Number of recent rows to calculate levels for, to optimize performance
+        
+    Usage Example:
+    --------------
+    >>> supres = SupResAllRows(tolerance=1.2, separation=3)
+    >>> df_with_levels = supres.run(price_dataframe, startwith='res')
+    
+    Returns:
+    --------
+    DataFrame with additional columns for resistance and support levels:
+    - Res_1, Res_1_Upper, Res_1_Lower: First resistance level with its tolerance zone
+    - Res_2, Res_2_Upper, Res_2_Lower: Second resistance level with its tolerance zone
+    - Sup_1, Sup_1_Upper, Sup_1_Lower: First support level with its tolerance zone
+    - Sup_2, Sup_2_Upper, Sup_2_Lower: Second support level with its tolerance zone
+    
+    Notes:
+    ------
+    - The algorithm begins level identification from the current price - starting with
+      resistance or support based on the 'startwith' parameter
+    - ATR is used as a volatility measure to scale both tolerance zones and level separation
+    - The levels calculated are based on historical data up to each row, simulating
+      how the indicator would have worked in real-time
+    - For performance reasons, calculations are only done for the most recent 'rowsToUpdate' rows
+    """
     hi_point_col: str = 'HP'
     lo_point_col: str = 'LP'
     atr_col: str = 'ATR'
-    tolerance: float = 0.01
+    tolerance: float = 1
+    separation: float = 2
     rowsToUpdate: int = 200
     names: list = field(init=False)
     
@@ -880,14 +962,24 @@ class SupResAllRows(TA):
             # Get all data up to current point for level calculation
             current_df = df.iloc[:i+1].copy()
             current_close = current_df['close'].iloc[-1]
+
             
             # Find levels based on all available data up to this point
             if startwith == 'res':
-                res_levels = self._find_levels(current_df, current_close, 'res', 2)
-                sup_levels = self._find_levels(current_df, current_close, 'sup', 2)
+                res_levels = self._find_levels(current_df, current_close, 'res', 2, self.separation)
+                sup_levels = self._find_levels(current_df, current_close, 'sup', 2, self.separation)
             else:
-                sup_levels = self._find_levels(current_df, current_close, 'sup', 2)
-                res_levels = self._find_levels(current_df, current_close, 'res', 2)
+                sup_levels = self._find_levels(current_df, current_close, 'sup', 2, self.separation)
+                res_levels = self._find_levels(current_df, current_close, 'res', 2, self.separation)
+
+            # hi = current_df['high'].iat[-1]
+            # lo = current_df['low'].iat[-1]
+            # if startwith == 'res':
+            #     res_levels = self._find_levels(current_df, hi, 'res', 2)
+            #     sup_levels = self._find_levels(current_df, lo, 'sup', 2)
+            # else:
+            #     sup_levels = self._find_levels(current_df, lo, 'sup', 2)
+            #     res_levels = self._find_levels(current_df, hi, 'res', 2)
             
             # Update resistance levels for the current row
             for j, (level, upper, lower, idx) in enumerate(res_levels):
@@ -913,7 +1005,30 @@ class SupResAllRows(TA):
         
         return df
 
-    def _find_levels(self, df, start_value, level_type, num_levels):
+    
+    def _find_levels(self, df, start_value, level_type, num_levels, min_distance=2.0):
+        """
+        Find support or resistance levels with minimum distance requirement between levels.
+        Always returns requested number of levels, falling back to closest available if needed.
+        
+        Parameters:
+        -----------
+        df : DataFrame
+            DataFrame containing price data
+        start_value : float
+            The starting value from which to find levels
+        level_type : str
+            'res' for resistance or 'sup' for support
+        num_levels : int
+            Number of levels to find
+        min_distance : float
+            Minimum distance between levels in ATR units
+        
+        Returns:
+        --------
+        list of tuples
+            Each tuple contains (level, upper_bound, lower_bound, index)
+        """
         levels = []
         hp_series = df[self.hi_point_col].dropna()
         lp_series = df[self.lo_point_col].dropna()
@@ -928,10 +1043,40 @@ class SupResAllRows(TA):
             
             all_candidates = pd.concat([hp_candidates, lp_candidates]).sort_values()
             
+            if all_candidates.empty:
+                levels.append((np.nan, np.nan, np.nan, df.index[-1]))
+                continue
+            
+            # Try to filter candidates based on minimum distance
+            filtered_candidates = all_candidates.copy()
+            for prev_level, prev_upper, prev_lower, prev_idx in levels:
+                if not pd.isna(prev_level):
+                    # Find an appropriate ATR value to use for distance calculation
+                    idx_check = df.index[((df[self.hi_point_col].isin([filtered_candidates.iloc[0]])) | 
+                                        (df[self.lo_point_col].isin([filtered_candidates.iloc[0]])))].min()
+                    
+                    # Safeguard against missing index
+                    if pd.isna(idx_check):
+                        continue
+                        
+                    current_atr = df.loc[idx_check, self.atr_col]
+                    min_dist_value = min_distance * current_atr
+                    
+                    if level_type == 'res':
+                        # For resistance, ensure candidates are at least min_distance ATRs above previous upper bound
+                        filtered_candidates = filtered_candidates[filtered_candidates >= (prev_upper + min_dist_value)]
+                    else:
+                        # For support, ensure candidates are at least min_distance ATRs below previous lower bound
+                        filtered_candidates = filtered_candidates[filtered_candidates <= (prev_lower - min_dist_value)]
+            
+            # If filtering left us with no candidates, fall back to original set (always provide a level)
+            if filtered_candidates.empty and not all_candidates.empty:
+                filtered_candidates = all_candidates
+            
             if level_type == 'res':
-                level = all_candidates.iloc[0] if not all_candidates.empty else np.nan
+                level = filtered_candidates.iloc[0] if not filtered_candidates.empty else np.nan
             else:
-                level = all_candidates.iloc[-1] if not all_candidates.empty else np.nan
+                level = filtered_candidates.iloc[-1] if not filtered_candidates.empty else np.nan
             
             if pd.isna(level):
                 levels.append((np.nan, np.nan, np.nan, df.index[-1]))
@@ -940,14 +1085,14 @@ class SupResAllRows(TA):
             idx = df.index[((df[self.hi_point_col] == level) | (df[self.lo_point_col] == level))].min()
             atr = df.loc[idx, self.atr_col]
             
-            # Calculate initial tolerance zone
+            # Calculate tolerance zone
             upper_bound = level + (self.tolerance * atr)
             lower_bound = level - (self.tolerance * atr)
             
             # Find the highest and lowest points within the tolerance zone
             zone_candidates = all_candidates[(all_candidates >= lower_bound) & (all_candidates <= upper_bound)]
-            upper = zone_candidates.max()
-            lower = zone_candidates.min()
+            upper = zone_candidates.max() if not zone_candidates.empty else level + (self.tolerance * atr)
+            lower = zone_candidates.min() if not zone_candidates.empty else level - (self.tolerance * atr)
             
             levels.append((level, upper, lower, idx))
             start_value = upper if level_type == 'res' else lower
