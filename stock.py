@@ -1094,7 +1094,6 @@ class StockX:
 
 
     def setup_frame(self, timeframe, dataType:str='random', duration:str="3 D", endDateTime:str='now', isIntradayFrame:bool=False, isTradeFrame:bool=False, isDayFrame:bool=False, taPresets:TAPresets1D | TAPresets1H | TAPresets5M2M1M=None):
-        print(f"StockX::setup_frame:  -------- testing ------- {self.symbol=} {timeframe=} {dataType=} {duration=} {endDateTime=} --------- ")
         if isIntradayFrame:
             self.intradaySizes.append(timeframe)
         if isTradeFrame:

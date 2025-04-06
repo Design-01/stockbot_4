@@ -137,7 +137,7 @@ class Frame:
         
         # No duplicates found, add the new TA
         if runOnLoad:
-            self.update_data(ta.run(self.data))
+            self.updaet_data(ta.run(self.data))
         
         self.ta.append(ta)
         # returning the ta object to allow it to be assigend and therefor access the name vaialbe in the ta object
@@ -244,6 +244,11 @@ class Frame:
         # Manual limit
         # result = merge_timeframes(df_1min, df_5min, 'close', auto_limit=False, ffillManualLimit=4)
 
+
+
+
+
+
     def plot(self, width: int = 1400, height: int = 800, trading_hours: bool = False, 
         show: bool = True, snapshot_data: pd.DataFrame = None, use_backtest_data: bool = False,
         animate: bool = False):
@@ -271,12 +276,9 @@ class Frame:
             
         # Use existing plot logic
         self.chart.refesh(self.data)
-        
-        # for indicator, style, chart_type, row, nameCol, columns in self.ta:
-        for ta in self.taPresets.ta_list:
-            if ta.chartArgs is None: 
-                continue
-                
+
+
+        def plot_each_ta(ta:TA):
             # Handle names whether they're in a list or string
             names = ta.names if ta.chartArgs.columns is None else ta.chartArgs.columns
             if isinstance(names, str):
@@ -287,9 +289,27 @@ class Frame:
             available_columns = [name for name in names if name in self.data.columns]
             if available_columns:
                 indicator_data = self.data[available_columns]
-                nameData = self.data[ta.chartArgs.nameCol] if ta.chartArgs.nameCol in self.data.columns else None
+                nameData = self.data[ta.chartArgs.nameCol] if ta.chartArgs.nameCol in self.data.columns else None # use data for the label
                 self.chart.add_ta(indicator_data, ta.chartArgs.style, ta.chartArgs.chartType, ta.chartArgs.row, nameData)
+
+
         
+        # for indicator, style, chart_type, row, nameCol, columns in self.ta:
+        for ta in self.taPresets.get_ta_list():
+            if ta.chartArgs is None: 
+                continue
+            
+            #! not tested yet
+            # Handle names whether they're in a list or string. Allows for multiple names to be passed in.
+            # assumes the chartArgs.columns will be used to set args to sets of column names 
+            if isinstance(ta.chartArgs, list):
+                for chartArg in ta.chartArgs:
+                    # print(f'Frame :: plot : Plotting {ta.name} with {chartArg}')
+                      plot_each_ta(ta)
+            #£ Tested and ok 
+            else: 
+                plot_each_ta(ta)
+
         if trading_hours:
             self.chart.add_trading_hours(self.data, self.trading_hours)
         

@@ -629,6 +629,8 @@ class ChartArgItem:
     row: int = 1
     nameCol: pd.Series = None
     columns: List[str] = None
+    mask: pd.Series = None
+    name:str = None
 
 @dataclass
 class ChartArgs:
@@ -698,9 +700,12 @@ class ChartArgs:
     ScoreRetest2:         ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
     ScoreRetest3:         ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
 
-    ScoreStrategy1:       ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
-    ScoreStrategy2:       ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
-    ScoreStrategy3:       ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+    
+    StratPctComplete:     ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+    StratMeanScore:       ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': 'magenta', 'width': 3}, chartType='line', row=5)
+    StratScores:          ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': ['magenta', 'green', 'red', 'orange'], 'width': 2}, chartType='line', row=5)
+    StratFails:           ChartArgItem = ChartArgItem(style={'dash': 'dash',  'color': ['magenta', 'green', 'red', 'orange'], 'width': 1}, chartType='line', row=5)
+    StratSubItems:        ChartArgItem = ChartArgItem(style={'dash': 'solid', 'color': ['magenta', 'green', 'red', 'orange'], 'width': 1}, chartType='line', row=5)
 
 
 @dataclass

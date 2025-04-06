@@ -4057,7 +4057,7 @@ class Condition:
 
 
 @dataclass
-class Strategy(MultiSignals):
+class Strategy_old(MultiSignals):
     name: str
     
     def __post_init__(self):
@@ -4217,7 +4217,136 @@ class Strategy(MultiSignals):
             results.iloc[i] = self._compute_row(df.iloc[:i+1])
         return results
 
+@dataclass
+class Strategy(MultiSignals):
+    name: str
+    chartArgs: List[ChartArgs] = field(default_factory=list)
 
+
+    def __post_init__(self):
+        self.names = [self.name, f"{self.name}_pctComplete", f"{self.name}_passed", f"{self.name}_meanScore"]
+        self.steps = []
+        self.rows = [] #  list of dicts for each row
+        self.pctComplete = 0
+        self.meanScoreOfSteps = 0
+        self.current_step = 1
+        self.passed = False
+        self.scoreList = []
+        self.chartArgs = []
+        self.count_steps_passed = 0
+
+    
+    def add_chart_args(self, meanScoreArgs:ChartArgs, pctCompleteArgs:ChartArgs, scoreArgs:ChartArgs, failArgs:ChartArgs, scoreSubItemArgs:ChartArgs):
+        meanScoreArgs.name = f"{self.name}_meanScore"
+        meanScoreArgs.columns = [meanScoreArgs.name]
+        pctCompleteArgs.name = f"{self.name}_pctComplete"
+        pctCompleteArgs.columns = [pctCompleteArgs.name]
+        scoreArgs.name = f"{self.name}_score"
+        scoreArgs.columns = []
+        failArgs.name = f"{self.name}_fail"
+        failArgs.columns = []
+        scoreSubItemArgs.name = f"{self.name}_subItem"
+        scoreSubItemArgs.columns = []
+        self.chartArgs = [meanScoreArgs, pctCompleteArgs, scoreArgs, failArgs, scoreSubItemArgs]
+        return self
+    
+    def get_name(self, step:int, objName):
+        name = f"{self.name}_{step}_{objName}"
+        if name not in self.names:  # Avoid duplicates
+            self.names.append(name)
+        return name
+
+    def add_step(self, scoreObj:Score, failObj:Score, ifFailStartFromStep:int):
+        self.steps.append({'scoreObj': scoreObj, 'failObj': failObj, 'ifFailStartFromStep': ifFailStartFromStep})
+        step = len(self.steps)
+        self.chartArgs[2].columns += [self.get_name(step, scoreObj.name)]
+        self.chartArgs[3].columns += [self.get_name(step, failObj.name)]
+        self.chartArgs[4].columns += [self.get_name(step, sig.name) for sig in scoreObj.sigs]
+        return self
+        
+    
+    def add_row_item(self, df, obj):
+        name = f"{self.name}_{self.current_step}_{obj.name}"
+        self.rows[-1][name] = df[obj.name].iat[-1] 
+        return self
+    
+    def add_row_metrics(self):
+        self.rows[-1][f"{self.name}_passed"] = self.passed
+        self.rows[-1][f"{self.name}_pctComplete"] = self.pctComplete
+        self.rows[-1][f"{self.name}_meanScore"] = self.meanScoreOfSteps
+        return self
+    
+    def update_mean_score(self, df, scoreObj):
+        score = df[scoreObj.name].iloc[-1]
+        self.scoreList += [score]
+        self.meanScoreOfSteps = sum(self.scoreList) / len(self.scoreList)
+
+    def update_pct_complete(self):
+        self.pctComplete = 0 if self.count_steps_passed == 0 else (self.count_steps_passed / len(self.steps)) * 100
+
+    def reset(self, startFromStep:int=1):
+        self.current_step = startFromStep
+        self.count_steps_passed = startFromStep - 1
+        self.scoreList = self.scoreList[:startFromStep-1] # keep the scores from the failed step
+        self.meanScoreOfSteps = 0 if len(self.scoreList) == 0 else sum(self.scoreList) / len(self.scoreList)
+        self.update_pct_complete()
+        self.passed = False
+  
+
+
+    def _compute_row(self, df: pd.DataFrame) -> pd.Series:
+        if self.passed > 0:
+            self.reset(1) # reset the strategy if it has passed
+
+        self.rows.append({}) # add a new row to the list of rows
+
+        for i, step in enumerate(self.steps):
+
+            if i + 1 >= self.current_step:
+                scoreObj = step['scoreObj']
+                failObj = step['failObj']
+                scorePassed  = df[scoreObj.name_passed].iloc[-1]
+                failed = df[failObj.name_passed].iloc[-1]
+
+                if pd.isna(scorePassed):
+                    break
+
+                if failed > 0:
+                    self.reset(step['ifFailStartFromStep'])
+                    break
+
+                if scorePassed > 0:
+                    self.count_steps_passed += 1
+                    self.update_mean_score(df, scoreObj)
+                    self.add_row_item(df, scoreObj)
+                    self.add_row_item(df, failObj)
+                    
+                    for sig in scoreObj.sigs:
+                        self.add_row_item(df, sig)
+
+                    if self.current_step == len(self.steps):
+                        self.passed = True
+                    else:
+                        self.current_step += 1
+
+        self.update_pct_complete()
+        self.add_row_metrics()
+      
+        # Create a Series with NaN values for all expected columns
+        result = pd.Series(index=self.names, dtype='float64')
+        
+        # Fill in the values that we have
+        for key, value in self.rows[-1].items():
+            if key in result.index:
+                result[key] = value
+        
+        return result
+
+    def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        results = pd.DataFrame(index=df.index, columns=self.names)
+        for i in range(len(df)):
+            results.iloc[i] = self._compute_row(df.iloc[:i+1])
+        return results
 
 
 
