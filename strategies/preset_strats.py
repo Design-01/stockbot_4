@@ -794,8 +794,8 @@ class TAPresets1D(TAPresetsBase):
         self.l_vads += [self.v_GappedWRBs, self.v_GappedPivots, self.v_GappedPastPivot, self.v_RoomToMove]
 
         # # Scores
-        self.s_1D  = sig.Score(name='s_1D',  ls=self.ls, sigs=self.l_sigs, scoreType='mean', operator='>=', threshold=50,  normRange=(0,100), lookBack=self.lookBack).add_chart_args(self.ca.Score1D) 
-        self.sv_1D = sig.Score(name='sv_1D', ls=self.ls, sigs=self.l_vads, scoreType='mean', operator='>=', threshold=100, normRange=(0,1), lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1D)
+        self.s_1D  = sig.Score(name='1Ds',  ls=self.ls, sigs=self.l_sigs, scoreType='mean', normRange=(0,100), operator='>=', threshold=50,   lookBack=self.lookBack).add_chart_args(self.ca.Score1D) 
+        self.sv_1D = sig.Score(name='1Dv', ls=self.ls, sigs=self.l_vads, scoreType='mean', normRange=(0,100), operator='>=', threshold=100, lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1D)
         self.add_to_ta_list(self.l_ma + self.l_sigs + self.l_vads + [self.s_1D, self.sv_1D])
 
 
@@ -827,11 +827,11 @@ class TAPresets1H(TAPresetsBase):
         self.l_vads = [self.v_VolChgPct]
 
         # Scores
-        self.s_1H  = sig.Score(name='s_1H_TODC',  ls=self.ls, sigs=[self.VolChgPct],   scoreType='mean', operator='>',  threshold=50,  normRange=(0,100), lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
-        self.sv_1H = sig.Score(name='sv_1H_TODC', ls=self.ls, sigs=[self.v_VolChgPct], scoreType='mean', operator='>=', threshold=100, normRange=(0,1), lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1H)
+        self.s_1H  = sig.Score(name='1H',  ls=self.ls, sigs=[self.VolChgPct],   scoreType='mean', operator='>',  threshold=50,  normRange=(0,100), lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
+        self.sv_1H = sig.Score(name='1Hv', ls=self.ls, sigs=[self.v_VolChgPct], scoreType='mean', operator='>=', threshold=100, normRange=(0,1), lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1H)
 
         # fails
-        self.s_1H_fail  = sig.Score(name='s_1H_TODC_F', ls=self.ls, sigs=[self.VolChgPct], scoreType='mean', operator='>', threshold=50, normRange=(0,100), lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
+        self.s_1H_fail  = sig.Score(name='1Hf', ls=self.ls, sigs=[self.VolChgPct], scoreType='mean', operator='>', threshold=50, normRange=(0,100), lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
 
         self.add_to_ta_list(self.l_sigs + self.l_vads + [self.s_1H, self.sv_1H, self.s_1H_fail])
 

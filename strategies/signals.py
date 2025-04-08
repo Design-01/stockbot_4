@@ -2437,13 +2437,13 @@ class Score(MultiSignals):
     ls: str = ''
     sigs: List[Signals] = field(default_factory=list)
     cols : Union[str, List[str]] = field(default_factory=list)   
-    scoreType: Literal["sum", "min", "max", "any", "all"] = ''
+    scoreType: Literal["mean", "sum", "min", "max", "any", "all"] = ''
     operator: Literal[">", "<", ">=", "<=", "=="] = ''
     threshold: Union[float, str] = 0 # Can be a value or column name
 
     def __post_init__(self):
         # Ensure the name is unique
-        self.name = f"S_{self.name}_{self.scoreType}"
+        self.name = f"{self.name}_{self.scoreType}"
         self.name_passed = f"{self.name}_{self.operator}_{self.threshold}"
         self.names = [self.name, self.name_passed]
         self._filtered_cols = None
