@@ -769,7 +769,7 @@ class TAPresets1D(TAPresetsBase):
         if not self.isSpy:
             self.RS = ta.RS(comparisonPrefix='SPY', ma=10, atr=50).add_chart_args(self.ca.RS)
             normRange = (0, 5) if self.ls == 'LONG' else (-5, 0)
-            self.s_RSScore = sig.Score(ls=self.ls, name='RS', normRange=normRange, invertScoreIfShort=True, cols=[self.RS.name], scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.RSScore)
+            self.s_RSScore = sig.Score(name='RS', ls=self.ls, sigs=[self.RS], scoreType='mean', operator='>=', threshold=50, normRange=normRange, invertScoreIfShort=True, lookBack=self.lookBack).add_chart_args(self.ca.RSScore)
             self.l_sigs += [self.RS, self.s_RSScore]
 
         piv_name = self.HPLPMajor.name_hp if self.ls == 'LONG' else self.HPLPMajor.name_lp
@@ -779,7 +779,6 @@ class TAPresets1D(TAPresetsBase):
         self.GappedPivots    = sig.GappedPivots(ls=self.ls, normRange=self.GappedPivots_normRange, pointCol=piv_name, spanPivots=10, lookBack=self.lookBack).add_chart_args(self.ca.GappedPivots)
         self.GappedPastPivot = sig.GappedPastPivot(ls=self.ls, normRange=self.GappedPastPivot_normRange, atrCol=self.ATR.name, pointCol=piv_name, lookBack=self.lookBack, maxAtrMultiple=10).add_chart_args(self.ca.GappedPastPivot)
         self.l_sigs += [self.RoomToMove, self.GappedWRBs, self.GappedPivots, self.GappedPastPivot] # NOTE Order of list is important when one sig refernecs anotehr sig
-        # self.l_sigs = [self.RoomToMove, self.GappedWRBs, self.GappedPivots, self.GappedPastPivot] # NOTE Order of list is important when one sig refernecs anotehr sig
 
         # Validate Signals
         self.l_vads = []
@@ -794,11 +793,13 @@ class TAPresets1D(TAPresetsBase):
         # self.l_vads = [self.v_GappedWRBs, self.v_GappedPivots, self.v_GappedPastPivot, self.v_RS, self.v_RoomToMove]
         self.l_vads += [self.v_GappedWRBs, self.v_GappedPivots, self.v_GappedPastPivot, self.v_RoomToMove]
 
-        # Scores
-        self.s_1D  = sig.Score(ls=self.ls, name='s_1D',  sigs=self.l_sigs, scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.Score1D) 
-        self.sv_1D = sig.Score(ls=self.ls, name='sv_1D', sigs=self.l_vads, scoreType='mean', weight=1, lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1D)
-
+        # # Scores
+        self.s_1D  = sig.Score(name='s_1D',  ls=self.ls, sigs=self.l_sigs, scoreType='mean', operator='>=', threshold=50,  normRange=(0,100), lookBack=self.lookBack).add_chart_args(self.ca.Score1D) 
+        self.sv_1D = sig.Score(name='sv_1D', ls=self.ls, sigs=self.l_vads, scoreType='mean', operator='>=', threshold=100, normRange=(0,1), lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1D)
         self.add_to_ta_list(self.l_ma + self.l_sigs + self.l_vads + [self.s_1D, self.sv_1D])
+
+
+
 
         #! TODO: Add the stratgey
 
@@ -826,11 +827,11 @@ class TAPresets1H(TAPresetsBase):
         self.l_vads = [self.v_VolChgPct]
 
         # Scores
-        self.s_1H  = sig.Score(name='s_1H_TODC',  normRange=(0,100), sigs=[self.VolChgPct], scoreType='mean', geThreshold=50, lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
-        self.sv_1H = sig.Score(name='sv_1H_TODC', normRange=(0,1), sigs=[self.v_VolChgPct], scoreType='mean', geThreshold=100, lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1H)
+        self.s_1H  = sig.Score(name='s_1H_TODC',  ls=self.ls, sigs=[self.VolChgPct],   scoreType='mean', operator='>',  threshold=50,  normRange=(0,100), lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
+        self.sv_1H = sig.Score(name='sv_1H_TODC', ls=self.ls, sigs=[self.v_VolChgPct], scoreType='mean', operator='>=', threshold=100, normRange=(0,1), lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1H)
 
         # fails
-        self.s_1H_fail  = sig.Score(name='s_1H_TODC_F',  normRange=(0,100), sigs=[self.VolChgPct], scoreType='mean', leThreshold=50, lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
+        self.s_1H_fail  = sig.Score(name='s_1H_TODC_F', ls=self.ls, sigs=[self.VolChgPct], scoreType='mean', operator='>', threshold=50, normRange=(0,100), lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
 
         self.add_to_ta_list(self.l_sigs + self.l_vads + [self.s_1H, self.sv_1H, self.s_1H_fail])
 
