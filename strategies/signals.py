@@ -3501,7 +3501,7 @@ class Validate(Signals):
     
 
     def __post_init__(self):
-        self.name = f"VAL_{self.ls[:1]}_{self.val1}_{self.operator}_{self.val2}"
+        self.name = f"v{self.ls[:1]}_{self.val1}_{self.operator}_{self.val2}"
         self.names = [self.name]
         if self.operator not in ['>', '<', 'p>p', 'p<p', '^p', 'vp', '>p', '<p', '^', 'v', '><', '==',
                         't>t', 't<t', 't==t', 't>=t', 't<=t', 't!=t']:
