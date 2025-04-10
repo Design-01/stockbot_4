@@ -279,7 +279,7 @@ class Frame:
 
 
         def plot_each_ta(ta:TA):
-            # Handle names whether they're in a list or string
+            # Use columns from chartArgs if provided, otherwise use ta.columns
             names = ta.names if ta.chartArgs.columns is None else ta.chartArgs.columns
             if isinstance(names, str):
                 names = [names]

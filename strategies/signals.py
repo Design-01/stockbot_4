@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import math
 from dataclasses import dataclass, field
-from typing import List, Dict, Union, Literal
+from typing import List, Dict, Union, Literal, Optional, Tuple, TypeVar, Set, Any
 from collections import defaultdict
 from abc import ABC, abstractmethod
 from chart.chart import ChartArgs
@@ -3961,177 +3961,38 @@ class Condition:
         return self.is_met
 
 
-@dataclass
-class Strategy_old(MultiSignals):
-    name: str
-    
-    def __post_init__(self):
-        # Initialize MultiSignals parent class
-        self.normRange = None # No normalization for this signal
-        self.name = f'Stgy_{self.name}'
-        self.name_conditions_met = f"{self.name}_ConditionsMet"
-        self.name_steps_passed = f"{self.name}_StepsPassed"
-        self.name_action = f"{self.name}_Action"
-        self.name_pct_complete = f"{self.name}_PctComplete"
-
-        self.names = [
-            self.name_conditions_met, 
-            self.name_steps_passed, 
-            self.name_action, 
-            self.name_pct_complete
-            ]
-        
-        self.steps = {}
-        self.current_step = 1  # Start at step 1 instead of 0
-        self.total_steps = 0
-        self.steps_passed = 0  # Added counter for steps passed
-        self.results = pd.Series({
-            self.name_conditions_met: 0, 
-            self.name_steps_passed: 0, 
-            self.name_action: 'WAIT',
-            self.name_pct_complete: 0
-        })
-
-    def _new_step(self, step:int):
-        self.steps[step] = {'pass_ifs': [], 'reset_ifs': []}
-        self.total_steps = max(self.total_steps, step)
-
-
-    def pass_if(self, step:int, scoreCol:str, operator:str, threshold:float|int):
-        if step not in self.steps: self._new_step(step)
-        cond_name = f"{self.name}_Step{step}_PassIf{scoreCol}_{operator}_{threshold}"
-        self.steps[step]['pass_ifs'] += [Condition(step, cond_name, scoreCol, operator, threshold)]
-        self.results[cond_name] = False
-        # Add condition name to names list if not already there
-        if cond_name not in self.names:
-            self.names.append(cond_name)      
-
-    def reset_if(self, step:int, scoreCol:str, operator:str, threshold:float|int, startFromStep:int):
-        if step not in self.steps: raise ValueError(f"Strategy :: Step {step} does not exist")
-        cond_name = f"{self.name}_Step{step}_ResetIf{scoreCol}_{operator}_{threshold}"
-        self.steps[step]['reset_ifs'] += [Condition(step, cond_name, scoreCol, operator, threshold, False, startFromStep)]
-        self.results[cond_name] = False
-        # Add condition name to names list if not already there
-        if cond_name not in self.names:
-            self.names.append(cond_name)
-    
-    def _check_step_conditions(self, condType: str, step: int, row: pd.Series):
-        """Check if all conditions of a specific type are met for a step"""
-        # If the step doesn't exist or there are no conditions of this type, return False
-        if step not in self.steps or not self.steps[step][condType]:
-            return False
-        
-        # Start with assumption that all conditions are met
-        all_met = True
-        
-        # Evaluate ALL conditions and update results
-        for cond in self.steps[step][condType]:
-            is_met = cond.evaluate(row)
-            self.results[cond.name] = is_met
-            
-            # Track if any condition fails, but continue evaluating all conditions
-            if not is_met:
-                all_met = False
-        
-        return all_met
-    
-    def _reset_from_step(self, step:int):
-        self.current_step = step
-        for s in self.steps:
-            if s >= step:
-                # Reset both pass and reset conditions
-                for cond in self.steps[s]['pass_ifs']:
-                    cond.reset()
-                    self.results[cond.name] = False
-                for cond in self.steps[s]['reset_ifs']:
-                    cond.reset()
-                    self.results[cond.name] = False
-
-    
-    def _get_min_start_step(self, step: int) -> int:
-        if not self.steps[step]['reset_ifs']:
-            return step
-        # Filter to only get startFromSteps of conditions that were met
-        met_conditions = [cond for cond in self.steps[step]['reset_ifs'] if cond.is_met]
-        if not met_conditions:
-            return step
-        return min([cond.startFromStep for cond in met_conditions])
-    
-    def _update_metrics(self):
-        """Update metrics in the results Series"""
-        # Count total conditions met
-        met_conditions = 0
-        
-        for step in self.steps:
-            for cond in self.steps[step]['pass_ifs']:
-                if cond.is_met:
-                    met_conditions += 1
-        
-        # Update metrics
-        self.results[self.name_conditions_met] = met_conditions
-        self.results[self.name_steps_passed] = self.current_step - 1
-        
-        # Calculate percentage complete (based on steps)
-        if self.total_steps > 0:
-            self.results[self.name_pct_complete] = round((self.current_step - 1) / self.total_steps * 100, 1)
-    
-    def _compute_row(self, df: pd.DataFrame) -> pd.Series:
-        if len(df) == 0:
-            return self.results
-        
-        row = df.iloc[-1]
-        reset_occurred = False
-        triggered_reset_condition = None
-
-        # First check if we need to reset due to reset conditions
-        # Only check reset conditions for the current and previous steps
-        for step in range(1, self.current_step + 1):
-            if step in self.steps and self._check_step_conditions('reset_ifs', step, row):
-                reset_step = self._get_min_start_step(step)
-                
-                # Save which reset condition was triggered before resetting
-                for cond in self.steps[step]['reset_ifs']:
-                    if cond.is_met:
-                        triggered_reset_condition = cond.name
-                
-                self._reset_from_step(reset_step)
-                reset_occurred = True
-                # If we've reset, update metrics and exit
-                self._update_metrics()
-                
-                # Re-set the triggered condition to True after reset
-                if triggered_reset_condition:
-                    self.results[triggered_reset_condition] = True
-                    
-                return self.results
-        
-        # Check if current step's pass conditions are met
-        if self._check_step_conditions('pass_ifs', self.current_step, row):
-            self.current_step += 1
-            if self.current_step > self.total_steps:
-                self.results[self.name_action] = 'BUY'
-        
-        # Update metrics
-        self._update_metrics()
-
-        return self.results
-    
-    def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
-        results = pd.DataFrame(index=df.index, columns=self.names)
-        for i in range(len(df)):
-            results.iloc[i] = self._compute_row(df.iloc[:i+1])
-        return results
+T = TypeVar('T', bound='Strategy')
 
 @dataclass
 class Strategy(MultiSignals):
+    """
+    A multi-step strategy implementation that tracks progression through a sequence of
+    scoring steps, handling success and failure conditions.
+    
+    Attributes:
+        name: Unique identifier for the strategy
+        chartArgs: List of chart configuration objects for visualization
+    """
     name: str
     chartArgs: List[ChartArgs] = field(default_factory=list)
 
-
-    def __post_init__(self):
-        self.names = [self.name, f"{self.name}_pctComplete", f"{self.name}_passed", f"{self.name}_meanScore"]
+    def __post_init__(self) -> None:
+        """Initialize strategy state after object creation."""
+        # Create base column names used by the strategy
+        self.names_base = [
+            self.name, 
+            f"{self.name}_pctComplete", 
+            f"{self.name}_passed", 
+            f"{self.name}_meanScore"
+        ]
+        
+        # Track all column names (including dynamic ones added later)
+        self.names: Set[str] = set(self.names_base)
+        self.names_active: Set[str] = set(self.names_base)
+        
+        # Strategy execution state
         self.steps = []
-        self.rows = [] #  list of dicts for each row
+        self.rows = []  # list of dicts for each row
         self.pctComplete = 0
         self.meanScoreOfSteps = 0
         self.current_step = 1
@@ -4140,117 +4001,266 @@ class Strategy(MultiSignals):
         self.chartArgs = []
         self.count_steps_passed = 0
 
-    
-    def add_chart_args(self, meanScoreArgs:ChartArgs, pctCompleteArgs:ChartArgs, scoreArgs:ChartArgs, failArgs:ChartArgs, scoreSubItemArgs:ChartArgs):
+    def add_chart_args(self, 
+                     meanScoreArgs: ChartArgs, 
+                     pctCompleteArgs: ChartArgs, 
+                     scoreArgs: ChartArgs, 
+                     failArgs: ChartArgs, 
+                     scoreSubItemArgs: ChartArgs) -> T:
+        """
+        Configure chart visualization arguments for the strategy.
+        
+        Args:
+            meanScoreArgs: Chart configuration for mean score display
+            pctCompleteArgs: Chart configuration for percent complete display
+            scoreArgs: Chart configuration for individual scores
+            failArgs: Chart configuration for failure indicators
+            scoreSubItemArgs: Chart configuration for sub-score components
+            
+        Returns:
+            Self for method chaining
+        """
+        # Set up chart argument names and columns
         meanScoreArgs.name = f"{self.name}_meanScore"
         meanScoreArgs.columns = [meanScoreArgs.name]
+        
         pctCompleteArgs.name = f"{self.name}_pctComplete"
         pctCompleteArgs.columns = [pctCompleteArgs.name]
+        
         scoreArgs.name = f"{self.name}_score"
         scoreArgs.columns = []
+        
         failArgs.name = f"{self.name}_fail"
         failArgs.columns = []
+        
         scoreSubItemArgs.name = f"{self.name}_subItem"
         scoreSubItemArgs.columns = []
+        
         self.chartArgs = [meanScoreArgs, pctCompleteArgs, scoreArgs, failArgs, scoreSubItemArgs]
         return self
     
-    def get_name(self, step:int, objName):
-        name = f"{self.name}_{step}_{objName}"
-        if name not in self.names:  # Avoid duplicates
-            self.names.append(name)
-        return name
-
-    def add_step(self, scoreObj:Score, failObj:Score, ifFailStartFromStep:int):
-        self.steps.append({'scoreObj': scoreObj, 'failObj': failObj, 'ifFailStartFromStep': ifFailStartFromStep})
-        step = len(self.steps)
-        self.chartArgs[2].columns += [self.get_name(step, scoreObj.name)]
-        self.chartArgs[3].columns += [self.get_name(step, failObj.name)]
-        self.chartArgs[4].columns += [self.get_name(step, sig.name) for sig in scoreObj.sigs]
-        return self
+    def add_step(self, scoreObj: Score, failObj: Score, ifFailStartFromStep: int) -> T:
+        """
+        Add a strategy execution step with associated scoring and failure handling.
         
+        Args:
+            scoreObj: Scoring object that determines success
+            failObj: Scoring object that determines failure
+            ifFailStartFromStep: Step to restart from in case of failure
+            
+        Returns:
+            Self for method chaining
+        """
+        self.steps.append({
+            'scoreObj': scoreObj, 
+            'failObj': failObj, 
+            'ifFailStartFromStep': ifFailStartFromStep
+        })
+        
+        # Get the step number for naming
+        step = len(self.steps)
+        
+        # Add column names to chart arguments
+        self.chartArgs[2].columns.append(self.get_name(step, scoreObj.name))
+        self.chartArgs[3].columns.append(self.get_name(step, failObj.name))
+        
+        # Add sub-signal column names
+        for sig in scoreObj.sigs:
+            sub_name = self.get_name(step, sig.name, parentName=scoreObj.name)
+            self.chartArgs[4].columns.append(sub_name)
+            
+        return self
     
-    def add_row_item(self, df, obj):
-        name = f"{self.name}_{self.current_step}_{obj.name}"
+    def get_name(self, step: int, objName: str, parentName: Optional[str] = None) -> str:
+        """
+        Generate a unique name for a step component.
+        
+        Args:
+            step: Step number
+            objName: Name of the object
+            parentName: Optional parent object name for hierarchical naming
+            
+        Returns:
+            A unique identifier string
+        """
+        if parentName is not None:
+            name = f"{self.name}{step}__{parentName}_({objName})"
+        else:
+            name = f"{self.name}{step}__{objName}"
+            
+        # Add to tracked names
+        self.names.add(name)
+        return name
+    
+    def add_row_item(self, df: pd.DataFrame, obj: Any, parentName: Optional[str] = None) -> T:
+        """
+        Add a single item to the current row.
+        
+        Args:
+            df: DataFrame containing the data
+            obj: Object with a 'name' attribute
+            parentName: Optional parent object name for hierarchical naming
+            
+        Returns:
+            Self for method chaining
+        """
+        step = self.current_step
+        name = self.get_name(step, obj.name, parentName=parentName)
+        self.names_active.add(name)
         self.rows[-1][name] = df[obj.name].iat[-1] 
         return self
     
-    def add_row_metrics(self):
+    def add_row_metrics(self) -> T:
+        """
+        Add standard metrics to the current row.
+        
+        Returns:
+            Self for method chaining
+        """
         self.rows[-1][f"{self.name}_passed"] = self.passed
         self.rows[-1][f"{self.name}_pctComplete"] = self.pctComplete
         self.rows[-1][f"{self.name}_meanScore"] = self.meanScoreOfSteps
         return self
     
-    def update_mean_score(self, df, scoreObj):
+    def update_mean_score(self, df: pd.DataFrame, scoreObj: Score) -> None:
+        """
+        Update the running mean score based on the latest score.
+        
+        Args:
+            df: DataFrame containing the score data
+            scoreObj: Score object with scoring info
+        """
         score = df[scoreObj.name].iloc[-1]
-        self.scoreList += [score]
-        self.meanScoreOfSteps = sum(self.scoreList) / len(self.scoreList)
+        self.scoreList.append(score)
+        self.meanScoreOfSteps = np.mean(self.scoreList)
 
-    def update_pct_complete(self):
-        self.pctComplete = 0 if self.count_steps_passed == 0 else (self.count_steps_passed / len(self.steps)) * 100
+    def update_pct_complete(self) -> None:
+        """Update the percentage completion of the strategy."""
+        if self.count_steps_passed == 0:
+            self.pctComplete = 0
+        else:
+            self.pctComplete = (self.count_steps_passed / len(self.steps)) * 100
 
-    def reset(self, startFromStep:int=1):
+    def reset(self, startFromStep: int = 1) -> None:
+        """
+        Reset the strategy state to a specific step.
+        
+        Args:
+            startFromStep: Step number to reset to (default: 1)
+        """
         self.current_step = startFromStep
         self.count_steps_passed = startFromStep - 1
-        self.scoreList = self.scoreList[:startFromStep-1] # keep the scores from the failed step
-        self.meanScoreOfSteps = 0 if len(self.scoreList) == 0 else sum(self.scoreList) / len(self.scoreList)
+        # Keep the scores from steps before the failure
+        self.scoreList = self.scoreList[:startFromStep-1]
+        
+        # Recalculate mean score
+        if len(self.scoreList) == 0:
+            self.meanScoreOfSteps = 0
+        else:
+            self.meanScoreOfSteps = np.mean(self.scoreList)
+            
         self.update_pct_complete()
         self.passed = False
   
-
-
     def _compute_row(self, df: pd.DataFrame) -> pd.Series:
-        if self.passed > 0:
-            self.reset(1) # reset the strategy if it has passed
+        """
+        Compute a single row of strategy signals.
+        
+        Args:
+            df: DataFrame with data up to the current point
+            
+        Returns:
+            Series containing computed signals for this row
+        """
+        # Reset strategy if it previously passed
+        if self.passed:
+            self.reset(1)
 
-        self.rows.append({}) # add a new row to the list of rows
+        # Initialize new row with base metrics as NaN
+        self.rows.append({name: np.nan for name in self.names_base})
 
+        # Process each step in sequence
         for i, step in enumerate(self.steps):
-
-            if i + 1 >= self.current_step:
+            step_num = i + 1
+            
+            # Only process current or future steps
+            if step_num >= self.current_step:
                 scoreObj = step['scoreObj']
                 failObj = step['failObj']
-                scorePassed  = df[scoreObj.name_passed].iloc[-1]
+                
+                # Check if signals are available
+                scorePassed = df[scoreObj.name_passed].iloc[-1]
                 failed = df[failObj.name_passed].iloc[-1]
 
+
+                # Break if score data is not available
                 if pd.isna(scorePassed):
                     break
 
+                # Add signals to the current row
+                self.add_row_item(df, scoreObj)
+                self.add_row_item(df, failObj)
+
+                # print(f"{df.index[-1]} : Step {step_num}: scorePassed={scorePassed}, failed={failed} {df[scoreObj.name].iloc[-1]=}, {df[failObj.name].iloc[-1]}")
+                
+                # Add sub-signals
+                for sig in scoreObj.sigs:
+                    self.add_row_item(df, sig, parentName=scoreObj.name)
+                
+                # Handle failure
                 if failed > 0:
                     self.reset(step['ifFailStartFromStep'])
                     break
-
+            
+                # Handle success
                 if scorePassed > 0:
                     self.count_steps_passed += 1
                     self.update_mean_score(df, scoreObj)
-                    self.add_row_item(df, scoreObj)
-                    self.add_row_item(df, failObj)
                     
-                    for sig in scoreObj.sigs:
-                        self.add_row_item(df, sig)
-
+                    # Check if all steps are complete
                     if self.current_step == len(self.steps):
                         self.passed = True
                     else:
                         self.current_step += 1
 
+        # Update metrics and add to row
         self.update_pct_complete()
         self.add_row_metrics()
-      
-        # Create a Series with NaN values for all expected columns
-        result = pd.Series(index=self.names, dtype='float64')
+    
+        # Create a Series with all expected columns initialized to NaN
+        result = pd.Series(index=list(self.names_active), dtype='float64')
         
-        # Fill in the values that we have
+        # Fill in values from the current row
         for key, value in self.rows[-1].items():
             if key in result.index:
                 result[key] = value
-        
+
         return result
 
     def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
-        results = pd.DataFrame(index=df.index, columns=self.names)
+        """
+        Compute strategy signals for the entire DataFrame.
+        
+        Args:
+            df: Input DataFrame with price/indicator data
+            
+        Returns:
+            DataFrame with computed strategy signals
+        """
+        # Pre-allocate results with NaN
+        results_data = []
+        
+        # Process each row sequentially
         for i in range(len(df)):
-            results.iloc[i] = self._compute_row(df.iloc[:i+1])
+            # Compute row and store result with corresponding index
+            row_result = self._compute_row(df.iloc[:i+1])
+            results_data.append(row_result)
+        
+        # Combine all rows into a single DataFrame
+        results = pd.DataFrame(results_data, index=df.index)
+        # print(f"Strategy {self.name} computed {len(results)} rows.")
+        # display(results)
+        
         return results
 
 

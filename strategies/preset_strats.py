@@ -801,9 +801,6 @@ class TAPresets1D(TAPresetsBase):
 
 
 
-        #! TODO: Add the stratgey
-
-
 @dataclass
 class TAPresets1H(TAPresetsBase):
     name: str = '1H'
@@ -831,9 +828,14 @@ class TAPresets1H(TAPresetsBase):
         self.sv_1H = sig.Score(name='1Hv', ls=self.ls, sigs=[self.v_VolChgPct], scoreType='mean', operator='>=', threshold=100, normRange=(0,1), lookBack=self.lookBack).add_chart_args(self.ca.ScoreV1H)
 
         # fails
-        self.s_1H_fail  = sig.Score(name='1Hf', ls=self.ls, sigs=[self.VolChgPct], scoreType='mean', operator='>', threshold=50, normRange=(0,100), lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
+        self.s_1H_fail  = sig.Score(name='1Hf', ls=self.ls, sigs=[self.VolChgPct], scoreType='mean', operator='<', threshold=30, normRange=(0,100), lookBack=self.lookBack).add_chart_args(self.ca.Score1H)
 
         self.add_to_ta_list(self.l_sigs + self.l_vads + [self.s_1H, self.sv_1H, self.s_1H_fail])
+
+        
+        strat = sig.Strategy(name='strat1H', lookBack=10).add_chart_args(self.ca.StratMeanScore, self.ca.StratPctComplete, self.ca.StratScores, self.ca.StratFails, self.ca.StratSubItems)
+        strat.add_step(scoreObj=self.s_1H, failObj=self.s_1H_fail, ifFailStartFromStep=1)
+        self.add_to_ta_list([strat])
 
 
 @dataclass
