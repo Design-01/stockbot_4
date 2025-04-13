@@ -66,10 +66,10 @@ class Frame:
         # Ensure both DataFrames have a datetime index
         if not isinstance(self.data.index, pd.DatetimeIndex):
             raise ValueError("Main DataFrame must have a datetime index")
-        if not isinstance(new_data.index, pd.DatetimeIndex):
-            print('---- Error: New data must have a datetime index. Skipping update!.')
-            print(f"New data index that threw this error {new_data.index}.")
-            pass
+        # if not isinstance(new_data.index, pd.DatetimeIndex):
+        #     print('---- Error: New data must have a datetime index. Skipping update!.')
+        #     print(f"New data index that threw this error {new_data.index}.")
+        #     pass
         
         # Create a fresh copy of the main DataFrame and deduplicate
         updated_df = self.data.copy()
@@ -137,7 +137,7 @@ class Frame:
         
         # No duplicates found, add the new TA
         if runOnLoad:
-            self.updaet_data(ta.run(self.data))
+            self.update_data(ta.run(self.data))
         
         self.ta.append(ta)
         # returning the ta object to allow it to be assigend and therefor access the name vaialbe in the ta object
@@ -244,81 +244,26 @@ class Frame:
         # Manual limit
         # result = merge_timeframes(df_1min, df_5min, 'close', auto_limit=False, ffillManualLimit=4)
 
+    def plot(self, width:int=1400, height:int=800, trading_hours:bool=False, show:bool=True):
 
-
-
-
-
-    def plot(self, width: int = 1400, height: int = 800, trading_hours: bool = False, 
-        show: bool = True, snapshot_data: pd.DataFrame = None, use_backtest_data: bool = False,
-        animate: bool = False):
-
-        """Plot the frame data with technical indicators."""
-
-        if animate and self.snapshots:
-            if self.chart is None:
-                self.setup_chart()
-            self.chart.enable_animation()
-            self.chart.create_frames_from_snapshots(self.snapshots)
-
-        # Determine which data to use for plotting
-        original_data = None
-        if snapshot_data is not None:
-            original_data = self.data
-            self.data = snapshot_data
-        elif use_backtest_data and hasattr(self, 'backtest_data') and not self.backtest_data.empty:
-            original_data = self.data
-            self.data = self.backtest_data
-            
         # Ensure chart is initialized
         if self.chart is None:
             self.setup_chart()
-            
-        # Use existing plot logic
+        # Check if data is loaded
         self.chart.refesh(self.data)
 
-
-        def plot_each_ta(ta:TA):
-            # Use columns from chartArgs if provided, otherwise use ta.columns
-            names = ta.names if ta.chartArgs.columns is None else ta.chartArgs.columns
-            if isinstance(names, str):
-                names = [names]
-            elif not isinstance(names, list):
-                names = list(names)
-                
-            available_columns = [name for name in names if name in self.data.columns]
-            if available_columns:
-                indicator_data = self.data[available_columns]
-                nameData = self.data[ta.chartArgs.nameCol] if ta.chartArgs.nameCol in self.data.columns else None # use data for the label
-                self.chart.add_ta(indicator_data, ta.chartArgs.style, ta.chartArgs.chartType, ta.chartArgs.row, nameData)
-
-
-        
-        # for indicator, style, chart_type, row, nameCol, columns in self.ta:
         for ta in self.taPresets.get_ta_list():
-            if ta.chartArgs is None: 
+            if ta.plotArgs is None: 
+                print(f"plot :: No plotArgs for {ta.__class__.__name__}")
                 continue
+            self.chart.add_ta_plots(self.data, ta.plotArgs) # ! testing 
+            # print(ta.plotArgs)
             
-            #! not tested yet
-            # Handle names whether they're in a list or string. Allows for multiple names to be passed in.
-            # assumes the chartArgs.columns will be used to set args to sets of column names 
-            if isinstance(ta.chartArgs, list):
-                for chartArg in ta.chartArgs:
-                    # print(f'Frame :: plot : Plotting {ta.name} with {chartArg}')
-                      plot_each_ta(ta)
-            #£ Tested and ok 
-            else: 
-                plot_each_ta(ta)
-
         if trading_hours:
             self.chart.add_trading_hours(self.data, self.trading_hours)
-        
+
         if show:
             self.chart.show(width=width, height=height)
-
-        # Restore original data if we temporarily changed it
-        if original_data is not None:
-            self.data = original_data
 
        # ---------------- Backtesting Methods ----------------
 

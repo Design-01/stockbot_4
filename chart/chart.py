@@ -1,22 +1,53 @@
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Literal, Union
 import datetime
-from plotly.colors import hex_to_rgb
 import numpy as np
 import plotly.io as pio
 from dataclasses import dataclass, field
+import plotly.colors as pc
+from matplotlib.colors import CSS4_COLORS
+
+from chart.chart_args import PlotArgs
 
 
-# used to store the chart arguments for Chart.add_multi_ta
-@dataclass
-class ChartArgs:
-    style: Dict[str, Any] | list[Dict[str, Any]] = field(default_factory=dict)
-    chartType: str = 'line'
-    row: int = 1
-    nameCol: pd.Series = None
-    columns: List[str] = None
+def get_rgba(color, opacity=1.0):
+    """
+    Convert a color name or hex to rgba format for plotly with custom opacity.
+    
+    Parameters:
+    -----------
+    color : str
+        Color name (e.g., 'green') or hex code (e.g., '#00FF00')
+    opacity : float
+        Opacity value between 0 and 1
+        
+    Returns:
+    --------
+    str
+        rgba string in format 'rgba(r,g,b,a)' that plotly can use
+    """
+    
+    # Handle color name to hex conversion
+    if not color.startswith('#'):
+        # Try to get color from matplotlib's CSS4 colors
+        try:
+            color = CSS4_COLORS[color.lower()]
+        except KeyError:
+            # Default to a standard color if not found
+            color = '#000000'  # Default to black
+    
+    # Convert hex to RGB
+    rgb = pc.hex_to_rgb(color)
+    
+    # Return as rgba string
+    return f'rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, {opacity})'
+
+
+
+
+
 
 class Chart:
 
@@ -26,8 +57,10 @@ class Chart:
         self.height = height
         self.width = width
         self.fig = None
+        self.plot_function_map = {}
         self.ta = []
         self.set_fig()
+        self._register_plot_functions()
     
 
     def set_fig(self):
@@ -38,6 +71,17 @@ class Chart:
             vertical_spacing=0.02,
             row_width=self.rowHeights)
     
+    def _register_plot_functions(self):
+        """Register the mapping of plot types to their handler functions"""
+        self.plot_function_map = {
+            'lines': self.add_line,
+            'lines+markers': self.add_line,  # Consolidated to use the same handler
+            'lines+markers+text': self.add_line,  # Consolidated to use the same handler
+            'zone': self.add_zone,
+            'points': self.add_points,
+            'points+text': self.add_points,  # Consolidated to use the same handler
+            'buysell': self.add_points,
+        }
         
     def store_ta(self, ta_list):
         self.ta = ta_list
@@ -444,345 +488,370 @@ class Chart:
         self.add_candles_and_volume(df)
         self.add_layout_and_format(df)
 
-    def add_ta(self, data: pd.Series | pd.DataFrame, style: Dict[str, Any] | list[Dict[str, Any]], chartType: str, row:int=1, nameCol:pd.Series=None, columns:List[str]=None) -> None:
-        """Adds ta's to the chart
+    # =====  Adding plots to the chart ======   
 
-        args:
-        data: pd.Series | pd.DataFrame: The data to be added to the chart
-        style: Dict[str, Any]: The style of the data
-        chartType: str: The type of chart to be added
+    def add_line(self, df:pd.DataFrame, plot_args:PlotArgs):
         """
-
-        if style == {}: return
-
-        # make styles consistent
-        style = [style] if not isinstance(style, list) else style
-
-        columns = data.columns if columns is None else columns
-
-        if chartType == 'line':
-            if isinstance(data, pd.Series):
-                self.fig.add_trace(go.Scatter(x=data.index, y=data, name=data.name, line=style[0]), row=row, col=1)
-            elif isinstance(data, pd.DataFrame):
-                for column, stl in zip(columns, style):
-                    self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, line=stl), row=row, col=1)
-
-        if chartType == 'lines+markers':
-            # print(f"Adding nameCol type: {type(nameCol)} nameCol: {nameCol},  {chartType} to chart")
+        Add line traces to a plotly figure based on the provided ChartArgItem.
+        Will handle both single values and lists for styling attributes.
+        
+        This method handles 'line', 'line+marker', and 'line+marker+label' plot types.
+        """
+        # print(f"Chart.add_line :: {plot_args=}")
+        row = plot_args.plotRow
+        col = plot_args.plotCol
+        idx = df.index
+        mode = plot_args.plotType
+        
+        # Convert all attributes to lists for consistent handling
+        columns = [plot_args.dataCols] if not isinstance(plot_args.dataCols, list) else plot_args.dataCols
+        columns = [col for col in columns if col in df.columns]  # Filter out invalid columns
+        if not columns:
+            print(f"Chart.add_line :: No valid columns for {plot_args.name=} found in {plot_args.dataCols=} , {plot_args=}") 
+            return
+        
+        # Convert other style attributes to lists (or empty lists if None)
+        names = [plot_args.name] if not isinstance(plot_args.name, list) else plot_args.name if plot_args.name else []
+        labels = [plot_args.textCols] if not isinstance(plot_args.textCols, list) else plot_args.textCols if plot_args.textCols else []
+        colours = [plot_args.colours] if not isinstance(plot_args.colours, list) else plot_args.colours if plot_args.colours else []
+        opacities = [plot_args.opacities] if not isinstance(plot_args.opacities, list) else plot_args.opacities if plot_args.opacities else []
+        dashes = [plot_args.dashes] if not isinstance(plot_args.dashes, list) else plot_args.dashes if plot_args.dashes else []
+        line_widths = [plot_args.lineWidths] if not isinstance(plot_args.lineWidths, list) else plot_args.lineWidths if plot_args.lineWidths else []
+        marker_sizes = [plot_args.markerSizes] if not isinstance(plot_args.markerSizes, list) else plot_args.markerSizes if plot_args.markerSizes else []
+        text_positions = [plot_args.textPositions] if not isinstance(plot_args.textPositions, list) else plot_args.textPositions if plot_args.textPositions else []
+        
+        # Add a trace for each column
+        for i, column in enumerate(columns):
+            # Get data for the current column
+            data = df[column]
             
-            if isinstance(data, pd.Series):
-            #     labels = ''
-            #     if isinstance(nameCol, pd.Series):
-            #         print(f"Adding nameCol ... isinstance pd.Series... type: {type(nameCol)} nameCol: {nameCol},  {chartType} to chart")
-            #         labels = nameCol.to_list()
-            #         print(labels)
-                self.fig.add_trace(go.Scatter(
-                    x=data.index, 
-                    y=data, 
-                    name=data.name, 
-                    line=style[0], 
-                    mode=chartType,
-                    text='test'
-                    ), row=row, col=1)
+            # Create the line style dictionary
+            line_style = {}
+            
+            # Get the current color and opacity
+            current_color = colours[i % len(colours)] if colours else None
+            current_opacity = opacities[i % len(opacities)] if opacities else 1.0
+            
+            # Apply color with opacity if both are available
+            if current_color:
+                # Use get_rgba to handle the opacity in the color
+                line_style["color"] = get_rgba(current_color, current_opacity) if current_opacity is not None else current_color
                 
-            elif isinstance(data, pd.DataFrame):
-                for column, stl in zip(columns, style):
-                    self.fig.add_trace(go.Scatter(x=data.index, y=data[column], name=column, line=stl, mode=chartType), row=row, col=1)
-
-
-
-        # Add MACD subplot if provided
-        if chartType == 'macd' and isinstance(data, pd.DataFrame):
-            macd_col = [col for col in columns if col.endswith('MACD')][0]
-            signal_col = [col for col in columns if col.endswith('Signal')][0]
-            hist_col = [col for col in columns if col.endswith('Histogram')][0]
+            # Apply line width if available
+            if line_widths:
+                line_style["width"] = line_widths[i % len(line_widths)]
+                
+            # Apply dash style if available
+            if dashes:
+                line_style["dash"] = dashes[i % len(dashes)]
             
-            # self.fig.add_trace(go.Bar(x=data.index, y=data[hist_col], name=hist_col, marker=hist_style), row=3, col=1)
-            self.fig.add_trace(go.Scatter(x=data.index, y=data[macd_col], name=macd_col, line=style[0]), row=3, col=1)
-            self.fig.add_trace(go.Scatter(x=data.index, y=data[signal_col], name=signal_col, line=style[1]), row=3, col=1)
-            self.fig.add_trace(go.Bar(x=data.index, y=data[hist_col], name=hist_col, marker=style[2]), row=3, col=1)
+            # Create marker style - only used if we need markers
+            marker_style = {}
+            if 'marker' in mode and current_color:
+                marker_style["color"] = line_style.get("color")
             
-            self.fig.update_layout()  # Adjust the height to accommodate the new subplot
+            if 'marker' in mode and marker_sizes:
+                marker_style["size"] = marker_sizes[i % len(marker_sizes)]
+            
+            # Get label data if we're using text
+            text_data = None
+            if 'text' in mode:
+                # Get the label data if specified
+                label_column = labels[i % len(labels)] if i < len(labels) and labels else None
+                text_data = df[label_column].astype(str) if label_column and label_column in df.columns else None
+            
+            # Get text position if specified
+            text_position = "top center"  # Default position
+            if text_positions and i < len(text_positions) and text_positions[i] is not None:
+                text_position = text_positions[i]
+            
+            # Get trace name (use provided name, label, or column name)
+            trace_name = None
+            if names and i < len(names) and names[i] is not None:
+                trace_name = names[i]
+            elif labels and i < len(labels) and labels[i] is not None:
+                trace_name = labels[i]
+            else:
+                trace_name = column
+                
+            # Add the trace with all configurations
+            self.fig.add_trace(
+                go.Scatter(
+                    x=idx,
+                    y=data,
+                    name=trace_name,
+                    text=text_data,
+                    textposition=text_position if text_data is not None else None,
+                    line=line_style,
+                    marker=marker_style if marker_style else None,
+                    mode=mode  # Set mode based on plot type
+                ),
+                row=row,
+                col=col
+            )
         
-        if chartType == 'points' and isinstance(data, pd.DataFrame):
-            for column, stl in zip(columns, style):
-                # Ensure 'size' and 'opacity' are set in the marker style if not provided
-                stl.setdefault('size', 10)  # Default size if not provided
-                stl.setdefault('color', 'blue')  # Default color if not provided
-                stl.setdefault('opacity', 0.8)  # Default opacity if not provided
-
-                labels = ''
-                if isinstance(nameCol, pd.Series):
-                    labels = nameCol.to_list()
-
-
-                self.fig.add_trace(go.Scatter(
-                    x=data.index,
-                    y=data[column],
-                    name=column,
-                    mode='markers',
-                    marker=stl,
-                    text=labels
-                ), row=row, col=1)
-
-        if chartType == 'support_resistance':
-            self.add_support_resistance(data, style)
-
-        if chartType.upper() in ['CONS', 'RECT']:
-            self.add_rectangle(data, style, chartType.upper())
+    def add_points(self, df: pd.DataFrame, plot_args: PlotArgs):
+        """
+        Add points (markers) to the plot, optionally with labels.
+        Handles 'points', 'points+text', and 'buy_sell' plot types.
+        """
+        row = plot_args.plotRow
+        col = plot_args.plotCol
+        idx = df.index
+        plot_type = plot_args.plotType
         
-        if chartType == 'trendlines':
-            trend_cols = [col for col in columns if 'TREND' in col]
-            for col in trend_cols:
-                mask = ~data[col].isna()
-                if mask.any():
-                    self.fig.add_trace(go.Scatter(
-                        x=data.index[mask],
-                        y=data[col][mask],
-                        name=col,
-                        line=style[0]  # Use the same style for all trend lines
-                    ), row=row, col=1)
-
-
-    def add_multi_ta(self, data: pd.DataFrame, chartArgs: List[ChartArgs]) -> None:
-        """
-        Adds multiple technical analysis indicators to the chart.
-
-        Args:
-        data (pd.DataFrame): DataFrame containing technical analysis indicators
-        chartArgs (List[ChartArgs]): List of ChartArgs objects containing indicator details
-        """
-        for chartArg in chartArgs:
-            self.add_ta(data, chartArg.style, chartArg.chartType, chartArg.row, chartArg.nameCol)
-
+        # Convert all attributes to lists for consistent handling
+        columns = [plot_args.dataCols] if not isinstance(plot_args.dataCols, list) else plot_args.dataCols
         
+        # Convert other style attributes to lists
+        names = [plot_args.name] if not isinstance(plot_args.name, list) else plot_args.name if plot_args.name else []
+        labels = [plot_args.textCols] if not isinstance(plot_args.textCols, list) else plot_args.textCols if plot_args.textCols else []
+        colours = [plot_args.colours] if not isinstance(plot_args.colours, list) else plot_args.colours if plot_args.colours else []
+        opacities = [plot_args.opacities] if not isinstance(plot_args.opacities, list) else plot_args.opacities if plot_args.opacities else []
+        marker_sizes = [plot_args.markerSizes] if not isinstance(plot_args.markerSizes, list) else plot_args.markerSizes if plot_args.markerSizes else []
+        text_positions = [plot_args.textPositions] if not isinstance(plot_args.textPositions, list) else plot_args.textPositions if plot_args.textPositions else []
+        text_sizes = [plot_args.textSizes] if not isinstance(plot_args.textSizes, list) else plot_args.textSizes if plot_args.textSizes else []
+        
+        # Add support for marker symbols
+        marker_symbols = [plot_args.markerSymbols] if not isinstance(plot_args.markerSymbols, list) else plot_args.markerSymbols if plot_args.markerSymbols else []
+        
+        # Determine the mode based on plot type
+        mode = 'markers'
+        if plot_type in ['points+text', 'buy_sell']:
+            mode = 'markers+text'
+        
+        # Add a trace for each column
+        for i, column in enumerate(columns):
+            # Get data for the current column
+            data = df[column]
+            
+            # Get current styling
+            current_color = colours[i % len(colours)] if colours else None
+            current_opacity = opacities[i % len(opacities)] if opacities else 1.0
+            
+            # Create marker style
+            marker_style = {}
+            if current_color:
+                marker_style["color"] = get_rgba(current_color, current_opacity) if current_opacity is not None else current_color
+            
+            if marker_sizes:
+                marker_style["size"] = marker_sizes[i % len(marker_sizes)]
+            
+            # Add marker symbol if specified
+            if marker_symbols:
+                marker_style["symbol"] = marker_symbols[i % len(marker_symbols)]
+            
+            # Get label data if we're using text
+            text_data = None
+            if 'text' in mode:
+                # Get the label data if specified
+                label_column = labels[i % len(labels)] if i < len(labels) and labels else None
+                text_data = df[label_column].astype(str) if label_column and label_column in df.columns else None
+            
+            # Get text position if specified
+            text_position = "top center"  # Default position
+            if text_positions and i < len(text_positions) and text_positions[i] is not None:
+                text_position = text_positions[i]
+            
+            # Get trace name
+            trace_name = names[i % len(names)] if names else column
+            
+            # Setup text font properties
+            text_font = {}
+            # Use the same color as the marker for text
+            if current_color:
+                text_font["color"] = get_rgba(current_color, current_opacity) if current_opacity is not None else current_color
+            
+            # Apply text size if specified
+            if text_sizes:
+                text_font["size"] = text_sizes[i % len(text_sizes)]
+            
+            # Add the trace with appropriate mode
+            self.fig.add_trace(
+                go.Scatter(
+                    x=idx,
+                    y=data,
+                    name=trace_name,
+                    marker=marker_style,
+                    text=text_data,
+                    textposition=text_position if text_data is not None else None,
+                    mode=mode,
+                    textfont=text_font
+                ),
+                row=row,
+                col=col
+            )
 
-    def add_support_resistance(self, data: pd.DataFrame, style: List[Dict[str, Any]]) -> None:
-        """
-        Adds support and resistance levels to the chart with upper and lower bounds.
-
-        Args:
-        data (pd.DataFrame): DataFrame containing support and resistance levels with bounds
-        style (List[Dict[str, Any]]): List of style dictionaries for support and resistance
-        """
-
-        def create_traces(level_col, upper_col, lower_col, style):
+    def add_zone(self, df: pd.DataFrame, plot_args: PlotArgs):
             """
             Creates Plotly traces for support/resistance levels with properly bounded shaded areas.
             
             This function generates a set of traces that visualize support/resistance levels with:
-            1. A main level line (solid)
-            2. Upper and lower bound lines (dotted)
-            3. Shaded areas between upper and lower bounds
+            1. Upper and lower bound lines (dotted)
+            2. Shaded areas between upper and lower bounds
             
-            The shading is carefully constructed to only appear where both upper and lower bounds
-            have valid data (non-NaN values). This prevents the shading from extending beyond
-            where the support/resistance lines actually exist.
-            
-            The function breaks the data into continuous segments and creates separate fill
-            areas for each segment to ensure proper visualization when lines have gaps.
-            
-            Args:
-                level_col (str): Column name for the main support/resistance level
-                upper_col (str): Column name for the upper bound
-                lower_col (str): Column name for the lower bound
-                style (dict): Dictionary with styling parameters including:
-                    - dash (str): Line style for main level ('solid', 'dash', 'dot', etc.)
-                    - width (int): Line width in pixels
-                    - fillcolour (str): Color for shaded area (RGBA format)
-                    - main_line_colour (str): Color for main level line (RGBA format)
-                    - zone_edge_colour (str): Color for upper/lower bound lines (RGBA format)
-            
-            Returns:
-                list: List of Plotly go.Scatter traces ready to be added to a figure
+            The colContains parameter is expected to contain patterns for identifying pairs of columns.
             """
-            # Extract styling parameters from the style dictionary with defaults
-            dash = style.get('dash', 'solid')                            # Line style for main level
-            width = style.get('width', 2)                                # Line width in pixels
-            fillcolour = style.get('fillcolour', 'rgba(0, 0, 255, 0.1)') # Color for shaded area
-            main_line_colour = style.get('main_line_colour', 'rgba(0, 0, 255, 0.8)')  # Main line color
-            zone_edge_colour = style.get('zone_edge_colour', 'rgba(0, 0, 255, 0.2)')  # Edge line color
-
-            traces = []
+            row = plot_args.plotRow
+            col = plot_args.plotCol
             
-            # PART 1: IDENTIFY CONTINUOUS SEGMENTS
-            # We need to find where both upper and lower bounds have valid data to properly create fills
-            mask = ~(data[upper_col].isna() | data[lower_col].isna())  # True where both lines have values
-            
-            # Find the start and end indices of each continuous segment
-            segment_starts = []  # Will hold starting indices of segments
-            segment_ends = []    # Will hold ending indices of segments
-            
-            in_segment = False   # Tracks whether we're currently in a valid segment
-            for i, valid in enumerate(mask):
-                if valid and not in_segment:
-                    # We just entered a valid segment
-                    segment_starts.append(i)
-                    in_segment = True
-                elif not valid and in_segment:
-                    # We just exited a valid segment
-                    segment_ends.append(i - 1)
-                    in_segment = False
-            
-            # If the last segment continues until the end of data, add the last index
-            if in_segment:
-                segment_ends.append(len(mask) - 1)
-            
-            # PART 2: CREATE FILL AREAS FOR EACH SEGMENT
-            # Iterate through each identified segment and create a separate fill area
-            for start, end in zip(segment_starts, segment_ends):
-                # Extract the relevant slice of data for this segment
-                segment_indices = data.index[start:end+1]
-                upper_values = data[upper_col].iloc[start:end+1].tolist()
-                lower_values = data[lower_col].iloc[start:end+1].tolist()
+            # Check if we have colContains defined
+            if not plot_args.colContains:
+                print("Zone plot requires colContains to identify column pairs")
+                return
                 
-                # Create the x and y coordinates for the fill polygon by:
-                # 1. Going forward along the upper bound (left to right)
-                # 2. Then going backward along the lower bound (right to left)
-                # This creates a closed path that Plotly can fill with 'toself'
-                x_fill = segment_indices.tolist() + segment_indices.tolist()[::-1]
-                y_fill = upper_values + lower_values[::-1]
+            # Convert colContains to a list if it's not already
+            col_patterns = [plot_args.colContains] if not isinstance(plot_args.colContains, list) else plot_args.colContains
+            columns = [plot_args.dataCols] if not isinstance(plot_args.dataCols, list) else plot_args.dataCols
+            
+            # Check if we have at least one pattern
+            if not col_patterns:
+                print("Zone plot requires at least one pattern in colContains")
+                return
                 
-                # Add the fill area for this segment
-                traces.append(go.Scatter(
+            # Get styling attributes as lists
+            colours = [plot_args.colours] if not isinstance(plot_args.colours, list) else plot_args.colours if plot_args.colours else []
+            fill_colours = [plot_args.fillColours] if not isinstance(plot_args.fillColours, list) else plot_args.fillColours if plot_args.fillColours else []
+            fill_opacities = [plot_args.fillOpacites] if not isinstance(plot_args.fillOpacites, list) else plot_args.fillOpacites if plot_args.fillOpacites else []
+            dashes = [plot_args.dashes] if not isinstance(plot_args.dashes, list) else plot_args.dashes if plot_args.dashes else []
+            line_widths = [plot_args.lineWidths] if not isinstance(plot_args.lineWidths, list) else plot_args.lineWidths if plot_args.lineWidths else []
+            
+            # Process each pattern to create zones
+            for i, pattern in enumerate(col_patterns):
+                # Find columns matching this pattern
+                matching_cols = [col for col in columns if pattern in col]
+                
+                # Skip if we don't have enough columns
+                if len(matching_cols) < 2:
+                    print(f"Pattern '{pattern}' doesn't match at least 2 columns, skipping")
+                    continue
+                    
+                # Sort columns so we have a consistent order
+                matching_cols = sorted(matching_cols)
+                
+                # Get current styling for this zone
+                dash = dashes[i % len(dashes)] if dashes else 'dot'
+                width = line_widths[i % len(line_widths)] if line_widths else 2
+                
+                # Get current zone edge color
+                zone_edge_colour = colours[i % len(colours)] if colours else 'rgba(0, 0, 0, 0.5)'
+                
+                # Get current fill color and opacity
+                fill_colour = fill_colours[i % len(fill_colours)] if fill_colours else 'rgba(0, 0, 255, 0.1)'
+                fill_opacity = fill_opacities[i % len(fill_opacities)] if fill_opacities else 0.1
+                
+                # Convert fill color to rgba with opacity
+                fill_rgba = get_rgba(fill_colour, fill_opacity) if isinstance(fill_colour, str) else 'rgba(0, 0, 255, 0.1)'
+                
+                # Get name for this zone
+                name = f"{pattern} Zone" if pattern else f"Zone {i+1}"
+                
+                # Process each pair of columns as a zone
+                for j in range(0, len(matching_cols) - 1, 2):
+                    # Get upper and lower columns for this pair
+                    upper_col = matching_cols[j]
+                    lower_col = matching_cols[j+1]
+                    
+                    # Create the zone for this pair of columns
+                    self._create_zone_for_column_pair(df, upper_col, lower_col, name, zone_edge_colour, fill_rgba, dash, width, row, col)
+    
+    def _create_zone_for_column_pair(self, df, upper_col, lower_col, name, edge_color, fill_color, dash, width, row, col):
+        """
+        Helper method to create a zone between two columns.
+        This handles the segment identification and trace creation for a single pair of columns.
+        """
+        # IDENTIFY CONTINUOUS SEGMENTS
+        # Find where both upper and lower bounds have valid data
+        mask = ~(df[upper_col].isna() | df[lower_col].isna())
+        
+        # Find the start and end indices of each continuous segment
+        segment_starts = []
+        segment_ends = []
+        
+        in_segment = False
+        for i, valid in enumerate(mask):
+            if valid and not in_segment:
+                # We just entered a valid segment
+                segment_starts.append(i)
+                in_segment = True
+            elif not valid and in_segment:
+                # We just exited a valid segment
+                segment_ends.append(i - 1)
+                in_segment = False
+        
+        # If the last segment continues until the end of data, add the last index
+        if in_segment:
+            segment_ends.append(len(mask) - 1)
+        
+        # CREATE FILL AREAS FOR EACH SEGMENT
+        traces = []
+        for start, end in zip(segment_starts, segment_ends):
+            # Extract the relevant slice of data for this segment
+            segment_indices = df.index[start:end+1]
+            upper_values = df[upper_col].iloc[start:end+1].tolist()
+            lower_values = df[lower_col].iloc[start:end+1].tolist()
+            
+            # Create the x and y coordinates for the fill polygon by:
+            # 1. Going forward along the upper bound (left to right)
+            # 2. Then going backward along the lower bound (right to left)
+            # This creates a closed path that Plotly can fill with 'toself'
+            x_fill = segment_indices.tolist() + segment_indices.tolist()[::-1]
+            y_fill = upper_values + lower_values[::-1]
+            
+            # Add the fill area for this segment
+            self.fig.add_trace(
+                go.Scatter(
                     x=x_fill,
                     y=y_fill,
-                    fill='toself',                        # Fill the path formed by x and y
-                    fillcolor=fillcolour,                 # Use the specified fill color
-                    line=dict(color='rgba(0, 0, 0, 0)'),  # Transparent line (no visible border)
-                    hoverinfo='skip',                     # Disable hover tooltips on the fill
-                    showlegend=False,                     # Don't show in legend
-                    name=f"{level_col} Zone Segment"      # Naming for debugging purposes
-                ))
-            
-            # PART 3: ADD THE ACTUAL LINES
-            # These will be drawn on top of the fill areas
-            
-            # Main level line (will usually be in the middle of the filled area)
-            traces.append(go.Scatter(
-                x=data.index, 
-                y=data[level_col], 
-                name=level_col,                           # Name that will appear in legend
-                line=dict(color=main_line_colour, width=width, dash=dash)  # Styling
-            ))
-            
-            # Upper bound (dotted line)
-            traces.append(go.Scatter(
-                x=data.index, 
-                y=data[upper_col], 
-                name=f"{level_col} Upper",                # Name that will appear in legend
-                line=dict(color=zone_edge_colour, width=width, dash='dot')  # Always dotted
-            ))
-            
-            # Lower bound (dotted line)
-            traces.append(go.Scatter(
-                x=data.index, 
-                y=data[lower_col], 
-                name=f"{level_col} Lower",                # Name that will appear in legend
-                line=dict(color=zone_edge_colour, width=width, dash='dot')  # Always dotted
-            ))
-            
-            return traces
-
-        def add_traces(cols, style):
-            if len(cols) == 0:
-                return
-            # print(f"Adding support/resistance traces: {cols}")
-            traces = create_traces(cols[0], cols[1], cols[2], style)
-            for trace in traces:
-                self.fig.add_trace(trace, row=1, col=1)
-
-        if not style: return
-        support_style, resistance_style = style
-
-        # Support traces
-        add_traces([col for col in data.columns if col.startswith('Sup_1')], support_style)
-        add_traces([col for col in data.columns if col.startswith('Sup_2')], support_style)
-
-        # Resistance traces
-        add_traces([col for col in data.columns if col.startswith('Res_1')], resistance_style)
-        add_traces([col for col in data.columns if col.startswith('Res_2')], resistance_style)
-   
-    def add_rectangle(self, data: pd.DataFrame, style: List[Dict[str, Any]], chartType='') -> None:
-        """
-        Adds support and resistance levels to the chart with upper and lower bounds.
-
-        Args:
-        data (pd.DataFrame): DataFrame containing support and resistance levels with bounds
-        style (List[Dict[str, Any]]): List of style dictionaries for support and resistance
-        """
-        if not style:
-            return
-            
-        support_style, resistance_style = style
-
-        def create_traces(upper_col, lower_col, style, name):
-            color = style.get('color', 'blue')
-            dash = style.get('dash', 'solid')
-            width = style.get('width', 2)
-            fillcolour = style.get('fillcolour', 'rgba(0, 0, 255, 0.1)')
-            
-            # Upper bound (dashed)
-            yield go.Scatter(
-                x=data.index, 
-                y=data[upper_col], 
-                name=f"{name} {upper_col.split('_')[-1]} Upper",
-                line=dict(color=color, width=width-1, dash='dash')
+                    fill='toself',
+                    fillcolor=fill_color,
+                    line=dict(color='rgba(0, 0, 0, 0)'),  # Transparent line
+                    hoverinfo='skip',
+                    showlegend=False,
+                    name=f"{name} Segment"
+                ),
+                row=row,
+                col=col
             )
-            
-            # Lower bound (dashed)
-            yield go.Scatter(
-                x=data.index, 
-                y=data[lower_col], 
-                name=f"{name} {lower_col.split('_')[-1]} Lower",
-                line=dict(color=color, width=width-1, dash='dash')
-            )
-            
-            # Filter out NaN values for the fill to work correctly
-            mask = data[upper_col].notna() & data[lower_col].notna()
-            x_data = data.index[mask]
-            upper_data = data[upper_col][mask]
-            lower_data = data[lower_col][mask]
-            
-            # Shaded area between upper and lower bounds
-            yield go.Scatter(
-                x=x_data.tolist() + x_data.tolist()[::-1],
-                y=upper_data.tolist() + lower_data.tolist()[::-1],
-                fill='toself',
-                fillcolor=fillcolour,
-                line=dict(color='rgba(255,255,255,0)'),
-                showlegend=False,
-                name=f"{name} {upper_col.split('_')[-1]} Zone"
-            )
-
-        # Get all rectangle columns
-        name = chartType.upper()
-        rect_cols = [col for col in data.columns if col.startswith(name)]
-        rect_pairs = []
         
-        # Group upper and lower bounds
-        for i in range(1, len(rect_cols)//2 + 1):
-            upper = f"{name}_UPPER_{i}"
-            lower = f"{name}_LOWER_{i}"
-            if upper in rect_cols and lower in rect_cols:
-                rect_pairs.append((upper, lower))
+        # ADD THE UPPER AND LOWER BOUND LINES
+        # Upper bound line
+        self.fig.add_trace(
+            go.Scatter(
+                x=df.index, 
+                y=df[upper_col], 
+                name=f"{name} Upper",
+                line=dict(color=edge_color, width=width, dash=dash)
+            ),
+            row=row,
+            col=col
+        )
         
-        # Add traces for each rectangle
-        for upper_col, lower_col in rect_pairs:
-            for trace in create_traces(upper_col, lower_col, support_style, name):
-                self.fig.add_trace(trace, row=1, col=1)
+        # Lower bound line
+        self.fig.add_trace(
+            go.Scatter(
+                x=df.index, 
+                y=df[lower_col], 
+                name=f"{name} Lower",
+                line=dict(color=edge_color, width=width, dash=dash)
+            ),
+            row=row,
+            col=col
+        )
 
-    def add_line(self, data: pd.Series, style: Dict[str, Any], row:int=1) -> None:
-        """Adds a line to the chart
+    def add_ta_plots(self, data: pd.DataFrame, plot_args: PlotArgs):
+        plot_args = plot_args if isinstance(plot_args, list) else [plot_args]
+        for pa in plot_args:
+            # Check if the plot argument is a valid PlotArgs instance
+            if not isinstance(pa, PlotArgs):
+                raise ValueError(f"Invalid plot argument: {pa}")
 
-        args:
-        data: pd.Series: The data to be added to the chart
-        style: Dict[str, Any]: The style of the data
-        """
-
-        if style == {}: return
-        self.fig.add_trace(go.Scatter(x=data.index, y=data, name=data.name, line=style), row=row, col=1)
-
-    
-
+            if pa.plotType == '':
+                continue
+            
+            # print(f"add_ta_plots :: {pa.plotType} : {pa}")
+            self.plot_function_map[pa.plotType](data, pa)
+        return self.fig
+       
+        
 

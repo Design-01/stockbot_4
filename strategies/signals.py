@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Union, Literal, Optional, Tuple, TypeVar, Set, Any
 from collections import defaultdict
 from abc import ABC, abstractmethod
-from chart.chart import ChartArgs
+from chart.chart_args import PlotArgs
 
 def trace(fromPrice:float, toPrice:float, priceNow:float):
     """ Determines how far a price has traced from one price to another price expressed as a % of the total dffernce between the fromPrice and toPrice. 
@@ -170,15 +170,22 @@ class Signals(ABC):
     normRange: Tuple[int, int] = (0, 100)
     ls: str = 'LONG'
     lookBack: int = 1
-    chartArgs: ChartArgs = None
+    plotArgs: PlotArgs | List[PlotArgs] = None
     invertScoreIfShort: bool = False
 
     def __post_init__(self):
         self.name = f"{self.ls[0]}_{self.name}"
         self.names = [self.name]
 
-    def add_chart_args(self, chartArgs: ChartArgs):
-        self.chartArgs = chartArgs
+    def add_plot_args(self, plotArgs: PlotArgs | List[PlotArgs]) -> 'Signals':
+        self.plotArgs = plotArgs
+        if isinstance(plotArgs, list):
+            for plotArg in plotArgs:
+                plotArg.dataCols = self.names if plotArg.dataCols is None else plotArg.dataCols
+                plotArg.name = self.name
+        else:
+            self.plotArgs.dataCols = self.names if self.plotArgs.dataCols is None else self.plotArgs.dataCols
+            self.plotArgs.name = self.name
         return self
 
     def get_score(self, val):
@@ -2330,7 +2337,7 @@ class MultiSignals(ABC):
     ls: str = 'LONG'
     lookBack: int = 1
     columnStartsWith: str = ''
-    chartArgs: ChartArgs = None
+    plotArgs: PlotArgs = None
     invertScoreIfShort: bool = False
 
     def __post_init__(self):
@@ -2339,8 +2346,8 @@ class MultiSignals(ABC):
         self.source_columns = []
         self.column_mapping = {}
 
-    def add_chart_args(self, chartArgs: ChartArgs):
-        self.chartArgs = chartArgs
+    def add_plot_args(self, PlotArgs: PlotArgs | List[PlotArgs]) -> 'MultiSignals':
+        self.plotArgs = PlotArgs if isinstance(PlotArgs, list) else [PlotArgs]
         return self
 
     def setup_columns(self, df: pd.DataFrame):
@@ -2458,6 +2465,17 @@ class Score(MultiSignals):
         
         # Initialize the score value
         self.val = 0.0
+
+    def add_plot_args(self, plotArgs: PlotArgs | List[PlotArgs]) -> 'Signals':
+        self.plotArgs = plotArgs
+        if isinstance(plotArgs, list):
+            for plotArg in plotArgs:
+                plotArg.dataCols = self.names
+                plotArg.name = self.name
+        else:
+            self.plotArgs.dataCols = self.names
+            self.plotArgs.name = self.name
+        return self
 
     def _get_filtered_columns(self, df: pd.DataFrame) -> List[str]:
         """Get and cache filtered columns to avoid recomputation."""
@@ -3971,10 +3989,10 @@ class Strategy(MultiSignals):
     
     Attributes:
         name: Unique identifier for the strategy
-        chartArgs: List of chart configuration objects for visualization
+        plotArgs: List of chart configuration objects for visualization
     """
     name: str
-    chartArgs: List[ChartArgs] = field(default_factory=list)
+    plotArgs: List[PlotArgs] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Initialize strategy state after object creation."""
@@ -3998,15 +4016,26 @@ class Strategy(MultiSignals):
         self.current_step = 1
         self.passed = False
         self.scoreList = []
-        self.chartArgs = []
+        self.plotArgs = []
         self.count_steps_passed = 0
 
-    def add_chart_args(self, 
-                     meanScoreArgs: ChartArgs, 
-                     pctCompleteArgs: ChartArgs, 
-                     scoreArgs: ChartArgs, 
-                     failArgs: ChartArgs, 
-                     scoreSubItemArgs: ChartArgs) -> T:
+    # def add_plot_args(self, plotArgs: PlotArgs | List[PlotArgs]) -> 'TA':
+    #     self.plotArgs = plotArgs
+    #     if isinstance(plotArgs, list):
+    #         for plotArg in plotArgs:
+    #             plotArg.name = self.name
+    #             plotArg.dataCols = self.names if plotArg.dataCols is None else plotArg.dataCols
+    #     else:
+    #         self.plotArgs.name = self.name
+    #         self.plotArgs.dataCols = self.names if self.plotArgs.dataCols is None else self.plotArgs.dataCols
+    #     return self
+
+    def add_plot_args(self, 
+                     meanScoreArgs: PlotArgs, 
+                     pctCompleteArgs: PlotArgs, 
+                     scoreArgs: PlotArgs, 
+                     failArgs: PlotArgs, 
+                     scoreSubItemArgs: PlotArgs) -> T:
         """
         Configure chart visualization arguments for the strategy.
         
@@ -4022,21 +4051,21 @@ class Strategy(MultiSignals):
         """
         # Set up chart argument names and columns
         meanScoreArgs.name = f"{self.name}_meanScore"
-        meanScoreArgs.columns = [meanScoreArgs.name]
+        meanScoreArgs.dataCols = [meanScoreArgs.name]
         
         pctCompleteArgs.name = f"{self.name}_pctComplete"
-        pctCompleteArgs.columns = [pctCompleteArgs.name]
+        pctCompleteArgs.dataCols = [pctCompleteArgs.name]
         
         scoreArgs.name = f"{self.name}_score"
-        scoreArgs.columns = []
+        scoreArgs.dataCols = []
         
         failArgs.name = f"{self.name}_fail"
-        failArgs.columns = []
+        failArgs.dataCols = []
         
         scoreSubItemArgs.name = f"{self.name}_subItem"
-        scoreSubItemArgs.columns = []
+        scoreSubItemArgs.dataCols = []
         
-        self.chartArgs = [meanScoreArgs, pctCompleteArgs, scoreArgs, failArgs, scoreSubItemArgs]
+        self.plotArgs = [meanScoreArgs, pctCompleteArgs, scoreArgs, failArgs, scoreSubItemArgs]
         return self
     
     def add_step(self, scoreObj: Score, failObj: Score, ifFailStartFromStep: int) -> T:
@@ -4061,13 +4090,13 @@ class Strategy(MultiSignals):
         step = len(self.steps)
         
         # Add column names to chart arguments
-        self.chartArgs[2].columns.append(self.get_name(step, scoreObj.name))
-        self.chartArgs[3].columns.append(self.get_name(step, failObj.name))
+        self.plotArgs[2].dataCols.append(self.get_name(step, scoreObj.name))
+        self.plotArgs[3].dataCols.append(self.get_name(step, failObj.name))
         
         # Add sub-signal column names
         for sig in scoreObj.sigs:
             sub_name = self.get_name(step, sig.name, parentName=scoreObj.name)
-            self.chartArgs[4].columns.append(sub_name)
+            self.plotArgs[4].dataCols.append(sub_name)
             
         return self
     

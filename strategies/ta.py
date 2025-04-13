@@ -2,8 +2,8 @@ import pandas as pd
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import numpy as np
-from typing import List, Tuple, Union, Dict, Optional, Any
-from chart.chart import ChartArgs
+from typing import List, Tuple, Union, Dict, Optional, Any, Literal
+from chart.chart_args import ChartArgs, PlotArgs
 
 def preprocess_data(func):
     def wrapper(self, data: pd.DataFrame, *args, **kwargs):
@@ -17,10 +17,17 @@ class TA(ABC):
     column: str = None
     name: str = None
     names: List[str] = field(default_factory=list)
-    chartArgs: ChartArgs = None
+    plotArgs: PlotArgs | List[PlotArgs] = field(default_factory=list)
 
-    def add_chart_args(self, chartArgs: ChartArgs):
-        self.chartArgs = chartArgs
+    def add_plot_args(self, plotArgs: PlotArgs | List[PlotArgs]) -> 'TA':
+        self.plotArgs = plotArgs
+        if isinstance(plotArgs, list):
+            for plotArg in plotArgs:
+                plotArg.name = self.name
+                plotArg.dataCols = self.names if plotArg.dataCols is None else plotArg.dataCols
+        else:
+            self.plotArgs.name = self.name
+            self.plotArgs.dataCols = self.names if self.plotArgs.dataCols is None else self.plotArgs.dataCols
         return self
 
     @abstractmethod
@@ -560,7 +567,7 @@ class HPLP(TA):
 
 
 @dataclass
-class LowestHighest:
+class LowestHighest(TA):
     hi_col: str = 'high'
     lo_col: str = 'low'
     span: int = 5
@@ -1208,11 +1215,11 @@ class ACC(TA):
 
 
 @dataclass
-class Breaks:
+class Breaks(TA):
     """Checks if price crosses above/below a metric"""
-    price_column: str
-    direction: str  # 'above' or 'below'
-    metric_column: str
+    price_column: str = ''
+    direction: Literal['above', 'below'] = 'above'  # 'above' or 'below'
+    metric_column: str = 'close'  # Column name for the metric to compare against
 
     def __post_init__(self):
         self.name = f"BRK_{self.price_column}_{self.direction[:2]}_{self.metric_column}"
@@ -1237,11 +1244,11 @@ class Breaks:
 
 
 @dataclass
-class AboveBelow:
+class AboveBelow(TA):
     """Checks if price is above/below a metric"""
-    value: str | float
-    direction: str  # 'above' or 'below'
-    metric_column: str
+    value: str | float = ''  # Column name or value to compare
+    direction: Literal['above', 'below'] = 'above'
+    metric_column: str = 'close'  # Column name for the metric to compare against
 
     def __post_init__(self):
         self.name = f"AB_{self.value}_{self.direction[:2]}_{self.metric_column}"
@@ -1262,7 +1269,7 @@ class AboveBelow:
 
 
 @dataclass
-class PctChange:
+class PctChange(TA):
     """Calculates percentage change of a column"""
     metric_column: str = 'close'
     period: int = 1

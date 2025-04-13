@@ -18,7 +18,7 @@ from strategies import ta
 from industry_classifications.sector import get_etf_from_sector_code
 import emails.email_client as email_client
 from project_paths import get_project_path
-from chart.chart import ChartArgs
+from chart.chart_args import ChartArgs
 from strategies.preset_strats import TAPresets1D, TAPresets1H, TAPresets5M2M1M
 
 

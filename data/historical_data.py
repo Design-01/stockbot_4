@@ -1202,7 +1202,7 @@ STORAGE_DAY_INTERVALS = {'1 day', '1 week', '1 month'}
 
 class HistoricalData:
     def __init__(self, ib:object=None):
-        self.ib = ib
+        self.ib = ib 
         self.new_data = []  # Store new data here
         self.data_folder_path = 'data\historical_data_store' #! not linked yet.  see load_data()
     
@@ -1843,7 +1843,6 @@ class HistoricalData:
         except:
             # If all else fails, return the original with the timezone appended
             return f"{date_str} {timezone}"
-
 
     def get_data(self, symbol:str, interval:str, endDateTime:str, durationStr:str, print_info: bool = False):
         """
