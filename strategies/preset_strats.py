@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from copy import deepcopy
 
 # my moudles
 import strategies.signals as sig
@@ -128,7 +129,7 @@ class TAPresets1H(TAPresetsBase):
         self.add_to_ta_list(self.l_sigs + self.l_vads + [self.s_1H, self.sv_1H, self.s_1H_fail])
 
         
-        strat = sig.Strategy(name='strat1H', lookBack=10).add_plot_args(self.ca.StratMeanScore, self.ca.StratPctComplete, self.ca.StratScores, self.ca.StratFails, self.ca.StratSubItems)
+        strat = sig.Strategy(name='strat1H', lookBack=10).add_plot_args(self.ca.Stategy1)
         strat.add_step(scoreObj=self.s_1H, failObj=self.s_1H_fail, ifFailStartFromStep=1)
         self.add_to_ta_list([strat])
 
@@ -151,161 +152,146 @@ class TAPresets5M2M1M(TAPresetsBase):
     retest_atrRange:             tuple[int, int] = (-0.1,0.1)
     retest_normRange:            tuple[int, int] = (0,3)
     retest_rollingLen:           int = 5
+    isSpy: bool = False
 
     def __post_init__(self):
         super().__post_init__()
         self.MA9  = ta.MA(maCol='close', period=9).add_plot_args(self.ca.MA9)
         self.MA21 = ta.MA(maCol='close', period=21).add_plot_args(self.ca.MA21)
+        self.add_to_ta_list([self.MA9, self.MA21])
 
         # Signals (Primary) - Pullback
         self.PB_PctHLLH           = sig.PB_PctHLLH          (ls=self.ls, normRange=self.PctHLLH_normRange,           minPbLen=self.pb_minPbLen, lookBack=self.lookBack, atrCol=self.ATR.name).add_plot_args(self.ca.PB_PctHLLH)
         self.PB_ASC               = sig.PB_ASC              (ls=self.ls, normRange=self.ASC_normRange,               minPbLen=self.pb_minPbLen, lookBack=self.lookBack).add_plot_args(self.ca.PB_ASC)
         self.PB_CoC_ByCountOpBars = sig.PB_CoC_ByCountOpBars(ls=self.ls, normRange=self.CoC_ByCountOpBars_normRange, minPbLen=self.pb_minPbLen, lookBack=self.lookBack).add_plot_args(self.ca.PB_CoC_ByCountOpBars)
         self.PB_Overlap           = sig.PB_Overlap          (ls=self.ls, normRange=self.Overlap_normRange,           minPbLen=self.pb_minPbLen, lookBack=self.lookBack).add_plot_args(self.ca.PB_Overlap)
-        self.l_pullback += [self.PB_PctHLLH, self.PB_ASC, self.PB_CoC_ByCountOpBars, self.PB_Overlap]
+        self.l_pullback = [self.PB_PctHLLH, self.PB_ASC, self.PB_CoC_ByCountOpBars, self.PB_Overlap]
+        self.add_to_ta_list(self.l_pullback)
 
 
-        # Levels
+        # Levels #$NOTE: uses deep copy so as not to overwrite the chart plots as their dataCols get set by the sig or ta object
+        self.l_levels = []
         if self.levels_prevDay:
-            self.LevelPrevDayHi = ta.Levels(level='prev_day_high', ffill=True).add_plot_args(self.ca.LevPrevDay)
-            self.LevelPrevDayLo = ta.Levels(level='prev_day_low', ffill=True).add_plot_args(self.ca.LevPrevDay)
+            self.LevelPrevDayHi = ta.Levels(level='prev_day_high', ffill=True).add_plot_args(deepcopy(self.ca.LevPrevDay))
+            self.LevelPrevDayLo = ta.Levels(level='prev_day_low', ffill=True).add_plot_args(deepcopy(self.ca.LevPrevDay))
             self.l_levels += [self.LevelPrevDayHi, self.LevelPrevDayLo]
         if self.levels_preMarket:
-            self.LevelPreMktHi = ta.Levels(level='pre_mkt_high', ffill=True).add_plot_args(self.ca.LevPreMkt)
-            self.LevelPreMktLo = ta.Levels(level='pre_mkt_low', ffill=True).add_plot_args(self.ca.LevPreMkt)
+            self.LevelPreMktHi = ta.Levels(level='pre_mkt_high', ffill=True).add_plot_args(deepcopy(self.ca.LevPreMkt))
+            self.LevelPreMktLo = ta.Levels(level='pre_mkt_low', ffill=True).add_plot_args(deepcopy(self.ca.LevPreMkt))
             self.l_levels += [self.LevelPreMktHi, self.LevelPreMktLo]
         if self.levels_intraday:
-            self.LevelIntraHi0935 = ta.Levels(level='intraday_high_9.35', ffill=False).add_plot_args(self.ca.LevIntraDay)
-            self.LevelIntraLo0935 = ta.Levels(level='intraday_low_9.35', ffill=False).add_plot_args(self.ca.LevIntraDay)
-            self.LevelIntraHi     = ta.Levels(level='intraday_high', ffill=False).add_plot_args(self.ca.LevIntraDay)
-            self.LevelIntraLo     = ta.Levels(level='intraday_low', ffill=False).add_plot_args(self.ca.LevIntraDay)
+            self.LevelIntraHi0935 = ta.Levels(level='intraday_high_9.35', ffill=False).add_plot_args(deepcopy(self.ca.Lev935))
+            self.LevelIntraLo0935 = ta.Levels(level='intraday_low_9.35', ffill=False).add_plot_args(deepcopy(self.ca.Lev935))
+            self.LevelIntraHi     = ta.Levels(level='intraday_high', ffill=False).add_plot_args(deepcopy(self.ca.LevIntraDay))
+            self.LevelIntraLo     = ta.Levels(level='intraday_low', ffill=False).add_plot_args(deepcopy(self.ca.LevIntraDay))
             self.l_levels += [self.LevelIntraHi0935, self.LevelIntraLo0935, self.LevelIntraHi, self.LevelIntraLo]
+        self.add_to_ta_list(self.l_levels)
 
-        # Touches
-        direction = 'down' if self.ls == 'LONG' else 'up'
-        col1 = 'Sup_1_Upper'        if direction == 'down' else 'Res_1_Lower'
-        col2 = '1 hour_Sup_1_Upper' if direction == 'down' else '1 hour_Res_1_Lower'
-        col3 = '1 day_Sup_1_Upper'  if direction == 'down' else '1 day_Res_1_Lower'
-        self.touchSupRes      = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol=col1, direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
-        self.touchSupRes1Hour = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol=col2, direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
-        self.touchSupRes1Day  = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol=col3, direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
-        self.touchPrevDayLo   = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol='prev_day_low', direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
-        self.touchPrevDayHi   = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol='prev_day_high', direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
-        self.touchIntyra935Hi = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol='intraday_high_9.35', direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
-        self.touchIntyra935Lo = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol='intraday_low_9.35', direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
-        self.l_touches = [self.touchSupRes, self.touchSupRes1Hour, self.touchSupRes1Day, self.touchPrevDayLo, self.touchPrevDayHi, self.touchIntyra935Hi, self.touchIntyra935Lo]
+        # # Touches
+        # direction = 'down' if self.ls == 'LONG' else 'up'
+        # col1 = 'Sup_1_Upper'        if direction == 'down' else 'Res_1_Lower'
+        # col2 = '1 hour_Sup_1_Upper' if direction == 'down' else '1 hour_Res_1_Lower'
+        # col3 = '1 day_Sup_1_Upper'  if direction == 'down' else '1 day_Res_1_Lower'
+        # self.touchSupRes      = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol=col1, direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
+        # self.touchSupRes1Hour = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol=col2, direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
+        # self.touchSupRes1Day  = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol=col3, direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
+        # self.touchPrevDayLo   = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol='prev_day_low', direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
+        # self.touchPrevDayHi   = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol='prev_day_high', direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
+        # self.touchIntyra935Hi = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol='intraday_high_9.35', direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
+        # self.touchIntyra935Lo = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol='intraday_low_9.35', direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack)
+        # self.l_touches = [self.touchSupRes, self.touchSupRes1Hour, self.touchSupRes1Day, self.touchPrevDayLo, self.touchPrevDayHi, self.touchIntyra935Hi, self.touchIntyra935Lo]
+        # self.add_to_ta_list(self.l_touches)
 
-        # Retest
-        self.retestHP = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol=self.HPLPMinor.hi_col, withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange) # retest HP withing 10% of ATR
-        self.retestLP = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol=self.HPLPMinor.lo_col, withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange) # retest LP withing 10% of ATR
-        self.retestLo = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol='low',                 withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange) # retest LP withing 10% of ATR
-        self.retestHi = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol='high',                withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange) # retest LP withing 10% of ATR
-        self.l_retests = [self.retestHP, self.retestLP, self.retestLo, self.retestHi]
+        # # Retest
+        # self.retestHP = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol=self.HPLPMinor.hi_col, withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange) # retest HP withing 10% of ATR
+        # self.retestLP = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol=self.HPLPMinor.lo_col, withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange) # retest LP withing 10% of ATR
+        # self.retestLo = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol='low',                 withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange) # retest LP withing 10% of ATR
+        # self.retestHi = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol='high',                withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange) # retest LP withing 10% of ATR
+        # self.l_retests = [self.retestHP, self.retestLP, self.retestLo, self.retestHi]
+        # self.add_to_ta_list(self.l_retests)
 
-        # Time of day
-        self.v_past_935 = sig.Validate(val1='idx', operator='t>t', val2='09:34', lookBack=self.lookBack)
-        self.s_past_935 = sig.Score(name='s_past_935', sigs=[self.v_past_935], scoreType='all_gt', geThreshold=100, lookBack=self.lookBack)
+        # # Time of day
+        # self.v_past_935 = sig.Validate(val1='idx', operator='t>t', val2='09:34', lookBack=self.lookBack)
+        # self.v_past_EOD = sig.Validate(val1='idx', operator='t>t', val2='15:35', lookBack=self.lookBack)
+        # self.s_past_935 = sig.Score(name='s_past_935', sigs=[self.v_past_935], scoreType='all', operator='>', threshold=100, lookBack=self.lookBack).add_plot_args(self.ca.DefaultValid)
+        # self.s_past_EOD = sig.Score(name='s_past_EOD', sigs=[self.v_past_EOD], scoreType='all', operator='>', threshold=100, lookBack=self.lookBack).add_plot_args(self.ca.DefaultValid)
+        # self.add_to_ta_list([self.s_past_935, self.s_past_EOD])
 
-        # Validate Breaks
-        self.v_above_5min     = sig.Validate(val1='close', operator='>',     val2='pre_mkt_high',       lookBack=self.lookBack)  # close > pre_mkt_high
-        self.v_above_premtkHi = sig.Validate(val1='close', operator='>',     val2='intraday_high_9.35', lookBack=self.lookBack)  # close > intraday_high_9.35
-        self.v_below_5min     = sig.Validate(val1='close', operator='<',     val2='pre_mkt_low',        lookBack=self.lookBack)
-        self.v_below_premtkHi = sig.Validate(val1='close', operator='<',     val2='intraday_low_9.35',  lookBack=self.lookBack)
-        self.s_above_5minPreMkt = sig.Score(name='s_above_5minPreMkt', sigs=[self.v_above_5min, self.v_above_premtkHi], scoreType='mean', geThreshold=50, lookBack=self.lookBack)
-        self.s_below_5minPreMkt = sig.Score(name='s_below_5minPreMkt', sigs=[self.v_below_5min, self.v_below_premtkHi], scoreType='mean', geThreshold=50, lookBack=self.lookBack)
+        # # Validate Breaks
+        # self.v_above_5min     = sig.Validate(val1='close', operator='>',     val2='pre_mkt_high',       lookBack=self.lookBack)  # close > pre_mkt_high
+        # self.v_above_premtkHi = sig.Validate(val1='close', operator='>',     val2='intraday_high_9.35', lookBack=self.lookBack)  # close > intraday_high_9.35
+        # self.v_below_5min     = sig.Validate(val1='close', operator='<',     val2='pre_mkt_low',        lookBack=self.lookBack)
+        # self.v_below_premtkHi = sig.Validate(val1='close', operator='<',     val2='intraday_low_9.35',  lookBack=self.lookBack)
+        # self.s_above_5minPreMkt = sig.Score(name='s_above_5minPreMkt', sigs=[self.v_above_5min, self.v_above_premtkHi], scoreType='mean', operator='>=', threshold=50, lookBack=self.lookBack)
+        # self.s_below_5minPreMkt = sig.Score(name='s_below_5minPreMkt', sigs=[self.v_below_5min, self.v_below_premtkHi], scoreType='mean', operator='>=', threshold=50, lookBack=self.lookBack)
         
         
-        # Trends
-        self.isMA21Trending = sig.IsMATrending(ls=self.ls, maCol=self.MA21.name, lookBack=self.lookBack, normRange=(0,1))
-        self.isMajorPointTrending = sig.IsPointsTrending(ls=self.ls, hiCol=self.HPLPMajor.hi_col, loCol=self.HPLPMajor.lo_col, lookBack=self.lookBack, normRange=(0,1))
-        self.isMMinorPointTrending = sig.IsPointsTrending(ls=self.ls, hiCol=self.HPLPMinor.hi_col, loCol=self.HPLPMinor.lo_col, lookBack=self.lookBack, normRange=(0,1))
-        self.l_trends = [self.isMA21Trending, self.isMajorPointTrending, self.isMMinorPointTrending]
-        self.s_trends_passed = sig.Score(name='s_trends', sigs=self.l_trends, scoreType='mean', geThreshold=50, lookBack=self.lookBack)
-        self.s_trends_failed = sig.Score(name='s_trends', sigs=self.l_trends, scoreType='mean', leThreshold=0, lookBack=self.lookBack)
+        # # Trends
+        # self.isMA21Trending = sig.IsMATrending(ls=self.ls, maCol=self.MA21.name, lookBack=self.lookBack, normRange=(0,1))
+        # self.isMajorPointTrending = sig.IsPointsTrending(ls=self.ls, hpCol=self.HPLPMajor.name_hp, lpCol=self.HPLPMajor.name_lp, lookBack=self.lookBack, normRange=(0,1))
+        # self.isMMinorPointTrending = sig.IsPointsTrending(ls=self.ls, hpCol=self.HPLPMinor.name_hp, lpCol=self.HPLPMinor.name_lp, lookBack=self.lookBack, normRange=(0,1))
+        # self.l_trends = [self.isMA21Trending, self.isMajorPointTrending, self.isMMinorPointTrending]
+        # self.s_trends_passed = sig.Score(name='s_trends', sigs=self.l_trends, scoreType='mean', operator='>=', threshold=50, lookBack=self.lookBack)
+        # self.s_trends_failed = sig.Score(name='s_trends', sigs=self.l_trends, scoreType='mean', operator='<=', threshold=0, lookBack=self.lookBack)
 
-        # Validate pullback
-        self.v_PB_PctHLLH           = sig.Validate(val1=self.PB_PctHLLH.name,           operator='>', val2=1, lookBack=self.lookBack)
-        self.v_PB_ASC               = sig.Validate(val1=self.PB_ASC.name,               operator='>', val2=1, lookBack=self.lookBack)
-        self.v_PB_CoC_ByCountOpBars = sig.Validate(val1=self.PB_CoC_ByCountOpBars.name, operator='>', val2=1, lookBack=self.lookBack)
-        self.v_PB_Overlap           = sig.Validate(val1=self.PB_Overlap.name,           operator='>', val2=1, lookBack=self.lookBack)
-        self.l_pullback_vads = [self.v_PB_PctHLLH, self.v_PB_ASC, self.v_PB_CoC_ByCountOpBars, self.v_PB_Overlap]
-        self.s_pullback_passed = sig.Score(name='s_pullback', sigs=self.l_pullback_vads, scoreType='mean', geThreshold=50, lookBack=self.lookBack)
-        self.s_pullback_failed = sig.Score(name='s_pullback', sigs=self.l_pullback_vads, scoreType='mean', leThreshold=0, lookBack=self.lookBack)    
+        # # Validate pullback
+        # self.v_PB_PctHLLH           = sig.Validate(val1=self.PB_PctHLLH.name,           operator='>', val2=1, lookBack=self.lookBack)
+        # self.v_PB_ASC               = sig.Validate(val1=self.PB_ASC.name,               operator='>', val2=1, lookBack=self.lookBack)
+        # self.v_PB_CoC_ByCountOpBars = sig.Validate(val1=self.PB_CoC_ByCountOpBars.name, operator='>', val2=1, lookBack=self.lookBack)
+        # self.v_PB_Overlap           = sig.Validate(val1=self.PB_Overlap.name,           operator='>', val2=1, lookBack=self.lookBack)
+        # self.l_pullback_vads = [self.v_PB_PctHLLH, self.v_PB_ASC, self.v_PB_CoC_ByCountOpBars, self.v_PB_Overlap]
+        # self.s_pullback_passed = sig.Score(name='s_pullback', sigs=self.l_pullback_vads, scoreType='mean', operator='>=', threshold=50, lookBack=self.lookBack).add_plot_args(self.ca.DefaultPassed)
+        # self.s_pullback_failed = sig.Score(name='s_pullback', sigs=self.l_pullback_vads, scoreType='mean', operator='<=', threshold=0,  lookBack=self.lookBack).add_plot_args(self.ca.DefaultFailed)
 
-        # Validate Touches
-        self.v_touchSupRes      = sig.Validate(val1=self.touchSupRes.name,      operator='>', val2=1, lookBack=self.lookBack)
-        self.v_touchSupRes1Hour = sig.Validate(val1=self.touchSupRes1Hour.name, operator='>', val2=1, lookBack=self.lookBack)
-        self.v_touchSupRes1Day  = sig.Validate(val1=self.touchSupRes1Day.name,  operator='>', val2=1, lookBack=self.lookBack)
-        self.v_touchPrevDayLo   = sig.Validate(val1=self.touchPrevDayLo.name,   operator='>', val2=1, lookBack=self.lookBack)
-        self.v_touchPrevDayHi   = sig.Validate(val1=self.touchPrevDayHi.name,   operator='>', val2=1, lookBack=self.lookBack)
-        self.v_touchIntyra935Hi = sig.Validate(val1=self.touchIntyra935Hi.name, operator='>', val2=1, lookBack=self.lookBack)
-        self.v_touchIntyra935Lo = sig.Validate(val1=self.touchIntyra935Lo.name, operator='>', val2=1, lookBack=self.lookBack)
-        self.l_touches_vads = [self.v_touchSupRes, self.v_touchSupRes1Hour, self.v_touchSupRes1Day, self.v_touchPrevDayLo, self.v_touchPrevDayHi, self.v_touchIntyra935Hi, self.v_touchIntyra935Lo]
-        self.s_touches_passed = sig.Score(name='s_touches', sigs=self.l_touches_vads, scoreType='mean', geThreshold=50, lookBack=self.lookBack)
+        # # Validate Touches
+        # self.v_touchSupRes      = sig.Validate(val1=self.touchSupRes.name,      operator='>', val2=1, lookBack=self.lookBack)
+        # self.v_touchSupRes1Hour = sig.Validate(val1=self.touchSupRes1Hour.name, operator='>', val2=1, lookBack=self.lookBack)
+        # self.v_touchSupRes1Day  = sig.Validate(val1=self.touchSupRes1Day.name,  operator='>', val2=1, lookBack=self.lookBack)
+        # self.v_touchPrevDayLo   = sig.Validate(val1=self.touchPrevDayLo.name,   operator='>', val2=1, lookBack=self.lookBack)
+        # self.v_touchPrevDayHi   = sig.Validate(val1=self.touchPrevDayHi.name,   operator='>', val2=1, lookBack=self.lookBack)
+        # self.v_touchIntyra935Hi = sig.Validate(val1=self.touchIntyra935Hi.name, operator='>', val2=1, lookBack=self.lookBack)
+        # self.v_touchIntyra935Lo = sig.Validate(val1=self.touchIntyra935Lo.name, operator='>', val2=1, lookBack=self.lookBack)
+        # self.l_touches_vads = [self.v_touchSupRes, self.v_touchSupRes1Hour, self.v_touchSupRes1Day, self.v_touchPrevDayLo, self.v_touchPrevDayHi, self.v_touchIntyra935Hi, self.v_touchIntyra935Lo]
+        # self.s_touches_passed = sig.Score(name='s_touches', sigs=self.l_touches_vads, scoreType='mean',  operator='>=', threshold=50, lookBack=self.lookBack)
 
-        #! PB signals
-        self.llx2 = sig.Lower(col='high', allLower=True, span=2, lookBack=self.lookBack)
-        self.lhx2 = sig.Lower(col='low',  allLower=True, span=2, lookBack=self.lookBack)
-        self.hhx2 = sig.Higher(col='high', allHigher=True, span=2, lookBack=self.lookBack)
-        self.hlx2 = sig.Higher(col='low',  allHigher=True, span=2, lookBack=self.lookBack)
+        # #! PB signals
+        # self.llx2 = sig.Lower(col='high', allLower=True, span=2, lookBack=self.lookBack)
+        # self.lhx2 = sig.Lower(col='low',  allLower=True, span=2, lookBack=self.lookBack)
+        # self.hhx2 = sig.Higher(col='high', allHigher=True, span=2, lookBack=self.lookBack)
+        # self.hlx2 = sig.Higher(col='low',  allHigher=True, span=2, lookBack=self.lookBack)
 
-        #! Bounce Signals 
-        self.rt_day_lo = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol='day_low', withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange)
-        self.colur_withLSx2 = sig.ColourWithLS(ls=self.ls, span=2, lookBack=self.lookBack)
-        self.l_micro = [self.llx2, self.lhx2, self.hhx2, self.hlx2, self.rt_day_lo, self.colur_withLSx2]  #! add barSW, 
-        self.s_micro_passed = sig.Score(sigs=self.l_micro, scoreType='cumsum', geThreshold=2, lookBack=self.lookBack)
-        self.s_micro_failed = sig.Score(sigs=self.l_micro, scoreType='cumsum', leThreshold=0, lookBack=self.lookBack)
-
-
-
-        # resets if new HP is formed
-        strat = sig.Strategy('PB', lookBack=self.lookBack, ls=self.ls, riskAmount=100.00)
-
-        """
-        -- premarket higher volume than average
-        -- time > 9:35 (wait for first 5 mins to play out)
-        -- breaks premkt high
-        -- price moves above first 5 min bar high
-        -- price pulls back 
-            a. to max 50% of the first 5 min bar
-            b. 2 or more lower highs (LH)
-            c. sequential pullback with less than 50% overlap on any bar
-            d. touches a support level (prev day high, this day low, daily Res 1 lower )
-        -- bullish bar completes (BSW ..  bot tail or CoC)
-        -- buy signal is confirmed (RTM, RS, break prev bar high)
-        """
-
-        # validates various metris. each step must be fully validated before moving to the next step
+        # #! Bounce Signals 
+        # self.rt_day_lo = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol='day_low', withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange)
+        # self.colur_withLSx2 = sig.ColourWithLS(ls=self.ls, lookBack=self.lookBack)
+        # self.l_micro = [self.llx2, self.lhx2, self.hhx2, self.hlx2, self.rt_day_lo, self.colur_withLSx2]  #! add barSW, 
+        # self.s_micro_passed = sig.Score(sigs=self.l_micro, scoreType='cumsum', operator='>=', threshold=2, lookBack=self.lookBack)
+        # self.s_micro_failed = sig.Score(sigs=self.l_micro, scoreType='cumsum', operator='<=', threshold=0, lookBack=self.lookBack)
 
 
-        # prerequisites
-        strat.pass_if(step=1, score=self.s_past_935)
 
-        # price breaks
-        if self.ls == 'LONG':
-            strat.pass_if(step=2, score=self.s_above_5minPreMkt)
-            strat.reset_if(step=2, score=self.s_below_5minPreMkt, startFromStep=2, cancelOrder=True)
-        else:
-            strat.pass_if(step=2, score=self.s_below_5minPreMkt)
-            strat.reset_if(step=2, score=self.s_above_5minPreMkt, startFromStep=2, cancelOrder=True)
+        # # resets if new HP is formed
+        # strat = sig.Strategy('PB', lookBack=self.lookBack, riskAmount=100.00).add_plot_args(self.ca.Stategy1)
 
-        # is trending
-        strat.pass_if(step=3, score=self.s_trends_passed)
-        strat.reset_if(step=3, score=self.s_trends_failed, startFromStep=2, cancelOrder=True)  #! TODO - currently not correct.... needs to reset if not trending
+        # """
+        # -- premarket higher volume than average
+        # -- time > 9:35 (wait for first 5 mins to play out)
+        # -- breaks premkt high
+        # -- price moves above first 5 min bar high
+        # -- price pulls back 
+        #     a. to max 50% of the first 5 min bar
+        #     b. 2 or more lower highs (LH)
+        #     c. sequential pullback with less than 50% overlap on any bar
+        #     d. touches a support level (prev day high, this day low, daily Res 1 lower )
+        # -- bullish bar completes (BSW ..  bot tail or CoC)
+        # -- buy signal is confirmed (RTM, RS, break prev bar high)
+        # """
 
-        # pullback
-        strat.pass_if(step=3, score=self.s_pullback_passed)
+        # # validates various metris. each step must be fully validated before moving to the next step
+        # #! note that Although an object can score or fail within itself it is not always a simple matter of choosing whether the step scores or fails so therefore we need a second fail object to determine whether the step has failed
+        
+        # # prerequisites
+        # strat.add_step( scoreObj=self.s_past_935, failObj=self.s_past_EOD, ifFailStartFromStep=1)
+        # strat.add_step( scoreObj=self.s_past_935, failObj=self.s_past_EOD, ifFailStartFromStep=1)
 
-        # touch
-        strat.pass_if(step=4, score=self.s_touches_passed)
-
-
-        # buillsh sigs
-        strat.pass_if(step=4, countSigs=[], minCount=2)
-        strat.reset_if(step=4, countSigs=[], maxCount=1)
-
-        # below only if all steps are passed
-        strat.set_prices(entry='high', stop='low', target='high')
-        strat.reset_all_if(anySigs=[self.x, self.y, self.z], startFromStep=2, cancelOrder=True)
-        strat.reset_all_if(allSigs=[self.x, self.y, self.z], startFromStep=2, cancelOrder=True)
-        strat.reset_all_if(countSigs=[self.x, self.y, self.z], minCount=2, startFromStep=2, cancelOrder=True)
+        # # validate pullback
+        # strat.add_step( scoreObj=self.s_pullback_passed, failObj=self.s_pullback_failed, ifFailStartFromStep=1)

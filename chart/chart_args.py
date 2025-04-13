@@ -51,9 +51,11 @@ class ChartArgs:
     SupLine     = PlotArgs(plotType='lines', plotRow=1, plotCol=1, dataCols=['Sup_1', 'Sup_2'], colours=['green', 'darkgreen'], dashes='solid', lineWidths=1)
     ResLine     = PlotArgs(plotType='lines', plotRow=1, plotCol=1, dataCols=['Res_1', 'Res_2'], colours=['red', 'darkred'],    dashes='solid', lineWidths=1)
 
-    LevPrevDay  = PlotArgs(plotType='lines', plotRow=1, plotCol=1, colours='yellow', dashes='dash', lineWidths=1)
-    LevPreMkt   = PlotArgs(plotType='lines', plotRow=1, plotCol=1, colours='yellow', dashes='dash', lineWidths=1)
-    LevIntraDay = PlotArgs(plotType='lines', plotRow=1, plotCol=1, colours='yellow', dashes='dash', lineWidths=1)
+    LevKeyDay   = PlotArgs(plotType='lines', plotRow=1, plotCol=1, colours='blue',   dashes='dash', lineWidths=4, opacities=0.4)
+    LevPrevDay  = PlotArgs(plotType='lines', plotRow=1, plotCol=1, colours='rebeccapurple', dashes='dash', lineWidths=3, opacities=0.5)
+    LevPreMkt   = PlotArgs(plotType='lines', plotRow=1, plotCol=1, colours='royalblue', dashes='dash', lineWidths=2, opacities=0.6)
+    LevIntraDay = PlotArgs(plotType='lines', plotRow=1, plotCol=1, colours='darkcyan', dashes='dot',    lineWidths=1, opacities=0.8)
+    Lev935      = PlotArgs(plotType='lines', plotRow=1, plotCol=1, colours='darkorange', dashes='dot', lineWidths=1, opacities=0.8)
 
     GappedWRBs      = PlotArgs(plotType='lines', plotRow=3, plotCol=1, colours='orange', dashes='solid', lineWidths=3)
     GappedPivots    = PlotArgs(plotType='lines', plotRow=3, plotCol=1, colours='orange', dashes='solid', lineWidths=3)
@@ -81,6 +83,11 @@ class ChartArgs:
     Score1H  = PlotArgs(plotType='lines', plotRow=4, plotCol=1, colours='magenta', dashes='solid', lineWidths=2, name='debug 7')
     ScoreV1H = PlotArgs(plotType='lines', plotRow=4, plotCol=1, colours='cyan',    dashes='solid', lineWidths=2, name='debug 8')
 
+
+    DefaultPassed = PlotArgs(plotType='lines', plotRow=4, plotCol=1, colours='green', dashes='solid', lineWidths=2, name='debug 9')
+    DefaultFailed  = PlotArgs(plotType='lines', plotRow=4, plotCol=1, colours='red',    dashes='solid', lineWidths=2, name='debug 10')
+    DefaultValid = PlotArgs(plotType='lines', plotRow=4, plotCol=1, colours='yellow', dashes='solid', lineWidths=2, name='debug 11')
+
     Validation1 = PlotArgs(plotType='lines', plotRow=5, plotCol=1, colours='yellow', dashes='solid', lineWidths=3)
     Validation2 = PlotArgs(plotType='lines', plotRow=5, plotCol=1, colours='yellow', dashes='solid', lineWidths=3)
     Validation3 = PlotArgs(plotType='lines', plotRow=5, plotCol=1, colours='yellow', dashes='solid', lineWidths=3)
@@ -97,10 +104,8 @@ class ChartArgs:
     ScoreRetest2 = PlotArgs(plotType='lines', plotRow=5, plotCol=1, colours='magenta', dashes='solid', lineWidths=3)
     ScoreRetest3 = PlotArgs(plotType='lines', plotRow=5, plotCol=1, colours='magenta', dashes='solid', lineWidths=3)
 
-    StratPctComplete = PlotArgs(plotType='lines', plotRow=5, plotCol=1, colours='magenta', dashes='solid', lineWidths=3)
-    StratMeanScore   = PlotArgs(plotType='lines', plotRow=5, plotCol=1, colours='magenta', dashes='solid', lineWidths=3)
-    StratScores      = PlotArgs(plotType='lines', plotRow=5, plotCol=1, colours=['magenta', 'green', 'red', 'orange'], dashes='solid', lineWidths=2)
-    StratFails       = PlotArgs(plotType='lines', plotRow=5, plotCol=1, colours=['magenta', 'green', 'red', 'orange'], dashes='dash',  lineWidths=1)
-    StratSubItems    = PlotArgs(plotType='lines', plotRow=5, plotCol=1, colours=['magenta', 'green', 'red', 'orange'], dashes='solid', lineWidths=1)
+    # [ mean score, pct complete] 
+    Stategy1 = PlotArgs(plotType='lines', plotRow=5, plotCol=1, colours=['magenta', 'cyan'], dashes='solid', lineWidths=5)
+
 
     BuySell = PlotArgs(plotType='buysell', plotRow=1, plotCol=1, colours=['cyan', 'yellow'], markerSizes=10, opacities=1, textCols=['open', 'close'], textPositions=['top right', 'bottom left'], textSizes=10, markerSymbols=['arrow-right', 'arrow-left'])

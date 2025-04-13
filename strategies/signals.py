@@ -835,7 +835,7 @@ class Trace(Signals):
 
 
 @dataclass
-class Lower:
+class Lower(Signals):
     name     : str = 'Lower'
     col : str = ''
     span: int = 1
@@ -861,7 +861,7 @@ class Lower:
     
 
 @dataclass
-class Higher:
+class Higher(Signals):
     name     : str = 'Higher'
     col : str = ''
     span: int = 1
@@ -887,7 +887,7 @@ class Higher:
     
 
 @dataclass
-class ColourWithLS:
+class ColourWithLS(Signals):
     """Chceks if the current bar is the same colour as the trade direction."""
     name: str = 'ColourWithLS'
     ls: str = 'LONG'
@@ -3992,6 +3992,7 @@ class Strategy(MultiSignals):
         plotArgs: List of chart configuration objects for visualization
     """
     name: str
+    riskAmount: float = 0.0
     plotArgs: List[PlotArgs] = field(default_factory=list)
 
     def __post_init__(self) -> None:
@@ -4005,8 +4006,8 @@ class Strategy(MultiSignals):
         ]
         
         # Track all column names (including dynamic ones added later)
-        self.names: Set[str] = set(self.names_base)
-        self.names_active: Set[str] = set(self.names_base)
+        self.names: List[str] = [self.names_base]
+        self.names_active: List[str] = [self.names_base]
         
         # Strategy execution state
         self.steps = []
@@ -4016,57 +4017,20 @@ class Strategy(MultiSignals):
         self.current_step = 1
         self.passed = False
         self.scoreList = []
-        self.plotArgs = []
         self.count_steps_passed = 0
 
-    # def add_plot_args(self, plotArgs: PlotArgs | List[PlotArgs]) -> 'TA':
-    #     self.plotArgs = plotArgs
-    #     if isinstance(plotArgs, list):
-    #         for plotArg in plotArgs:
-    #             plotArg.name = self.name
-    #             plotArg.dataCols = self.names if plotArg.dataCols is None else plotArg.dataCols
-    #     else:
-    #         self.plotArgs.name = self.name
-    #         self.plotArgs.dataCols = self.names if self.plotArgs.dataCols is None else self.plotArgs.dataCols
-    #     return self
-
-    def add_plot_args(self, 
-                     meanScoreArgs: PlotArgs, 
-                     pctCompleteArgs: PlotArgs, 
-                     scoreArgs: PlotArgs, 
-                     failArgs: PlotArgs, 
-                     scoreSubItemArgs: PlotArgs) -> T:
-        """
-        Configure chart visualization arguments for the strategy.
-        
-        Args:
-            meanScoreArgs: Chart configuration for mean score display
-            pctCompleteArgs: Chart configuration for percent complete display
-            scoreArgs: Chart configuration for individual scores
-            failArgs: Chart configuration for failure indicators
-            scoreSubItemArgs: Chart configuration for sub-score components
-            
-        Returns:
-            Self for method chaining
-        """
-        # Set up chart argument names and columns
-        meanScoreArgs.name = f"{self.name}_meanScore"
-        meanScoreArgs.dataCols = [meanScoreArgs.name]
-        
-        pctCompleteArgs.name = f"{self.name}_pctComplete"
-        pctCompleteArgs.dataCols = [pctCompleteArgs.name]
-        
-        scoreArgs.name = f"{self.name}_score"
-        scoreArgs.dataCols = []
-        
-        failArgs.name = f"{self.name}_fail"
-        failArgs.dataCols = []
-        
-        scoreSubItemArgs.name = f"{self.name}_subItem"
-        scoreSubItemArgs.dataCols = []
-        
-        self.plotArgs = [meanScoreArgs, pctCompleteArgs, scoreArgs, failArgs, scoreSubItemArgs]
+    def add_plot_args(self, plotArgs: PlotArgs | List[PlotArgs]) -> 'Strategy':
+        self.plotArgs = plotArgs
+        if isinstance(plotArgs, list):
+            for plotArg in plotArgs:
+                plotArg.name = self.name
+                plotArg.dataCols = self.names if plotArg.dataCols is None else plotArg.dataCols
+        else:
+            self.plotArgs.name = self.name
+            self.plotArgs.dataCols = self.names if self.plotArgs.dataCols is None else self.plotArgs.dataCols
         return self
+
+    
     
     def add_step(self, scoreObj: Score, failObj: Score, ifFailStartFromStep: int) -> T:
         """
@@ -4088,15 +4052,12 @@ class Strategy(MultiSignals):
         
         # Get the step number for naming
         step = len(self.steps)
-        
-        # Add column names to chart arguments
-        self.plotArgs[2].dataCols.append(self.get_name(step, scoreObj.name))
-        self.plotArgs[3].dataCols.append(self.get_name(step, failObj.name))
+        self.get_name(step, scoreObj.name)
+        self.get_name(step, failObj.name)
         
         # Add sub-signal column names
         for sig in scoreObj.sigs:
-            sub_name = self.get_name(step, sig.name, parentName=scoreObj.name)
-            self.plotArgs[4].dataCols.append(sub_name)
+            self.get_name(step, sig.name, parentName=scoreObj.name)
             
         return self
     
@@ -4118,7 +4079,7 @@ class Strategy(MultiSignals):
             name = f"{self.name}{step}__{objName}"
             
         # Add to tracked names
-        self.names.add(name)
+        self.names += [name]
         return name
     
     def add_row_item(self, df: pd.DataFrame, obj: Any, parentName: Optional[str] = None) -> T:
