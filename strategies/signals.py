@@ -965,44 +965,51 @@ class TouchWithBar(Signals):
         if len(df) < 10:
             return 0.0
         
+        # shift backwards so that we are not counting a touch of a level at the very bar that created the level in the first place. 
+        shifted_level = df[self.valCol].iat[-5]  
+         
         if self.direction == 'down':
-            level = df[self.valCol].iat[-1]
             bar_low = df.low.iat[-1]
             bar_close = df.close.iat[-1]
             atr = df[self.atrCol].iat[-1]
 
+            if pd.isna(shifted_level) or pd.isna(bar_low) or pd.isna(bar_close) or pd.isna(atr):
+                return 0.0
+
             # Perfect touch (low crosses but close recovers)
-            if bar_low <= level <= bar_close:
+            if bar_low <= shifted_level <= bar_close:
                 return 100.0
 
             # Calculate ATR distance
-            if bar_low > level:
+            if bar_low > shifted_level:
                 # Approaching from above
-                atr_distance = (bar_low - level) / atr
+                atr_distance = (bar_low - shifted_level) / atr
                 return self._normalize_score(atr_distance, self.toTouchAtrScale)
             else:
                 # Overshooting
-                atr_distance = (level - bar_close) / atr
+                atr_distance = (shifted_level - bar_close) / atr
                 return self._normalize_score(atr_distance, self.pastTouchAtrScale)
         
         elif self.direction == 'up':
-            level = df[self.valCol].iat[-1]
             bar_high = df.high.iat[-1]
             bar_close = df.close.iat[-1]
             atr = df[self.atrCol].iat[-1]
 
+            if pd.isna(shifted_level) or pd.isna(bar_high) or pd.isna(bar_close) or pd.isna(atr):   
+                return 0.0
+
             # Perfect touch (high crosses but close recovers)
-            if bar_high >= level >= bar_close:
+            if bar_high >= shifted_level >= bar_close:
                 return 100.0
 
             # Calculate ATR distance
-            if bar_high < level:
+            if bar_high < shifted_level:
                 # Approaching from below
-                atr_distance = (level - bar_high) / atr
+                atr_distance = (shifted_level - bar_high) / atr
                 return self._normalize_score(atr_distance, self.toTouchAtrScale)
             else:
                 # Overshooting
-                atr_distance = (bar_close - level) / atr
+                atr_distance = (bar_close - shifted_level) / atr
                 return self._normalize_score(atr_distance, self.pastTouchAtrScale)
 
         return 0.0
