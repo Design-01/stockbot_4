@@ -219,19 +219,19 @@ def max_plus_weighted_mean_capped(vals: list[float], meanWeights: list[float]) -
     
     This function first identifies the maximum value in the input list, then applies
     weights to the remaining values (up to the number of weights available). The final score
-    is the sum of the maximum value and the weighted mean of remaining values, capped at 1.0.
+    is the sum of the maximum value and the mean of the weighted remaining values, capped at 1.0.
     
     Args:
         vals: List of float values to score
         meanWeights: List of weights to apply to the non-maximum values
         
     Returns:
-        float: The sum of max value and weighted mean of remaining values, capped at 1.0
+        float: The sum of max value and mean of weighted remaining values, capped at 1.0
         
     Example:
         For vals=[0.6, 0.4, 0.3] and meanWeights=[0.7, 0.3], the max value is 0.6,
-        and the weighted mean of remaining values is (0.4*0.7 + 0.3*0.3)/(0.7+0.3) = 0.37.
-        Final score is 0.6 + 0.37 = 0.97, which is below 1.0 so it stays uncapped.
+        and the mean of weighted remaining values is (0.4*0.7 + 0.3*0.3)/2 = 0.185.
+        Final score is 0.6 + 0.185 = 0.785, which is below 1.0 so it stays uncapped.
     """
     if not vals:
         return 0.0
@@ -245,24 +245,22 @@ def max_plus_weighted_mean_capped(vals: list[float], meanWeights: list[float]) -
     
     # Get the list of values excluding the max value
     remaining_vals = [v for v in vals if v != max_val]
-    remaining_vals = remaining_vals[:len(meanWeights)]  # Only use values with weights
     
-    # If no remaining values with weights, return max_val (capped)
-    if not remaining_vals:
+    # Apply weights to remaining values (up to available weights)
+    weighted_vals = []
+    for i, val in enumerate(remaining_vals):
+        if i < len(meanWeights):
+            weighted_vals.append(val * meanWeights[i])
+    
+    # If no weighted values, return max_val (capped)
+    if not weighted_vals:
         return min(max_val, 1.0)
     
-    # Calculate weighted mean
-    weighted_sum = sum(val * weight for val, weight in zip(remaining_vals, meanWeights))
-    total_weight = sum(meanWeights[:len(remaining_vals)])
-    
-    # Avoid division by zero
-    if total_weight == 0:
-        return min(max_val, 1.0)
-    
-    weighted_mean = weighted_sum / total_weight
+    # Calculate mean of weighted values
+    mean_weighted = sum(weighted_vals) / len(weighted_vals)
     
     # Return the final capped score
-    return min(max_val + weighted_mean, 1.0)
+    return min(max_val + mean_weighted, 1.0)
 
 
 """

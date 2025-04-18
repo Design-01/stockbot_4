@@ -8,7 +8,9 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Union, Literal, Optional, Tuple, TypeVar, Set, Any
 from collections import defaultdict
 from abc import ABC, abstractmethod
+
 from chart.chart_args import PlotArgs
+import scoring
 
 def trace(fromPrice:float, toPrice:float, priceNow:float):
     """ Determines how far a price has traced from one price to another price expressed as a % of the total dffernce between the fromPrice and toPrice. 
@@ -908,111 +910,7 @@ class ColourWithLS(Signals):
 # ------- R E V E R S A L   S I G N A L S ----------------------
 # --------------------------------------------------------------
 
-@dataclass
-class TouchWithBar(Signals):
-    """
-    TouchWithBar is a signal class that computes a normalized score (0-100) based on how close
-    price is to a specified level, scaled by ATR. Different scales are used for approaching vs
-    overshooting the level.
 
-    Attributes:
-        name (str): The name of the signal. Default is 'Touch'.
-        valCol (str): The column name containing the level to touch.
-        atrCol (int): The column index containing ATR values.
-        direction (str): The direction of approach ('up' or 'down').
-        toTouchAtrScale (float): Maximum ATR distance when approaching (score=0 at this distance).
-        pastTouchAtrScale (float): Maximum ATR distance when overshooting (score=0 at this distance).
-    """
-    name: str = 'Touch'
-    valCol: str = ''
-    atrCol: int = 1
-    direction: str = 'down'
-    toTouchAtrScale: float = 10.0    # Max ATR distance for approaching
-    pastTouchAtrScale: float = 2.0    # Max ATR distance for overshooting
-    
-    def __post_init__(self):
-        """Post-initialization to set up the signal name."""
-        self.name = f"{self.name}_{self.direction}_{self.valCol}"
-        self.names = [self.name]
-
-    def _normalize_score(self, atr_distance: float, max_atr: float) -> float:
-        """
-        Normalize ATR distance to a score between 0 and 100.
-        
-        Args:
-            atr_distance (float): Distance from level in ATR units
-            max_atr (float): Maximum ATR distance (score will be 0 beyond this)
-            
-        Returns:
-            float: Normalized score between 0 and 100
-        """
-        abs_distance = abs(atr_distance)
-        if abs_distance >= max_atr:
-            return 0.0
-        
-        return (1 - (abs_distance / max_atr)) * 100
-
-    def _compute_row(self, df: pd.DataFrame) -> float:
-        """
-        Compute the score for the current row based on price's distance from the level.
-        
-        Args:
-            df (pd.DataFrame): DataFrame containing price and ATR data
-            
-        Returns:
-            float: Score between 0 and 100
-        """
-        if len(df) < 10:
-            return 0.0
-        
-        # shift backwards so that we are not counting a touch of a level at the very bar that created the level in the first place. 
-        shifted_level = df[self.valCol].iat[-5]  
-         
-        if self.direction == 'down':
-            bar_low = df.low.iat[-1]
-            bar_close = df.close.iat[-1]
-            atr = df[self.atrCol].iat[-1]
-
-            if pd.isna(shifted_level) or pd.isna(bar_low) or pd.isna(bar_close) or pd.isna(atr):
-                return 0.0
-
-            # Perfect touch (low crosses but close recovers)
-            if bar_low <= shifted_level <= bar_close:
-                return 100.0
-
-            # Calculate ATR distance
-            if bar_low > shifted_level:
-                # Approaching from above
-                atr_distance = (bar_low - shifted_level) / atr
-                return self._normalize_score(atr_distance, self.toTouchAtrScale)
-            else:
-                # Overshooting
-                atr_distance = (shifted_level - bar_close) / atr
-                return self._normalize_score(atr_distance, self.pastTouchAtrScale)
-        
-        elif self.direction == 'up':
-            bar_high = df.high.iat[-1]
-            bar_close = df.close.iat[-1]
-            atr = df[self.atrCol].iat[-1]
-
-            if pd.isna(shifted_level) or pd.isna(bar_high) or pd.isna(bar_close) or pd.isna(atr):   
-                return 0.0
-
-            # Perfect touch (high crosses but close recovers)
-            if bar_high >= shifted_level >= bar_close:
-                return 100.0
-
-            # Calculate ATR distance
-            if bar_high < shifted_level:
-                # Approaching from below
-                atr_distance = (shifted_level - bar_high) / atr
-                return self._normalize_score(atr_distance, self.toTouchAtrScale)
-            else:
-                # Overshooting
-                atr_distance = (bar_close - shifted_level) / atr
-                return self._normalize_score(atr_distance, self.pastTouchAtrScale)
-
-        return 0.0
 
 
 @dataclass
@@ -1116,8 +1014,6 @@ class Retest(Signals):
         # Count how many points fall within the retest zone
         points_in_range = vals[(vals >= min_level) & (vals <= max_level)]
         return len(points_in_range)
-
-
 
 
 
@@ -1234,16 +1130,284 @@ class PullbackNear(Signals):
 
 
 
+@dataclass
+class ScoreKeyLevel(Signals):
+    name: str = 'ScoreKeyLevel' # assign score to this colname 
+    levelCol: str | float = 0.0 #  key level to score against, can be a string or a float
+    triggerCol: str = None #  column name for the trigger, if None then pass
+    levelTol: float = 0.25 #  multiple of the ATR so 0.5 = 25% of ATR above and 25% below the key level
+    timeDecay: float = 0.005 #  decay factor for time, 0.01 = 1% decay per bar
+    volChgCol: str = 'volChg' #  column name for volume change
+    atrCol: str = None #  column name for ATR
+    tailSettings:      dict = field(default_factory=lambda: {'weight': 0.35, 'norm': 3,  'confBonThresh': 0.5})
+    volSettings:       dict = field(default_factory=lambda: {'weight': 0.25, 'norm': 1,  'confBonThresh': 0.5}) 
+    rejectionSettings: dict = field(default_factory=lambda: {'weight': 0.2,  'norm': 10, 'confBonThresh': 0.5}) 
+    spanSettings:      dict = field(default_factory=lambda: {'weight': 0.1,  'norm': 20, 'confBonThresh': 0.5}) 
+    timeDecaySettings: dict = field(default_factory=lambda: {'weight': 0.1,  'norm': None, 'confBonThresh': 0.5})
+    scoreWeights:      list = field(default_factory=lambda: [0.8, 0.5, 0.3, 0.2, 0.1]) #  weights for the list of scores to be used in the final score calculation. max score always included, the weights are for the remaining scores.
+    confBonThresh:     dict = field(default_factory=lambda: {'tail': 0.50, 'vol': 0.50, 'rejection': 0.50, 'span': 0.50, 'decay': 0.50}) #  thresholds for the confluence bonus, if the score is above this value then the confluence bonus is applied
+    confWeight : float = 0.5 #  weight for the confluence bonus
+    confIncluded: bool = True #  if True then the confluence bonus is included in the score calculation, if False then it is not included
+    debug: bool = False #  debug flag to print out the scores and other values for debugging
 
+    def __post_init__(self):
+        self.bucket_list = [] # list of buckets to store the data   
+        self.name = f'{self.name}_{self.levelCol}'
+        self.names = [self.name] #  list of names to be used in the final score calculation
 
+    def get_reversed_records(self, df, reverse=False):
+        #  reverse the records so we can work backwards
+        #  and also to get the correct order of the records
+        dfx = df.copy()
+        records = dfx.reset_index().to_dict('records') #  for debugging to include the index
+        if reverse:
+            records.reverse()
+        return records
+    
+    def get_touch_zone(self, price, atr):
+        """takes the key level and the ATR and returns the top and bottom edges of the touch zone"""
+        zone_val = self.levelTol * atr / 2
+        top_edge = price + zone_val
+        bot_edge = price - zone_val
+        return round(top_edge,2), round(bot_edge,2)
 
-#!!! --------->>>  Not implemented yet.  Needs to be checked  <<<-----------
+    def get_bounce_direction(self, i):
+        """ Determine the bounce direction based on the position of the previous and next buckets.
+        So if comming down from above and then bouncing back up the direction is 'up'"""
+        pos_before = self.bucket_list[i-1]['pos']
+        pos_after = self.bucket_list[i+1]['pos']
+        if pos_before == 'above' and pos_after == 'above':
+            return 'up'
+        if pos_before == 'below' and pos_after == 'below':
+            return 'down'
+        return 'transition'
+    
+    def get_rejection_strength(self, i):
+        """how much the price has moved away from the touch zone eitehr side of the tounch point"""
+        max_before = self.bucket_list[i-1]['max']
+        max_after = self.bucket_list[i+1]['max']
+        return (max_before + max_after) / 2
+    
+    def normalise(self, value, min_val, max_val):
+        if min_val == max_val:
+            return 0
+        return min(1, (value - min_val) / (max_val - min_val))
+    
+    def compute_confluences(self, tail:float, vol:float, rejection:float, span:float, decay:float):
+        """A confluence bonus is applied because multiple signals aligning simultaneously provides
+        stronger evidence than isolated signals, making the overall evaluation more robust against
+        noise or random fluctuations in any single metric."""
+        confluence_count = 0
+        confluence_count += 1 if tail >= self.confBonThresh['tail'] else 0
+        confluence_count += 1 if vol >= self.confBonThresh['vol'] else 0
+        confluence_count += 1 if rejection >= self.confBonThresh['rejection'] else 0
+        confluence_count += 1 if span >= self.confBonThresh['span'] else 0
+        confluence_count += 1 if decay <= self.confBonThresh['decay'] else 0
 
+        # Calculate percentage of thresholds met and apply proportional bonus
+        return confluence_count / len(self.confBonThresh) * self.confWeight
 
+    def compute_metrics(self, df , atr):
+        if len(self.bucket_list) < 3:
+            return
+        
+        for i, b in enumerate(self.bucket_list[:-1]):
+            if b['stage'] == 'Touch':
+                b['bounceDir'] = self.get_bounce_direction(i)
+                if b['bounceDir'] == 'transition':
+                    continue
 
+                if 'pos' not in b:
+                    continue
 
+                b['rejection'] = self.get_rejection_strength(i)
+                taillen   = b['toptailmax'] if b['pos'] == 'below' else b['bottailmax'] 
+     
+                norm_tailLen   = self.normalise(taillen,            0, atr*self.tailSettings['norm']) 
+                norm_vol       = self.normalise(b['vol'],           0, df['volume'].mean())
+                norm_rejection = self.normalise(b['rejection'],     0, self.rejectionSettings['norm']) 
+                norm_span      = self.normalise(b['span'],          0, self.spanSettings['norm']) 
+                norm_decay     = self.normalise(len(df)-b['decay'], 0, len(df))
+                confluence     = self.compute_confluences(norm_tailLen, norm_vol, norm_rejection, norm_span, norm_decay)    
+
+                weighted_tailLen    = norm_tailLen * self.tailSettings['weight']
+                weighted_vol        = norm_vol * self.volSettings['weight']
+                weighted_rejection  = norm_rejection * self.rejectionSettings['weight']
+                weighted_span       = norm_span * self.spanSettings['weight']
+                weighted_decay      = norm_decay * self.timeDecaySettings['weight']
+                weighted_confluence = confluence * self.confWeight
+
+                b['score'] = weighted_tailLen + weighted_vol + weighted_rejection + weighted_span + weighted_decay 
+                b['scoreWconf'] = b['score'] + weighted_confluence
+
+                if self.debug:
+                    b['norm_tailLen'] = norm_tailLen
+                    b['norm_vol'] = norm_vol
+                    b['norm_rejection'] = norm_rejection
+                    b['norm_span'] = norm_span
+                    b['norm_decay'] = norm_decay
+                    b['confluence'] = confluence
+                    b['confluenceWconf'] = confluence * self.confWeight
+                    b['weighted_tailLen'] = weighted_tailLen
+                    b['weighted_vol'] = weighted_vol
+                    b['weighted_rejection'] = weighted_rejection
+                    b['weighted_span'] = weighted_span
+                    b['weighted_decay'] = weighted_decay
+                    b['weighted_confluence'] = weighted_confluence
+    
+    def get_row_df(self):
+        return pd.DataFrame(self.bucket_list)
+    
+    def compute_time_decay(self, df, count):
+        total_length = len(df)
+        distance_from_newest = total_length - count - 1
+        decay_factor = 1 - (self.timeDecay * distance_from_newest)
+        decay_factor = max(0.0, decay_factor)
+        return decay_factor
+    
+    def get_key_level_score(self, confluenceScore:bool=True):
+        keyname = 'scoreWconf' if confluenceScore else 'score'
+        scores = [min(1, b[keyname]) for b in self.bucket_list if keyname in b and b[keyname] > 0]
+        if len(scores) == 0:
+            return 0
+        return scoring.max_plus_weighted_mean_capped(scores, self.scoreWeights)
+
+    def run_back_through_touch_points(self, df, keyLevel=None, atr=None):   
+        records = self.get_reversed_records(df)
+        stage = 'starting'
+        
+
+        for count, row in enumerate(records):
+            # Get values using dictionary access
+            idx = row['date']
+            # lev = row['Sup_1']
+            lev = keyLevel
+            op = row['open']
+            cl = row['close']
+            hi = row['high']
+            lo = row['low']
+            vol = row['volume']
+            prev_hi = df['high'].iat[-2] 
+            prev_lo = df['low'].iat[-2]
+            top_edge, bot_edge = self.get_touch_zone(lev, atr)
+            
+
+            if count == 0:
+                #  first row, so set the top and bottom edges
+                top_edge, bot_edge = self.get_touch_zone(lev, atr)
+
+            #  claude says this the fastest way to check for NaN but must be a float
+            if isinstance(lev, float) and math.isnan(lev):
+                continue
+
+            is_above = lo > top_edge
+            is_below = hi < bot_edge
+            in_zone = hi >= bot_edge and lo <= top_edge
+            touch_from_below = bot_edge <= hi <= top_edge 
+            touch_from_above = bot_edge <= lo <= top_edge
+
+            # === Detremine trasitions to stages first ===
+
+            # start filling between
+            if not in_zone and stage == 'starting':
+                # bucket filling
+                stage = 'Between'
+                self.bucket_list += [{'bounceDir':'', 'start': idx, 'end': None, 'stage': stage, 'pos': None, 'span': 0, 'max': 0}]
+
+            # end fillig Between - start filling touches
+            if in_zone and stage == 'Between':
+                stage = 'Touch'
+                self.bucket_list += [{'bounceDir': '', 'start': idx, 'end': None, 'stage': stage, 'decay': 0.0, 'vol': vol, 'span': 0, 'tail': 0}]
+            
+            # end filling touches - start filling Between
+            if not in_zone and stage == 'Touch':
+                stage = 'Between'
+                self.bucket_list += [{
+                    'bounceDir':'', 
+                    'start': idx, 
+                    'end': None, 
+                    'stage': stage, 
+                    'pos': None, 
+                    'decay': 0, 
+                    'vol': 0,
+                    'span': 0, 
+                    'max': 0, 
+                    'scoreWconf':0.0, 
+                    'score': 0, 
+                    'rejection': 0, 
+                    'toptailmax': 0, 
+                    'bottailmax': 0}]
+            
+            # ==== fiil once decided on the stage ====
+            
+            # continue filling Between
+            if not in_zone and stage == 'Between':
+                b = self.bucket_list[-1]
+                b['span'] +=1
+                b['end'] = idx
+
+                if is_above:
+                    # touch from above
+                    b['pos'] = 'above'
+                    b['max'] = max(b['max'], lo - top_edge)
+
+                elif is_below:
+                    # touch from below
+                    b['pos'] = 'below'
+                    b['max'] = max(b['max'], bot_edge - hi)
+
+            # continue filling touches
+            if in_zone and stage == 'Touch':
+                time_decay = self.compute_time_decay(df, count)
+                b = self.bucket_list[-1]
+                b['end'] = idx
+                b['span'] += 1
+
+                # testing 
+                b['is_above'] = is_above
+                b['is_below'] = is_below
+                b['is_in_zone'] = in_zone
+                b['touch_from_above'] = touch_from_above    
+                b['touch_from_below'] = touch_from_below
+
+                if touch_from_above and not is_above:
+                    # touch from above
+                    b['pos'] = 'above'
+                    b['decay'] = time_decay
+                    b['vol'] += vol
+                    b['bottail'] = min(op, cl) - lo
+                    b['bottailmax'] = max(b['bottailmax'], b['bottail']) if 'bottailmax' in b else b['bottail']
+
+                elif touch_from_below and not is_below:
+                    # touch from below
+                    b['pos'] = 'below'
+                    b['decay'] = time_decay
+                    b['vol'] += vol
+                    b['toptail'] = hi - max(op, cl)
+                    b['toptailmax'] = max(b['toptailmax'], b['toptail']) if 'toptailmax' in b else b['toptail']
+        
+        if self.debug:
+            print(f'top edge: {top_edge}, bot edge: {bot_edge}')
 
     
+    def _compute_row(self, df):
+        trigger = df[self.triggerCol].iat[-1] if self.triggerCol else None
+        print(f'Running {self.name} for {df.index[-1]} :: {trigger=}')
+
+        # if trgger is found it will use this to tigger the event  other wise it assumes the events will run regardless
+        if trigger is None or trigger > 0:
+            level = df[self.levelCol].iat[-1] if isinstance(self.levelCol, str) else self.levelCol
+            atr = df[self.atrCol].iat[-1] if self.atrCol else (df.high-df.low).mean()
+            self.run_back_through_touch_points(df, keyLevel=level, atr=atr)
+            self.compute_metrics(df, atr)
+            print(self.confIncluded)
+            score = round(self.get_key_level_score(confluenceScore=self.confIncluded), 2)
+            if self.debug:
+                print(f'level: {level}, score:{score}')
+
+            return score
+        else:
+            return 0.0
 
 
 #! Not implemented yet.  Needs to be checked
@@ -2353,8 +2517,19 @@ class MultiSignals(ABC):
         self.source_columns = []
         self.column_mapping = {}
 
-    def add_plot_args(self, PlotArgs: PlotArgs | List[PlotArgs]) -> 'MultiSignals':
-        self.plotArgs = PlotArgs if isinstance(PlotArgs, list) else [PlotArgs]
+    # def add_plot_args(self, PlotArgs: PlotArgs | List[PlotArgs]) -> 'MultiSignals':
+    #     self.plotArgs = PlotArgs if isinstance(PlotArgs, list) else [PlotArgs]
+    #     return self
+    
+    def add_plot_args(self, plotArgs: PlotArgs | List[PlotArgs]) -> 'Signals':
+        self.plotArgs = plotArgs
+        if isinstance(plotArgs, list):
+            for plotArg in plotArgs:
+                plotArg.dataCols = self.names if plotArg.dataCols is None else plotArg.dataCols
+                plotArg.name = self.name
+        else:
+            self.plotArgs.dataCols = self.names if self.plotArgs.dataCols is None else self.plotArgs.dataCols
+            self.plotArgs.name = self.name
         return self
 
     def setup_columns(self, df: pd.DataFrame):
@@ -3408,7 +3583,141 @@ class BuySetup(MultiSignals):
             results.iloc[i] = self._compute_row(df.iloc[:i+1])
         return results
     
+
+
+@dataclass
+class TouchWithBar(MultiSignals):
+    """
+    TouchWithBar is a signal class that computes a normalized score (0-100) based on how close
+    price is to a specified level, scaled by ATR. Different scales are used for approaching vs
+    overshooting the level.
+
+    Attributes:
+        name (str): The name of the signal. Default is 'Touch'.
+        valCol (str): The column name containing the level to touch.
+        atrCol (int): The column index containing ATR values.
+        direction (str): The direction of approach ('up' or 'down').
+        toTouchAtrScale (float): Maximum ATR distance when approaching (score=0 at this distance).
+        pastTouchAtrScale (float): Maximum ATR distance when overshooting (score=0 at this distance).
+    """
+    name: str = 'Touch'
+    valCol: str = ''
+    atrCol: int = 1
+    direction: str = 'down'
+    toTouchAtrScale: float = 10.0    # Max ATR distance for approaching
+    pastTouchAtrScale: float = 2.0    # Max ATR distance for overshooting
     
+    def __post_init__(self):
+        """Post-initialization to set up the signal name."""
+        self.name = f"{self.name}_{self.direction}_{self.valCol}"
+        self.name_level = f"{self.name}_level"
+        self.names = [self.name]
+
+    def _normalize_score(self, atr_distance: float, max_atr: float) -> float:
+        """
+        Normalize ATR distance to a score between 0 and 100.
+        
+        Args:
+            atr_distance (float): Distance from level in ATR units
+            max_atr (float): Maximum ATR distance (score will be 0 beyond this)
+            
+        Returns:
+            float: Normalized score between 0 and 100
+        """
+        abs_distance = abs(atr_distance)
+        if abs_distance >= max_atr:
+            return 0.0
+        
+        return (1 - (abs_distance / max_atr)) * 100
+
+    def _compute_row(self, df: pd.DataFrame) -> float:
+        """
+        Compute the score for the current row based on price's distance from the level.
+        
+        Args:
+            df (pd.DataFrame): DataFrame containing price and ATR data
+            
+        Returns:
+            float: Score between 0 and 100
+        """
+        
+        def return_series(val, level):
+            return pd.Series({self.name: val, self.name_level: level})
+
+
+        if len(df) < 10:
+            return_series(0.0, level=None)
+        
+        # shift backwards so that we are not counting a touch of a level at the very bar that created the level in the first place. 
+        if len(df[self.valCol]) < 5:
+            # print(f"{df.index[-1]}: {df[self.valCol]} not enough data")
+            return return_series(0.0, level=None)
+        shifted_level = df[self.valCol].iat[-5]  
+         
+        if self.direction == 'down':
+            bar_low = df.low.iat[-1]
+            bar_close = df.close.iat[-1]
+            atr = df[self.atrCol].iat[-1]
+
+            if pd.isna(shifted_level) or pd.isna(bar_low) or pd.isna(bar_close) or pd.isna(atr):
+                return return_series(0.0, level=None)
+
+            # Perfect touch (low crosses but close recovers)
+            if bar_low <= shifted_level <= bar_close:
+                return return_series(100.0, level=shifted_level)
+
+            # Calculate ATR distance
+            if bar_low > shifted_level:
+                # Approaching from above
+                atr_distance = (bar_low - shifted_level) / atr
+                val = self._normalize_score(atr_distance, self.toTouchAtrScale)
+                return return_series(val, level=shifted_level)
+            else:
+                # Overshooting
+                atr_distance = (shifted_level - bar_close) / atr
+                val = self._normalize_score(atr_distance, self.pastTouchAtrScale)
+                return return_series(val, level=shifted_level)
+        
+        elif self.direction == 'up':
+            bar_high = df.high.iat[-1]
+            bar_close = df.close.iat[-1]
+            atr = df[self.atrCol].iat[-1]
+
+            if pd.isna(shifted_level) or pd.isna(bar_high) or pd.isna(bar_close) or pd.isna(atr):   
+                return return_series(0.0, level=None)
+
+            # Perfect touch (high crosses but close recovers)
+            if bar_high >= shifted_level >= bar_close:
+                return return_series(100.0, level=shifted_level)
+
+            # Calculate ATR distance
+            if bar_high < shifted_level:
+                # Approaching from below
+                atr_distance = (shifted_level - bar_high) / atr
+                val = self._normalize_score(atr_distance, self.toTouchAtrScale)
+                return return_series(val, level=shifted_level)
+            else:
+                # Overshooting
+                atr_distance = (bar_close - shifted_level) / atr
+                val = self._normalize_score(atr_distance, self.pastTouchAtrScale)
+                return return_series(val, level=shifted_level)
+
+        return return_series(0.0, level=None)
+    
+    
+    def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        results = pd.DataFrame(index=df.index, columns=self.name)
+        if self.valCol not in df.columns:
+            df[self.valCol] = np.nan
+        for i in range(len(df)):
+            row = self._compute_row(df.iloc[:i+1])
+            print(f"{row[self.name]=}")
+            results.iloc[i] = row[self.name]
+            df.iat[i, df.columns.get_loc(self.valCol)] = row[self.name_level]
+        return results
+
+
+     
 
 # --------------------------------------------------------------------
 # ----- E V E N T   S I G N A L S ------------------------------------

@@ -203,6 +203,27 @@ class TAPresets5M2M1M(TAPresetsBase):
         self.l_touches = [self.touchSupRes, self.touchPrevDayLo, self.touchPrevDayHi, self.touchIntyra935Hi, self.touchIntyra935Lo]
         self.add_to_ta_list(self.l_touches)
 
+        # key levels
+        self.ScoreKeyLevels = sig.ScoreKeyLevel(ls=self.ls, lookBack=self.lookBack,
+                # level             = 524, #  key level to score against
+                triggerCol        =  self.touchSupRes.name, #  column name for the trigger, expects the TouchwithBar score to trigger this run_back_through_touch_points method  
+                levelCol          =  self.touchSupRes.name_level, #  key level to score against
+                levelTol          = 0.5,
+                timeDecay         = 0.005,
+                volChgCol         = 'volume',
+                atrCol            = 'ATR_14',
+                tailSettings      = {'weight': 0.35, 'norm': 3,    'confBonThresh': 0.5},
+                volSettings       = {'weight': 0.35, 'norm': 1,    'confBonThresh': 0.5},
+                rejectionSettings = {'weight': 0.2,  'norm': 10,   'confBonThresh': 0.5},
+                spanSettings      = {'weight': 0.1,  'norm': 20,   'confBonThresh': 0.5},
+                timeDecaySettings = {'weight': 0.1,  'norm': None, 'confBonThresh': 0.5},
+                scoreWeights      = [0.8, 0.5, 0.3],
+                confBonThresh     = {'tail': 0.5, 'vol': 0.50, 'rejection': 0.50, 'span': 0.50, 'decay': 0.50},
+                confWeight        = 0.2,
+                confIncluded      = True,
+                debug=True).add_plot_args(deepcopy(self.ca.DefaultScore))
+        self.add_to_ta_list([self.ScoreKeyLevels])
+
         # # # Retest
         # self.retestHP = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol=self.HPLPMinor.hi_col, withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange).add_plot_args(deepcopy(self.ca.Retest)) 
         # self.retestLP = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol=self.HPLPMinor.lo_col, withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange).add_plot_args(deepcopy(self.ca.Retest)) 
