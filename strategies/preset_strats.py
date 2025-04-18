@@ -248,7 +248,7 @@ class TAPresets5M2M1M(TAPresetsBase):
         # self.add_to_ta_list(self.l_pullback_vads + [self.s_pullback_passed, self.s_pullback_failed])
 
         # # Validate Touches
-        # self.v_touchSupRes      = sig.Validate(val1=self.touchSupRes.name,      operator='>', val2=1, lookBack=self.lookBack)
+        self.v_touchSupRes      = sig.Validate(val1=self.touchSupRes.name,      operator='>', val2=1, lookBack=self.lookBack)
         # self.v_touchSupRes1Hour = sig.Validate(val1=self.touchSupRes1Hour.name, operator='>', val2=1, lookBack=self.lookBack)
         # self.v_touchSupRes1Day  = sig.Validate(val1=self.touchSupRes1Day.name,  operator='>', val2=1, lookBack=self.lookBack)
         # self.v_touchPrevDayLo   = sig.Validate(val1=self.touchPrevDayLo.name,   operator='>', val2=1, lookBack=self.lookBack)

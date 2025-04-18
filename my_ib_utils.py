@@ -240,3 +240,5 @@ def is_market_day(date: str = None, today: bool = False) -> bool:
 # # Example usage
 # print(is_market_day(today=True))  # Check if today is a market day
 # print(is_market_day('2024-01-01'))  # Check if a specific date is a market day
+
+
