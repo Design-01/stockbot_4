@@ -105,29 +105,6 @@ class Frame:
         self.data = updated_df[reordered_columns]
         return self.data
 
-    # def add_ta_old(self, ta: TA, style: Dict[str, Any] | List[Dict[str, Any]] = {}, chart_type: str = "line", row: int = 1, nameCol:str=None, columns:List[str]=None, runOnLoad:bool=True) -> TA:
-    #     # Check for duplicates
-    #     for existing_ta, existing_style, existing_chart_type, existing_row, existing_nameCol, existing_columns in self.ta:
-    #         if (existing_ta == ta and 
-    #             existing_style == style and 
-    #             existing_chart_type == chart_type and 
-    #             existing_row == row and
-    #             existing_nameCol == nameCol and 
-    #             existing_columns == columns):
-    #             # Duplicate found, do not add
-    #             return ta
-        
-    #     # No duplicates found, add the new TA
-    #     if runOnLoad:
-    #         self.update_data(ta.run(self.data))
-        
-    #     self.ta.append((ta, style, chart_type, row, nameCol, columns))
-    #     # returning the ta object to allow it to be assigend and therefor access the name vaialbe in the ta object
-    #     # eg 
-    #     # ta1 = frame.add_ta(ta('close'), style, chart_type, row, nameCol)
-    #     # ta2 = frame.add_ta(ta(ta1.name), style, chart_type, row, nameCol)
-    #     return ta
-
     def add_ta(self, ta: TA, chartArgs:ChartArgs, runOnLoad:bool=True) -> TA:
         # Check for duplicates
         for existing_ta in self.ta:

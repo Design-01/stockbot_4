@@ -87,7 +87,7 @@ class ChartArgs:
     DefaultPassed = PlotArgs(plotType='lines', plotRow=4, plotCol=1, colours='green', dashes='solid', lineWidths=2, name='debug 9')
     DefaultFailed  = PlotArgs(plotType='lines', plotRow=4, plotCol=1, colours='red',  dashes='solid', lineWidths=2, name='debug 10')
     DefaultValid = PlotArgs(plotType='lines', plotRow=4, plotCol=1, colours='yellow', dashes='solid', lineWidths=2, name='debug 11')
-    DefaultScore = PlotArgs(plotType='lines', plotRow=4, plotCol=1, colours='magenta', dashes='solid', lineWidths=2, name='debug 12')
+    DefaultScore = PlotArgs(plotType='lines', plotRow=4, plotCol=1, colours=['magenta','purple'], dashes='solid', lineWidths=2, name='debug 12')
     NoPlot      = PlotArgs(plotType='')
 
     Validation1 = PlotArgs(plotType='lines', plotRow=5, plotCol=1, colours='yellow', dashes='solid', lineWidths=3)
