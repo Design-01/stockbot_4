@@ -36,6 +36,7 @@ class ChartArgs:
     MA21  = PlotArgs(plotType='lines', plotRow=1, plotCol=1, colours='hotpink', dashes='solid', lineWidths=2)
     MA13  = PlotArgs(plotType='lines', plotRow=1, plotCol=1, colours='deepskyblue', dashes='solid', lineWidths=1)
     MA9   = PlotArgs(plotType='lines', plotRow=1, plotCol=1, colours='khaki', dashes='solid', lineWidths=1)
+    MAVol = PlotArgs(plotType='lines', plotRow=2, plotCol=1, colours='yellow', dashes='solid', lineWidths=1)
 
     ATR         = PlotArgs(plotType='', plotRow=1, plotCol=1)
     VWAP        = PlotArgs(plotType='lines', plotRow=1, plotCol=1, colours='yellow', dashes='solid', lineWidths=1)
@@ -61,7 +62,10 @@ class ChartArgs:
     GappedPivots    = PlotArgs(plotType='lines', plotRow=3, plotCol=1, colours='orange', dashes='solid', lineWidths=3)
     GappedPastPivot = PlotArgs(plotType='lines', plotRow=3, plotCol=1, colours='orange', dashes='solid', lineWidths=3)
 
-    BarSW      = PlotArgs(plotType='lines', plotRow=3, plotCol=1, colours='magenta', dashes='solid', lineWidths=3)
+    BarSW      = PlotArgs(plotType='lines', plotRow=3, plotCol=1, colours='magenta', dashes='solid', lineWidths=1)
+    BarTail    = PlotArgs(plotType='lines', plotRow=3, plotCol=1, colours='pink', dashes='solid', lineWidths=1)
+    NBB        = PlotArgs(plotType='lines', plotRow=3, plotCol=1, colours='orange', dashes='solid', lineWidths=1) # NBB = Narrow Body Bar
+    VolSpike   = PlotArgs(plotType='lines', plotRow=3, plotCol=1, colours='purple', dashes='solid', lineWidths=1) # VolSpike = Volume Spike
     RoomToMove = PlotArgs(plotType='lines', plotRow=3, plotCol=1, colours='pink', dashes='solid', lineWidths=3)
     RS         = PlotArgs(plotType='lines', plotRow=3, plotCol=1, colours='purple', dashes='solid', lineWidths=3)
     RSScore    = PlotArgs(plotType='lines', plotRow=4, plotCol=1, colours='cyan', dashes='solid', lineWidths=3, name='debug 1')

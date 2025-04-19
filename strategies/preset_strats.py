@@ -93,8 +93,9 @@ class TAPresets1D(TAPresetsBase):
         self.add_to_ta_list(self.l_vads)
 
         # # Scores
-        self.s_1D  = sig.Score(name='1Ds',  ls=self.ls, sigs=self.l_sigs, scoreType='mean', normRange=(0,100), operator='>=', threshold=50,   lookBack=self.lookBack).add_plot_args(self.ca.Score1D) 
-        self.sv_1D = sig.Score(name='1Dv', ls=self.ls, sigs=self.l_vads, scoreType='mean', normRange=(0,100), operator='>=', threshold=100, lookBack=self.lookBack).add_plot_args(self.ca.ScoreV1D)
+        # meanWeights Used for max_plus_weighted_mean_capped / List of weights to apply to the non-maximum values
+        self.s_1D  = sig.Score(name='1Ds',  ls=self.ls, sigs=self.l_sigs, scoreType='mean', normRange=(0,100), operator='>=', threshold=50, meanWeights=[0.8,0.5,0.3],  lookBack=self.lookBack).add_plot_args(self.ca.Score1D) 
+        self.sv_1D = sig.Score(name='1Dv', ls=self.ls, sigs=self.l_vads, scoreType='mean', normRange=(0,100), operator='>=', threshold=100, meanWeights=[0.8,0.5,0.3],  lookBack=self.lookBack).add_plot_args(self.ca.ScoreV1D)
         self.add_to_ta_list([self.s_1D, self.sv_1D])
 8
 
@@ -141,13 +142,17 @@ class TAPresets1H(TAPresetsBase):
 class TAPresets5M2M1M(TAPresetsBase):
     name: str = '5M2M1M'
     ls: str = 'LONG'
-    lookBack: int = 10
-    levels_prevDay   : bool = True
-    levels_preMarket : bool = True
-    levels_intraday  : bool = True
-    levels_935       : bool = True
-    levels_SupResHour: bool = False
-    levels_SupResDay : bool = False
+    lookBack: int = 100
+    set_levels_SupRes    : bool = False # True
+    set_levels_prevDay   : bool = False # True
+    set_levels_preMarket : bool = False # True
+    set_levels_intraday  : bool = False # True
+    set_levels_935       : bool = False # True
+    set_levels_SupResHour: bool = False
+    set_levels_SupResDay : bool = False
+    set_pullback         : bool = False # True
+    set_pullback_bounus  : bool = True # True
+
     touch_toTouchAtrScale: int = 2
     touch_pastTouchAtrScale: int = 1
     pb_minPbLen: int = 3
@@ -164,15 +169,22 @@ class TAPresets5M2M1M(TAPresetsBase):
         super().__post_init__()
         self.MA9  = ta.MA(maCol='close', period=9).add_plot_args(self.ca.MA9)
         self.MA21 = ta.MA(maCol='close', period=21).add_plot_args(self.ca.MA21)
-        self.add_to_ta_list([self.MA9, self.MA21])
+        self.VolMA = ta.MA(maCol='volume', period=14).add_plot_args(self.ca.MAVol)
+        self.l_ma = [self.MA9, self.MA21, self.VolMA]
+        self.add_to_ta_list(self.l_ma)
 
-        # Signals (Primary) - Pullback
-        self.PB_PctHLLH           = sig.PB_PctHLLH          (ls=self.ls, normRange=self.PctHLLH_normRange,           minPbLen=self.pb_minPbLen, lookBack=self.lookBack, atrCol=self.ATR.name).add_plot_args(self.ca.PB_PctHLLH)
-        self.PB_ASC               = sig.PB_ASC              (ls=self.ls, normRange=self.ASC_normRange,               minPbLen=self.pb_minPbLen, lookBack=self.lookBack).add_plot_args(self.ca.PB_ASC)
-        self.PB_CoC_ByCountOpBars = sig.PB_CoC_ByCountOpBars(ls=self.ls, normRange=self.CoC_ByCountOpBars_normRange, minPbLen=self.pb_minPbLen, lookBack=self.lookBack).add_plot_args(self.ca.PB_CoC_ByCountOpBars)
-        self.PB_Overlap           = sig.PB_Overlap          (ls=self.ls, normRange=self.Overlap_normRange,           minPbLen=self.pb_minPbLen, lookBack=self.lookBack).add_plot_args(self.ca.PB_Overlap)
-        self.l_pullback = [self.PB_PctHLLH, self.PB_ASC, self.PB_CoC_ByCountOpBars, self.PB_Overlap]
-        self.add_to_ta_list(self.l_pullback)
+
+        if self.set_pullback:
+            self.PB_PctHLLH           = sig.PB_PctHLLH          (ls=self.ls, hpCol=self.HPLPMinor.name_hp, lpCol=self.HPLPMinor.name_lp,  atrCol=self.ATR.name, normRange=self.PctHLLH_normRange,           minPbLen=self.pb_minPbLen, lookBack=self.lookBack).add_plot_args(self.ca.PB_PctHLLH)
+            self.PB_ASC               = sig.PB_ASC              (ls=self.ls, hpCol=self.HPLPMinor.name_hp, lpCol=self.HPLPMinor.name_lp,  atrCol=self.ATR.name, normRange=self.ASC_normRange,               minPbLen=self.pb_minPbLen, lookBack=self.lookBack).add_plot_args(self.ca.PB_ASC)
+            self.PB_CoC_ByCountOpBars = sig.PB_CoC_ByCountOpBars(ls=self.ls, hpCol=self.HPLPMinor.name_hp, lpCol=self.HPLPMinor.name_lp,  atrCol=self.ATR.name, normRange=self.CoC_ByCountOpBars_normRange, minPbLen=self.pb_minPbLen, lookBack=self.lookBack).add_plot_args(self.ca.PB_CoC_ByCountOpBars)
+            self.PB_Overlap           = sig.PB_Overlap          (ls=self.ls, hpCol=self.HPLPMinor.name_hp, lpCol=self.HPLPMinor.name_lp,  atrCol=self.ATR.name, normRange=self.Overlap_normRange,           minPbLen=self.pb_minPbLen, lookBack=self.lookBack).add_plot_args(self.ca.PB_Overlap)
+            self.l_pullback = [self.PB_PctHLLH, self.PB_ASC, self.PB_CoC_ByCountOpBars, self.PB_Overlap]
+            self.add_to_ta_list(self.l_pullback)
+
+            self.s_pullback_passed = sig.Score(name='s_pullback_passed', sigs=self.l_pullback, scoreType='mean', operator='>=', threshold=50, lookBack=self.lookBack).add_plot_args(deepcopy(self.ca.DefaultPassed))
+            self.s_pullback_failed = sig.Score(name='s_pullback_failed', sigs=self.l_pullback, scoreType='mean', operator='<=', threshold=0,  lookBack=self.lookBack).add_plot_args(deepcopy(self.ca.DefaultFailed))
+            self.add_to_ta_list([self.s_pullback_passed, self.s_pullback_failed])
 
 
 
@@ -202,21 +214,26 @@ class TAPresets5M2M1M(TAPresetsBase):
         self.l_levels = []
         self.l_touches = []
         self.l_levscores = []
+        self.l_bonus = []
         direction = 'down' if self.ls == 'LONG' else 'up'
         col1 = 'Sup_1_Upper'        if direction == 'down' else 'Res_1_Lower'
         col2 = '1 hour_Sup_1_Upper' if direction == 'down' else '1 hour_Res_1_Lower'
         col3 = '1 day_Sup_1_Upper'  if direction == 'down' else '1 day_Res_1_Lower'
-        self.touchSupRes      = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol=col1, direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack).add_plot_args(deepcopy(self.ca.TouchWithBar)) 
-        self.add_to_ta_list([self.touchSupRes])
-        
-        config_supres = key_lev_base_config.copy()
-        config_supres['levelCol'] = col1
-        config_supres['touchCol'] = self.touchSupRes.name
-        self.ScoreKeyLev_SupRes = sig.ScoreKeyLevel(ls=self.ls, **config_supres).add_plot_args(deepcopy(self.ca.DefaultScore))
-        self.l_levscores += [self.ScoreKeyLev_SupRes]
-        self.add_to_ta_list(self.l_levscores)
 
-        if self.levels_prevDay:
+
+        if self.set_levels_SupRes:
+            # the actual SupRes levels are calculated in the base class
+            self.touchSupRes = sig.TouchWithBar(ls=self.ls, atrCol=self.ATR.name, valCol=col1, direction=direction, toTouchAtrScale=self.touch_toTouchAtrScale, pastTouchAtrScale=self.touch_pastTouchAtrScale, lookBack=self.lookBack).add_plot_args(deepcopy(self.ca.TouchWithBar)) 
+            self.add_to_ta_list([self.touchSupRes])
+            
+            config_supres = key_lev_base_config.copy()
+            config_supres['levelCol'] = col1
+            config_supres['touchCol'] = self.touchSupRes.name
+            self.ScoreKeyLev_SupRes = sig.ScoreKeyLevel(ls=self.ls, **config_supres).add_plot_args(deepcopy(self.ca.DefaultScore))
+            self.l_levscores += [self.ScoreKeyLev_SupRes]
+            self.add_to_ta_list(self.l_levscores)
+
+        if self.set_levels_prevDay:
             # levels
             self.LevelPrevDayHi = ta.Levels(level='prev_day_high', ffill=True).add_plot_args(deepcopy(self.ca.LevPrevDay))
             self.LevelPrevDayLo = ta.Levels(level='prev_day_low', ffill=True).add_plot_args(deepcopy(self.ca.LevPrevDay))
@@ -239,7 +256,7 @@ class TAPresets5M2M1M(TAPresetsBase):
             self.l_levscores += [self.ScoreLev_PrevDayHi, self.ScoreLev_PrevDayLo]
             self.add_to_ta_list([self.ScoreLev_PrevDayHi, self.ScoreLev_PrevDayLo])
 
-        if self.levels_preMarket:
+        if self.set_levels_preMarket:
             # levels
             self.LevelPreMktHi = ta.Levels(level='pre_mkt_high', ffill=True).add_plot_args(deepcopy(self.ca.LevPreMkt))
             self.LevelPreMktLo = ta.Levels(level='pre_mkt_low', ffill=True).add_plot_args(deepcopy(self.ca.LevPreMkt))
@@ -262,7 +279,7 @@ class TAPresets5M2M1M(TAPresetsBase):
             self.l_levscores += [self.ScoreLev_PreMktHi, self.ScoreLev_PreMktLo]
             self.add_to_ta_list([self.ScoreLev_PreMktHi, self.ScoreLev_PreMktLo])
 
-        if self.levels_intraday:
+        if self.set_levels_intraday:
             # levels
             self.LevelIntraHi     = ta.Levels(level='intraday_high', ffill=False).add_plot_args(deepcopy(self.ca.LevIntraDay))
             self.LevelIntraLo     = ta.Levels(level='intraday_low', ffill=False).add_plot_args(deepcopy(self.ca.LevIntraDay))
@@ -285,7 +302,7 @@ class TAPresets5M2M1M(TAPresetsBase):
             self.l_levscores += [self.ScoreKeyLev_intradayHi, self.ScoreKeyLev_intradayLo]
             self.add_to_ta_list([self.ScoreKeyLev_intradayHi, self.ScoreKeyLev_intradayLo])
 
-        if self.levels_935:
+        if self.set_levels_935:
             # levels
             self.LevelIntraHi0935 = ta.Levels(level='intraday_high_9.35', ffill=False).add_plot_args(deepcopy(self.ca.Lev935))
             self.LevelIntraLo0935 = ta.Levels(level='intraday_low_9.35', ffill=False).add_plot_args(deepcopy(self.ca.Lev935))
@@ -308,8 +325,8 @@ class TAPresets5M2M1M(TAPresetsBase):
             self.l_levscores += [self.ScoreLevs_935Hi, self.ScoreLevs_935Lo]
             self.add_to_ta_list([self.ScoreLevs_935Hi, self.ScoreLevs_935Lo])
 
-        #! TODO: add the 1H levels to the chart.  self.levels_SupResHour and self.levels_SupResDay set to False by default
-        if self.levels_SupResHour:
+        #! TODO: add the 1H levels to the chart.  self.set_levels_SupResHour and self.set_levels_SupResDay set to False by default
+        if self.set_levels_SupResHour:
             # levels get imported from the hour chart
 
             # touches
@@ -324,8 +341,8 @@ class TAPresets5M2M1M(TAPresetsBase):
             self.l_levscores += [self.ScoreKeyLev_SupRes]
             self.add_to_ta_list([self.ScoreKeyLev_SupRes])
 
-        #! TODO: add the 1D levels to the chart.  self.levels_SupResHour and self.levels_SupResDay set to False by default
-        if self.levels_SupResDay:
+        #! TODO: add the 1D levels to the chart.  self.set_levels_SupResHour and self.set_levels_SupResDay set to False by default
+        if self.set_levels_SupResDay:
             # levels get imported from the day chart
 
             # touches
@@ -340,7 +357,30 @@ class TAPresets5M2M1M(TAPresetsBase):
             self.l_levscores += [self.ScoreKeyLev_SupRes]
             self.add_to_ta_list([self.ScoreKeyLev_SupRes])
 
+        
 
+        # Score Touches
+        if len(self.l_touches) > 0:
+            self.s_touch = sig.Score(name='s_touch', ls=self.ls, sigs=self.l_levscores, scoreType='max_plus_weighted_mean_capped', operator='>=', threshold=50, lookBack=self.lookBack).add_plot_args(deepcopy(self.ca.DefaultScore))
+            self.add_to_ta_list([self.s_touch])
+
+        if self.set_pullback_bounus:
+            barswLS  = 'SHORT' if self.ls == 'LONG' else 'SHORT'
+            testCol  = 'low' if self.ls == 'LONG' else 'high'
+            # self.barSW   = sig.BarSW(ls=self.ls, normRange=(0,1), atrCol=self.ATR.name, lookBack=self.lookBack).add_plot_args(self.ca.BarSW)
+            self.BarTail = sig.BarTail(ls=self.ls, normRange=(0,1), atrCol=self.ATR.name, lookBack=self.lookBack).add_plot_args(self.ca.BarTail)
+            self.NBB     = sig.NarrowBobyBar(ls=self.ls, normRange=(0,1), atrCol=self.ATR.name, lookBack=self.lookBack).add_plot_args(self.ca.NBB)
+            self.volSpike = sig.VolumeSpike(ls=self.ls, normRange=(0,1), volMACol=self.VolMA.name, lookBack=self.lookBack).add_plot_args(self.ca.VolSpike)
+            self.retestHL = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol=testCol, withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange).add_plot_args(deepcopy(self.ca.Retest))
+            self.l_bonus = [self.BarTail, self.NBB, self.volSpike, self.retestHL]
+            self.s_bonus = sig.Score(name='s_bonus', ls=self.ls, sigs=self.l_bonus, scoreType='max_plus_weighted_mean_capped', operator='>=', threshold=50, lookBack=self.lookBack).add_plot_args(deepcopy(self.ca.DefaultScore))
+            self.add_to_ta_list(self.l_bonus + [self.s_bonus])
+
+            #! todo -  create is valid pullback as a signal then use that in the strategy in each bonus item.  This will help remove the noise of the barSW and NBB etc and targte only where it makes sense.
+            #! todo - apply isValidPullback to BarTail
+            #! todo - Apply isValidPullback to NBB
+            #! todo - apply isValidPullback to VolSpike
+            #! todo - apply isValidPullback to Retest
  
         # # # Retest
         # self.retestHP = sig.Retest(ls=self.ls, atrCol=self.ATR.name, direction=direction, valCol=self.HPLPMinor.hi_col, withinAtrRange=self.retest_atrRange, rollingLen=self.retest_rollingLen, lookBack=self.lookBack, normRange=self.retest_normRange).add_plot_args(deepcopy(self.ca.Retest)) 
@@ -376,26 +416,7 @@ class TAPresets5M2M1M(TAPresetsBase):
         # self.add_to_ta_list(self.l_trends)
         # self.add_to_ta_list([self.s_trends_passed, self.s_trends_failed])
 
-        # # # Validate pullback
-        # self.v_PB_PctHLLH           = sig.Validate(val1=self.PB_PctHLLH.name,           operator='>', val2=1, lookBack=self.lookBack).add_plot_args(self.ca.PB_PctHLLH)
-        # self.v_PB_ASC               = sig.Validate(val1=self.PB_ASC.name,               operator='>', val2=1, lookBack=self.lookBack).add_plot_args(self.ca.PB_ASC)
-        # self.v_PB_CoC_ByCountOpBars = sig.Validate(val1=self.PB_CoC_ByCountOpBars.name, operator='>', val2=1, lookBack=self.lookBack).add_plot_args(self.ca.PB_CoC_ByCountOpBars)
-        # self.v_PB_Overlap           = sig.Validate(val1=self.PB_Overlap.name,           operator='>', val2=1, lookBack=self.lookBack).add_plot_args(self.ca.PB_Overlap)
-        # self.l_pullback_vads = [self.v_PB_PctHLLH, self.v_PB_ASC, self.v_PB_CoC_ByCountOpBars, self.v_PB_Overlap]
-        # self.s_pullback_passed = sig.Score(name='s_pullback', sigs=self.l_pullback_vads, scoreType='mean', operator='>=', threshold=50, lookBack=self.lookBack).add_plot_args(self.ca.DefaultPassed)
-        # self.s_pullback_failed = sig.Score(name='s_pullback', sigs=self.l_pullback_vads, scoreType='mean', operator='<=', threshold=0,  lookBack=self.lookBack).add_plot_args(self.ca.DefaultFailed)
-        # self.add_to_ta_list(self.l_pullback_vads + [self.s_pullback_passed, self.s_pullback_failed])
 
-        # # Validate Touches
-        self.v_touchSupRes      = sig.Validate(val1=self.touchSupRes.name,      operator='>', val2=1, lookBack=self.lookBack)
-        # self.v_touchSupRes1Hour = sig.Validate(val1=self.touchSupRes1Hour.name, operator='>', val2=1, lookBack=self.lookBack)
-        # self.v_touchSupRes1Day  = sig.Validate(val1=self.touchSupRes1Day.name,  operator='>', val2=1, lookBack=self.lookBack)
-        # self.v_touchPrevDayLo   = sig.Validate(val1=self.touchPrevDayLo.name,   operator='>', val2=1, lookBack=self.lookBack)
-        # self.v_touchPrevDayHi   = sig.Validate(val1=self.touchPrevDayHi.name,   operator='>', val2=1, lookBack=self.lookBack)
-        # self.v_touchIntyra935Hi = sig.Validate(val1=self.touchIntyra935Hi.name, operator='>', val2=1, lookBack=self.lookBack)
-        # self.v_touchIntyra935Lo = sig.Validate(val1=self.touchIntyra935Lo.name, operator='>', val2=1, lookBack=self.lookBack)
-        # self.l_touches_vads = [self.v_touchSupRes, self.v_touchSupRes1Hour, self.v_touchSupRes1Day, self.v_touchPrevDayLo, self.v_touchPrevDayHi, self.v_touchIntyra935Hi, self.v_touchIntyra935Lo]
-        # self.s_touches_passed = sig.Score(name='s_touches', sigs=self.l_touches_vads, scoreType='mean',  operator='>=', threshold=50, lookBack=self.lookBack)
 
         # #! PB signals
         # self.llx2 = sig.Lower(col='high', allLower=True, span=2, lookBack=self.lookBack)

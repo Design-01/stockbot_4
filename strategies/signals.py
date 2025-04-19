@@ -128,7 +128,15 @@ def is_gap_pivot_crossover(df: pd.DataFrame, pivot_col: str, ls: str) -> bool:
     except (KeyError, IndexError):
         return False
 
-def get_valid_pb(ls, df, pointCol:str, minLen:int=3):
+def get_valid_pb(ls:str, df:pd.DataFrame, pointCol:str, atrCol:str, minLen:int=3):
+    """gets a valid pullback window.
+
+    Args:
+        ls (str): 'LONG' or 'SHORT'
+        df (pd.DataFrame): dataframe with the data
+        pointCol (str): column name with the points . eg if pullback from High Point then this is the column with the high points
+        minLen (int): minimum length of the pullback
+    """
     if minLen < 3:
         raise ValueError("get_valid_pb :: minLen must be at least 3")
     # check if names exists in df
@@ -148,6 +156,10 @@ def get_valid_pb(ls, df, pointCol:str, minLen:int=3):
     if len(w0) < minLen:
         return None
     
+    # check if pulback is deep enough.  If too shallow then not a valid pullback
+    if w0.high.max() - w0.low.min() < w0[atrCol].iat[-1] * 2:
+        return None
+    
     if ls == 'LONG':
         #check if high < two previous high ago
         if not w0.high.iat[-1] < w0.high.iat[-3] :
@@ -157,8 +169,10 @@ def get_valid_pb(ls, df, pointCol:str, minLen:int=3):
         return w0
     
     if ls == 'SHORT':       
+
+
         #check if low > two previous low ago
-        if not w0.low.iat[-1] > w0.low.iat[-3] :
+        if not w0.low.iat[-1] > w0.low.iat[-3]:
             return None
         
         return w0
@@ -393,9 +407,10 @@ class PB_PctHLLH(Signals):
         Returns a value between 0 and 100.
     """
     name: str = 'PB_PctHLLH'
-    pointCol: str = ''
+    hpCol: str = ''
+    lpCol: str = ''
     atrCol: str = ''
-    atrMultiple: float = 1.0 # minimum number of ATRs required between pointCol low and toCol
+    atrMultiple: float = 1.0 # minimum number of ATRs required between pointCols low and toCol
     minPbLen: int = 3
     
     def __post_init__(self):
@@ -415,15 +430,16 @@ class PB_PctHLLH(Signals):
    
 
     #$ **kwargs is used to allow any signal arguments to be passed to any run method. This so that the same run method can be used when looping through signals.
-    def _compute_row(self, df:pd.DataFrame=pd.DataFrame(), **kwargs):
+    def _compute_row(self, df:pd.DataFrame=pd.DataFrame()):
         """Computes the % of bars that have a lower highs (BULL pullback, so downward)
         Vice versa for BEAR case. So this is only for pullbacks not overall trends. """
-
-        window  = get_valid_pb( ls=self.ls, df=df, pointCol=self.pointCol, minLen=self.minPbLen)
+        pointcol = self.hpCol if self.ls == 'LONG' else self.lpCol
+        window  = get_valid_pb( ls=self.ls, df=df, pointCol=pointcol, atrCol=self.atrCol, minLen=self.minPbLen)
         
         if window is None:
             return self._use_prev_if_none(0.0)
         
+
 
         if self.ls == 'LONG': # if there are more than 2 bars in the pullback from the high
             # eg fhp.high < fhp.high.shift() retruns a series of bools. 
@@ -505,7 +521,9 @@ class PB_ASC(Signals):
     - Signal persists for one additional bar after a valid pullback disappears
     """
     name: str = 'PB_ASC'
-    pointCol: str = ''
+    hpCol: str = ''
+    lpCol: str = ''
+    atrCol: str = ''    
     atrMultiple: float = 1.0 # minimum number of ATRs required between pointCol low and toCol
     minPbLen: int = 3
     
@@ -526,7 +544,8 @@ class PB_ASC(Signals):
         return val
 
     def _compute_row(self, df:pd.DataFrame=pd.DataFrame()):
-        window  = get_valid_pb( ls=self.ls, df=df, pointCol=self.pointCol, minLen=self.minPbLen)
+        pointCol = self.hpCol if self.ls == 'LONG' else self.lpCol
+        window  = get_valid_pb( ls=self.ls, df=df, pointCol=pointCol, atrCol=self.atrCol, minLen=self.minPbLen)
         
         if window is None:
             return self._use_prev_if_none(0.0)
@@ -601,7 +620,9 @@ class PB_CoC_ByCountOpBars(Signals):
       (shift from bearish to bullish for LONG, or bullish to bearish for SHORT)
     """
     name: str = 'PB_CoC_OpBars'
-    pointCol: str = ''
+    hpCol: str = ''
+    lpCol: str = ''
+    atrCol: str = ''
     minPbLen: int = 3
 
     
@@ -611,7 +632,8 @@ class PB_CoC_ByCountOpBars(Signals):
         self.prev_window = None
 
     def _compute_row(self, df: pd.DataFrame = pd.DataFrame()):
-        window = get_valid_pb(ls=self.ls, df=df, pointCol=self.pointCol, minLen=self.minPbLen)
+        pointCol = self.hpCol if self.ls == 'LONG' else self.lpCol
+        window = get_valid_pb(ls=self.ls, df=df, pointCol=pointCol, atrCol=self.atrCol, minLen=self.minPbLen)
         if window is None or len(window) <= 1:
             if self.prev_window is not None:
                 window = self.prev_window
@@ -727,7 +749,9 @@ class PB_Overlap(Signals):
     - Uses the get_valid_pb() function to identify pullbacks
     """
     name  : str = 'PB_Olap'
-    pointCol: str = ''   
+    hpCol: str = ''
+    lpCol: str = ''
+    atrCol: str = ''    
     minPbLen: int = 3 
 
     def __post_init__(self):
@@ -746,7 +770,8 @@ class PB_Overlap(Signals):
         return val
 
     def _compute_row(self, df:pd.DataFrame):
-        window  = get_valid_pb( ls=self.ls, df=df, pointCol=self.pointCol, minLen=self.minPbLen)
+        pointCol = self.hpCol if self.ls == 'LONG' else self.lpCol
+        window  = get_valid_pb( ls=self.ls, df=df, pointCol=pointCol, atrCol=self.atrCol, minLen=self.minPbLen)
         
         if window is None:
             return self._use_prev_if_none(0.0)
@@ -1045,6 +1070,57 @@ class BarSW(Signals):
         # print(f"{df.index[-1]} open: {open}, close: {close}, score: {score} ... ({top=} - {bot=} + {body=}) / ({high=} - {low=})")
 
         return score
+
+#£ Done
+@dataclass
+class BarTail(Signals):
+    """ Computes the lenght of the tail of the bar relevnt to the atr"""
+    name: str = 'BarTail'  # Bar Strength Weakness 
+    atrCol: str = ''
+
+    def __post_init__(self):
+        self.name = f"{self.name}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame):
+        # Extract the most recent open, high, low, and close values
+        atr = df[self.atrCol].iloc[-1]
+
+        if self.ls == 'LONG':
+            tail = min(df['open'].iloc[-1], df['close'].iloc[-1]) - df['low'].iloc[-1]
+            return tail / atr
+        elif self.ls == 'SHORT':
+            tail = df['high'].iloc[-1] - max(df['open'].iloc[-1], df['close'].iloc[-1])
+            return tail / atr
+        
+        return 0.0
+
+#£ Done
+@dataclass
+class NarrowBobyBar(Signals):
+    """ Computes the lenght of the tail of the bar relevnt to the atr"""
+    name: str = 'NBB'  # Bar Strength Weakness 
+    atrCol: str = ''
+
+    def __post_init__(self):
+        self.name = f"{self.name}"
+        self.names = [self.name]
+
+    def _compute_row(self, df: pd.DataFrame):
+        # Extract the most recent open, high, low, and close values
+        atr = df[self.atrCol].iloc[-1]
+
+        if self.ls == 'LONG':
+            body = abs(df['close'].iloc[-1] - df['open'].iloc[-1])
+            return 1 - (body / atr)
+        elif self.ls == 'SHORT':
+            body = abs(df['close'].iloc[-1] - df['open'].iloc[-1])
+            return 1 - (body / atr)
+        
+        return 0.0
+
+        
+
  
 
 
@@ -1768,7 +1844,7 @@ class VolumeSpike(Signals):
             return 0  # or return 0, or handle it as needed
         
         # Calculate the percent change between the current volume and the rolling average volume
-        return ((current_volume - vol_ma) / vol_ma) * 100
+        return (current_volume - vol_ma) / vol_ma
 
 
 @dataclass
@@ -2339,15 +2415,18 @@ class MultiSignals(ABC):
         return signalsDF
 #$ -------  Cosnsolidation and Trend Signals ---------------
 
+import scoring
+
 @dataclass
 class Score(MultiSignals):
     name: str = ''
     ls: str = ''
     sigs: List[Signals] = field(default_factory=list)
     cols : Union[str, List[str]] = field(default_factory=list)   
-    scoreType: Literal["mean", "sum", "min", "max", "any", "all"] = ''
+    scoreType: Literal["mean", "sum", "min", "max", "any", "all", "max_plus_weighted_mean_capped"] = ''
     operator: Literal[">", "<", ">=", "<=", "=="] = ''
     threshold: Union[float, str] = 0 # Can be a value or column name
+    meanWeights: List[float] = field(default_factory=list)
 
     def __post_init__(self):
         # Ensure the name is unique
@@ -2422,11 +2501,17 @@ class Score(MultiSignals):
             computed_value = np.any(values)
         elif self.scoreType == "all":
             computed_value = np.all(values)
+        elif self.scoreType == "max_plus_weighted_mean_capped":
+            vals = list(values)
+            vals = [v/100 for v in vals if not np.isnan(v)]  # Replace None with 0
+            if sum(vals) > 0:
+                print(f"Score::max_plus_weighted_mean_capped: {self.meanWeights=}, {values=}")
+            computed_value = scoring.max_plus_weighted_mean_capped(vals, self.meanWeights) * 100
 
         # apply score normalization
         if self.normRange:
             computed_value = self.get_score(computed_value)
-
+ 
         # Invert the score if short
         if self.invertScoreIfShort and self.ls == 'SHORT':
             computed_value *= -1
@@ -2451,7 +2536,7 @@ class Score(MultiSignals):
         
         # Create a Series with the computed value and pass status
         # The second column includes the operator and threshold in the name
-        return pd.Series({ self.name: round(computed_value,2), self.name_passed: passed})
+        return pd.Series({ self.name: round(computed_value,2), self.name_passed: passed * 100}) # miltupliy Pass ed by 100 to get a percentage value
         
 
     def compute_signals(self, df: pd.DataFrame) -> pd.DataFrame:
